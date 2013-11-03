@@ -1,0 +1,12 @@
+*~
+*.pyc
+.*.swp
+
+/build/*.lst
+/build/*.img
+/build/*.cpi
+/build/uuid
+/build/gen_init_cpio.list
+/build/grub_early.cfg
+/build/cache/
+/build/root/

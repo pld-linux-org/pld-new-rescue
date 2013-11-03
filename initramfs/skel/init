@@ -1,0 +1,62 @@
+#!/bin/sh -x
+
+echo "PLD New Rescue booting"
+
+export PATH=/sbin:/bin
+
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+
+mkdir -p /.rcd/rw
+mount -t tmpfs none /.rcd/rw
+
+# we want tmpfs not rootfs there
+mkdir -p /.rcd/rw/dev
+cp -a /dev/* /.rcd/rw/dev
+mount --bind /.rcd/rw/$dir /$dir
+for dir in tmp run ; do
+        mkdir -p /.rcd/rw/$dir
+	mount --bind /.rcd/rw/$dir /$dir
+done
+
+echo "Starting udevd"
+mkdir -p /run/udev
+udevd --daemon
+udevadm trigger --type=subsystems --action=add
+udevadm trigger --type=devices --action=add
+
+echo "Waiting for udev to setlle"
+udevadm settle
+
+blkid
+
+OFFSET=0
+SQF=/_rescue/base.sqf
+
+losetup -o $OFFSET /dev/loop0 $SQF
+mount -t squashfs /dev/loop0 /.rcd/base
+
+for dir in var ; do
+ if [ -d /$dir ] ;  then
+    cp -a /$dir /.rcd/rw/$dir
+ else
+    mkdir -p /.rcd/rw/$dir
+ fi
+ if [ -d /.rcd/base/$dir ] ;  then
+     cd /.rcd/base/$dir
+     find | cpio -p /.rcd/rw/$dir
+     cd /
+ fi
+done
+
+for dir in boot usr sbin lib lib64 etc bin opt ; do
+ if [ -d /.rcd/base/$dir ] ;  then
+      rm -fr $dir
+      mkdir -p /.rcd/rw/$dir $dir
+      mount -t aufs -o dirs=/.rcd/rw/$dir:/.rcd/base/$dir=ro none /$dir
+  fi
+done
+
+exec /sbin/init
+
+# vi: ft=sh sw=4 sts=4 et

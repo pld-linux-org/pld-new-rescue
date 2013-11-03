@@ -1,0 +1,41 @@
+# gen_init_cpio input
+dir /dev 0755 0 0
+nod /dev/console 0600 0 0 c 5 1
+nod /dev/null 0666 0 0 c 1 3
+dir /dev/pts 0755 0 0
+dir /bin 0755 0 0
+dir /sbin 0755 0 0
+dir /lib 0755 0 0
+dir /etc 0755 0 0
+dir /proc 0755 0 0
+dir /sys 0755 0 0
+dir /tmp 0755 0 0
+dir /run 0755 0 0
+slink /bin/sh busybox 0755 0 0
+slink /bin/echo busybox 0755 0 0
+slink /bin/mount busybox 0755 0 0
+slink /bin/mkdir busybox 0755 0 0
+slink /bin/losetup busybox 0755 0 0
+slink /bin/blkid busybox 0755 0 0
+file /init @skel@/init 0755 0 0
+#file /bin/busybox /bin/busybox.static 0755 0 0
+
+# files to be copied from the rootfs (with dependencies)
+* /etc/ld.so.cache
+* /etc/group
+* /etc/passwd
+* /lib/libnss_files*
+* /bin/busybox
+* /sbin/udevd
+* /sbin/udevadm
+* /etc/udev/*
+* /lib/udev/*
+* /lib/modules/*/modules.*
+* /lib/modules/*/kernel/drivers/ata
+* /lib/modules/*/kernel/drivers/cdrom
+* /lib/modules/*/kernel/drivers/scsi/sd_mod*
+* /lib/modules/*/kernel/drivers/scsi/sr_mod*
+* /lib/modules/*/kernel/drivers/ide
+* /lib/modules/*/kernel/drivers/block/loop.ko*
+* /lib/modules/*/kernel/fs/isofs
+* /lib/modules/*/kernel/fs/fat/vfat*

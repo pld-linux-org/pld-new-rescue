@@ -1,0 +1,12 @@
+#!/bin/sh
+
+[ -e /tmp/boot.vdi ] && rm -f /tmp/boot.vdi
+
+VBoxManage convertfromraw \
+	boot.img /tmp/boot.vdi \
+	--format VDI \
+	--uuid "$(cat uuid)"
+
+chown root:vbox /tmp/boot.vdi
+#chmod ug+rw /tmp/boot.vdi
+chmod a+rw /tmp/boot.vdi

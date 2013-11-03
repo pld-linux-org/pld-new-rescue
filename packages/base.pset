@@ -1,0 +1,9 @@
+
+# the very base packages
+# for the system and the initramfs
+
+basesystem
+systemd-init
+udev
+kernel
+busybox
