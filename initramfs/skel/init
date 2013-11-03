@@ -71,12 +71,15 @@ for dir in boot usr sbin lib lib64 etc bin opt ; do
   fi
 done
 
-/bin/sh
+udevadm control --exit
 
 for dir in tmp run dev ; do
     umount /$dir
 done
 
-exec switch_root /root /sbin/init
+cd /root
+mkdir old-root
+pivot_root . ./old-root
+exec usr/sbin/chroot . /sbin/init
 
 # vi: ft=sh sw=4 sts=4 et
