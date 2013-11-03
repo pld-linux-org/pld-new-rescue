@@ -7,3 +7,4 @@ systemd-init
 udev
 kernel
 busybox
+losetup

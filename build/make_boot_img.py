@@ -79,6 +79,10 @@ def main():
     grub_early_fn = os.path.abspath("grub_early.cfg")
     grub_prefix = "grub"
 
+    module_files = []
+    for module in ['base']:
+        module_files.append(os.path.abspath("{0}.cpi".format(module)))
+
     if os.path.exists("uuid"):
         with open("uuid", "rt") as uuid_f:
             img_uuid = uuid.UUID(uuid_f.read().strip())
@@ -97,9 +101,10 @@ def main():
                                             "/lib/grub",
                                             boot_img_dir,
                                             init_cpio_fn,
-                                            vmlinuz_fn])
+                                            vmlinuz_fn,
+                                            ] + module_files)
     match = DU_OUTPUT_RE.search(du_output.decode("utf-8"))
-    bytes_needed = int(match.group(1)) + 10240
+    bytes_needed = int(int(match.group(1)) * 1.1)
     print("bytes needed: {0!r}".format(bytes_needed))
     cylinders_needed = max(bytes_needed // CYLINDER + 2, 2)
     print("cylinders needed: {0!r}".format(cylinders_needed))
@@ -118,7 +123,7 @@ def main():
             rc = sfdisk_p.wait()
             if rc:
                 raise subprocess.CalledProcessError(rc, ["sfdisk"])
-            subprocess.check_call(["mkdosfs", "-F", "12", "-I",
+            subprocess.check_call(["mkdosfs", "-F", "16", "-I",
                                         "-n", boot_label, lodev + "p1"])
             subprocess.check_call(["mount", "-t", "vfat", lodev + "p1",
                                         boot_mnt_dir])
@@ -127,6 +132,10 @@ def main():
                             os.path.join(boot_mnt_dir, "vmlinuz"))
                 shutil.copy(init_cpio_fn,
                             os.path.join(boot_mnt_dir, "init.cpi"))
+                for module_f in module_files:
+                    module_fn = os.path.basename(module_f)
+                    shutil.copy(module_f,
+                            os.path.join(boot_mnt_dir, module_fn))
                 copy_dir(boot_img_dir, boot_mnt_dir)
                 install_grub("i386-pc", lodev, boot_mnt_dir, grub_prefix,
                                                                 grub_early_fn)

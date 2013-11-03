@@ -2,6 +2,14 @@
 dir /dev 0755 0 0
 nod /dev/console 0600 0 0 c 5 1
 nod /dev/null 0666 0 0 c 1 3
+nod /dev/loop0 0600 0 0 b 7 0
+nod /dev/loop1 0600 0 0 b 7 1
+nod /dev/loop2 0600 0 0 b 7 2
+nod /dev/loop3 0600 0 0 b 7 3
+nod /dev/loop4 0600 0 0 b 7 4
+nod /dev/loop5 0600 0 0 b 7 5
+nod /dev/loop6 0600 0 0 b 7 6
+nod /dev/loop7 0600 0 0 b 7 7
 dir /dev/pts 0755 0 0
 dir /bin 0755 0 0
 dir /sbin 0755 0 0
@@ -26,6 +34,7 @@ file /init @skel@/init 0755 0 0
 * /etc/passwd
 * /lib/libnss_files*
 * /bin/busybox
+* /sbin/losetup
 * /sbin/udevd
 * /sbin/udevadm
 * /etc/udev/*
@@ -39,3 +48,5 @@ file /init @skel@/init 0755 0 0
 * /lib/modules/*/kernel/drivers/block/loop.ko*
 * /lib/modules/*/kernel/fs/isofs
 * /lib/modules/*/kernel/fs/fat/vfat*
+* /lib/modules/*/kernel/fs/squashfs
+* /lib/modules/*/kernel/fs/aufs

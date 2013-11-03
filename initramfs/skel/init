@@ -7,17 +7,22 @@ export PATH=/sbin:/bin
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
 
-mkdir -p /.rcd/rw
-mount -t tmpfs none /.rcd/rw
+mkdir -p /root
+mount -t tmpfs none /root
 
-# we want tmpfs not rootfs there
-mkdir -p /.rcd/rw/dev
-cp -a /dev/* /.rcd/rw/dev
-mount --bind /.rcd/rw/$dir /$dir
+mkdir -p /.rcd/modules
+mv *.sqf /.rcd/modules
+
+mkdir -p /root/dev
+cp -a /dev/* /root/dev
+mount --bind /root/dev /dev
+
 for dir in tmp run ; do
-        mkdir -p /.rcd/rw/$dir
-	mount --bind /.rcd/rw/$dir /$dir
+        mkdir -p /root/$dir
+	mount --bind /root/$dir /$dir
 done
+
+modprobe loop
 
 echo "Starting udevd"
 mkdir -p /run/udev
@@ -31,32 +36,47 @@ udevadm settle
 blkid
 
 OFFSET=0
-SQF=/_rescue/base.sqf
+SQF=/.rcd/modules/base.sqf
 
-losetup -o $OFFSET /dev/loop0 $SQF
-mount -t squashfs /dev/loop0 /.rcd/base
+modprobe squashfs
+lodev=$(/sbin/losetup -o $OFFSET --find --show $SQF)
+mkdir -p /.rcd/m/base
+mount -t squashfs $lodev /.rcd/m/base
 
 for dir in var ; do
  if [ -d /$dir ] ;  then
-    cp -a /$dir /.rcd/rw/$dir
+    cp -a /$dir /root/$dir
  else
-    mkdir -p /.rcd/rw/$dir
+    mkdir -p /root/$dir
  fi
- if [ -d /.rcd/base/$dir ] ;  then
-     cd /.rcd/base/$dir
-     find | cpio -p /.rcd/rw/$dir
+ if [ -d /.rcd/m/base/$dir ] ;  then
+     cd /.rcd/m/base/$dir
+     find | cpio -p /root/$dir
      cd /
  fi
 done
 
+modprobe aufs
+
+mkdir /root/.rw
+
 for dir in boot usr sbin lib lib64 etc bin opt ; do
- if [ -d /.rcd/base/$dir ] ;  then
-      rm -fr $dir
-      mkdir -p /.rcd/rw/$dir $dir
-      mount -t aufs -o dirs=/.rcd/rw/$dir:/.rcd/base/$dir=ro none /$dir
+ if [ -d /.rcd/m/base/$dir ] ;  then
+      mkdir -p /root/.rw/$dir /root/$dir
+      if [ -d /$dir ] ; then
+        mount -t aufs -o dirs=/root/.rw/$dir:/.rcd/m/base/$dir=rr:/$dir=ro none /root/$dir
+      else
+        mount -t aufs -o dirs=/root/.rw/$dir:/.rcd/m/base/$dir=rr none /root/$dir
+      fi
   fi
 done
 
-exec /sbin/init
+/bin/sh
+
+for dir in tmp run dev ; do
+    umount /$dir
+done
+
+exec switch_root /root /sbin/init
 
 # vi: ft=sh sw=4 sts=4 et
