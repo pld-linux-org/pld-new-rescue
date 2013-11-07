@@ -2,11 +2,20 @@
 *.pyc
 .*.swp
 
-/build/*.lst
-/build/*.img
+/*.img
+/*.iso
+
 /build/*.cpi
-/build/uuid
+/build/*.img
+/build/*.lst
+/build/*.full-lst
+/build/*.exclude
+/build/cache/
 /build/gen_init_cpio.list
 /build/grub_early.cfg
-/build/cache/
+/build/log
+/build/make.deps
+/build/make.vars
 /build/root/
+/build/uuid
+/build/poldek.conf

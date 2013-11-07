@@ -8,52 +8,69 @@ import shutil
 import re
 import stat
 import uuid
+import logging
 from glob import glob
 
-def main():
-    parser = argparse.ArgumentParser(description="Make PLD NR image")
+import pld_nr_buildconf
 
+logger = logging.getLogger()
+
+
+def main():
+    log_parser = pld_nr_buildconf.get_logging_args_parser()
+    parser = argparse.ArgumentParser(description="Make PLD NR module",
+                                     parents=[log_parser])
     parser.add_argument("module", action="store",
                         help="Module name")
     args = parser.parse_args()
+    pld_nr_buildconf.setup_logging(args)
+    
+    config = pld_nr_buildconf.Config.get_config()
 
-    root_dir = os.path.abspath("root")
+    lst_fn = "{0}.lst".format(args.module)
     exclude_fn = "{0}.exclude".format(args.module)
     squashfs_fn = "{0}.sqf".format(args.module)
-    module_fn = "{0}.cpi".format(args.module)
 
     if os.path.exists(squashfs_fn):
         os.unlink(squashfs_fn)
-    if os.path.exists(module_fn):
-        os.unlink(module_fn)
 
-    excludes = set()
-    for lst_fn in glob("*.lst"):
-        mod_name = lst_fn[:-4]
-        if mod_name == args.module:
+    logger.debug("Getting list of all files in 'root'")
+    find_p = subprocess.Popen(["find", "root"],
+                                stdout=subprocess.PIPE)
+    all_files = [l.strip(b"root/").decode("utf-8").rstrip()
+                                        for l in find_p.stdout.readlines()]
+    find_p.stdout.close()
+    rc = find_p.wait()
+    if rc:
+        raise CalledProcessError(rc, ["find", "root"])
+
+    all_files = set(f for f in all_files if f)
+
+    module_files = set(l.rstrip() for l in open(lst_fn, "rt").readlines())
+    module_dirs = set()
+    for path in module_files:
+        if "/" not in path:
             continue
-        excludes.update(open(lst_fn, "rt").readlines())
-
+        dir_path = path.rsplit("/", 1)[0]
+        module_dirs.add(dir_path)
+    
+    logger.debug("Building the exclude file")
+    excludes = all_files - module_files - module_dirs
+    excludes = sorted(excludes)
+    while excludes and not excludes[0]:
+        # squashfs hates empty paths
+        excludes = excludes[1:]
     with open(exclude_fn, "wt") as exclude_f:
-        exclude_f.writelines(sorted(excludes))
+        exclude_f.writelines(e + "\n" for e in sorted(excludes))
 
     try:
-        subprocess.check_call(["mksquashfs", root_dir, squashfs_fn,
-                                "-e", exclude_fn])
-
-        cpio_p = subprocess.Popen(["cpio", "-o", "-H", "newc",
-                                    "-F", module_fn],
-                                 stdin=subprocess.PIPE)
-        cpio_p.stdin.write((squashfs_fn + "\n").encode("utf-8"))
-        cpio_p.stdin.close()
-        rc = cpio_p.wait()
-        if rc:
-            raise subprocess.CalledProcessError(rc, ["cpio"])
+        logger.debug("Calling mksquashfs")
+        subprocess.check_call(["mksquashfs", "root/", squashfs_fn,
+                                "-comp", config.compression,
+                                "-ef", exclude_fn])
     except:
-        if os.path.exists(module_fn):
-            os.unlink(module_fn)
-    finally:
-        os.unlink(squashfs_fn)
+        if os.path.exists(squashfs_fn):
+            os.unlink(squashfs_fn)
 
 if __name__ == "__main__":
     main()

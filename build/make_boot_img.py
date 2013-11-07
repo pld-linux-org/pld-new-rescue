@@ -8,8 +8,14 @@ import shutil
 import re
 import stat
 import uuid
+import logging
 
 from hashlib import md5
+
+import pld_nr_buildconf
+
+logger = logging.getLogger()
+
 
 CYLINDER=8225280
 
@@ -65,10 +71,17 @@ def install_grub(platform, lodev, boot_mnt_dir, grub_prefix, grub_early_fn):
     copy_dir("/lib/grub/{0}".format(platform), grub_plat_dir)
 
 def main():
-    parser = argparse.ArgumentParser(description="Make boot image")
+    log_parser = pld_nr_buildconf.get_logging_args_parser()
+    parser = argparse.ArgumentParser(description="Make boot image",
+                                     parents=[log_parser])
+    parser.add_argument("destination",
+                        help="Destination file name")
     args = parser.parse_args()
+    pld_nr_buildconf.setup_logging(args)
+    
+    config = pld_nr_buildconf.Config.get_config()
 
-    boot_img_fn = os.path.abspath("boot.img")
+    boot_img_fn = os.path.abspath(args.destination)
     root_dir = os.path.abspath("root")
     boot_img_dir = os.path.abspath("../boot_img")
     init_cpio_fn = os.path.abspath("init.cpi")
@@ -80,7 +93,7 @@ def main():
     grub_prefix = "grub"
 
     module_files = []
-    for module in ['base']:
+    for module in config.modules:
         module_files.append(os.path.abspath("{0}.cpi".format(module)))
 
     if os.path.exists("uuid"):
@@ -90,12 +103,11 @@ def main():
         img_uuid = uuid.uuid4()
         with open("uuid", "wt") as uuid_f:
             print(str(img_uuid), file=uuid_f)
-    boot_label = md5(img_uuid.bytes).hexdigest()[:11]
+    boot_vol_id = md5(img_uuid.bytes).hexdigest()[:8]
 
     with open(grub_early_fn, "wt") as grub_early:
-        grub_early.write("search.fs_label {0} root\nset prefix=($root)/grub\n"
-                            .format(boot_label))
-
+        grub_early.write("search.fs_uuid {0}-{1} root\nset prefix=($root)/grub\n"
+                .format(boot_vol_id[:4], boot_vol_id[4:]))
 
     du_output = subprocess.check_output(["du", "-sbcD",
                                             "/lib/grub",
@@ -105,9 +117,9 @@ def main():
                                             ] + module_files)
     match = DU_OUTPUT_RE.search(du_output.decode("utf-8"))
     bytes_needed = int(int(match.group(1)) * 1.1)
-    print("bytes needed: {0!r}".format(bytes_needed))
+    logger.debug("bytes needed: {0!r}".format(bytes_needed))
     cylinders_needed = max(bytes_needed // CYLINDER + 2, 2)
-    print("cylinders needed: {0!r}".format(cylinders_needed))
+    logger.debug("cylinders needed: {0!r}".format(cylinders_needed))
 
     subprocess.check_call(["dd", "if=/dev/zero", "of=" + boot_img_fn,
                             "bs={0}".format(CYLINDER),
@@ -124,7 +136,7 @@ def main():
             if rc:
                 raise subprocess.CalledProcessError(rc, ["sfdisk"])
             subprocess.check_call(["mkdosfs", "-F", "16", "-I",
-                                        "-n", boot_label, lodev + "p1"])
+                                        "-i", boot_vol_id, lodev + "p1"])
             subprocess.check_call(["mount", "-t", "vfat", lodev + "p1",
                                         boot_mnt_dir])
             try:
@@ -137,11 +149,9 @@ def main():
                     shutil.copy(module_f,
                             os.path.join(boot_mnt_dir, module_fn))
                 copy_dir(boot_img_dir, boot_mnt_dir)
-                install_grub("i386-pc", lodev, boot_mnt_dir, grub_prefix,
+                for platform in config.grub_platforms:
+                    install_grub(platform, lodev, boot_mnt_dir, grub_prefix,
                                                                 grub_early_fn)
-                install_grub("i386-efi", lodev, boot_mnt_dir, grub_prefix,
-                                                                grub_early_fn)
-                #install_grub("x86_64-efi")
             finally:
                 subprocess.call(["umount", boot_mnt_dir])
         finally:

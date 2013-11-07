@@ -8,8 +8,13 @@ import shutil
 import re
 import stat
 import errno
+import logging
 
 from glob import glob
+
+import pld_nr_buildconf
+
+logger = logging.getLogger()
 
 KERNEL_MOD_RE = re.compile("^lib/modules/([^/]*)/(.*\.ko(?:\.gz)?)$")
 
@@ -32,7 +37,8 @@ def load_modules_dep(kernel_ver):
     return deps
 
 def find_kernel_mod_deps(kernel_ver, mod_path):
-    print("find_kernel_mod_deps({0!r}, {1!r})".format(kernel_ver, mod_path))
+    logger.debug("find_kernel_mod_deps({0!r}, {1!r})"
+                                            .format(kernel_ver, mod_path))
     deps = load_modules_dep(kernel_ver)
     result = []
     for path in deps[mod_path]:
@@ -40,7 +46,10 @@ def find_kernel_mod_deps(kernel_ver, mod_path):
     return result
 
 def find_executable_deps(path, root_dir):
-    print("find_executable_deps({0!r})".format(path))
+    logger.debug("find_executable_deps({0!r})".format(path))
+    if path.startswith("lib/ld-"):
+        logger.debug("Returning empty list for dynamic loader")
+        return []
     with open(path, "rb") as exec_f:
         header = exec_f.read(1024)
     if header[:2] == b"#!":
@@ -53,7 +62,7 @@ def find_executable_deps(path, root_dir):
                         ["chroot", root_dir, "/lib/ld-linux.so.2",
                             "--list", "/" + path])
     except subprocess.CalledProcessError as err:
-        print(err)
+        logger.error(err)
         return []
 
     result = ["lib/ld-linux.so.2"]
@@ -100,7 +109,7 @@ def find_deps(files, all_files, root_dir):
             deps = find_executable_deps(path, root_dir)
         else:
             continue
-        print("deps={0!r}".format(deps))
+        logger.debug("deps={0!r}".format(deps))
         for dep_path in deps:
             if dep_path not in present:
                 present.add(dep_path)
@@ -152,8 +161,13 @@ def cpio_append(cpio_fn, paths):
         raise subprocess.CalledProcessError(rc, "cpio")
 
 def main():
-    parser = argparse.ArgumentParser(description="Make initramfs")
+    log_parser = pld_nr_buildconf.get_logging_args_parser()
+    parser = argparse.ArgumentParser(description="Make initramfs",
+                                     parents=[log_parser])
     args = parser.parse_args()
+    pld_nr_buildconf.setup_logging(args)
+    
+    config = pld_nr_buildconf.Config.get_config()
 
     skel_dir = os.path.abspath("../initramfs/skel")
     root_dir = os.path.abspath("root")
@@ -161,6 +175,8 @@ def main():
     files_list_fn = os.path.abspath("../initramfs/files.list")
     gic_list_fn = os.path.abspath("gen_init_cpio.list")
     init_lst_fn = os.path.abspath("init.lst")
+    base_lst_fn = os.path.abspath("base.lst")
+    base_full_lst_fn = os.path.abspath("base.full-lst")
     
     os.chdir(root_dir)
 
@@ -182,8 +198,19 @@ def main():
         for path in paths:
             print(path, file=init_lst)
 
-    subprocess.check_call(["gzip", init_cpio_fn])
-    os.rename(init_cpio_fn + ".gz", init_cpio_fn)
+    base_all_paths = set(l.rstrip() for l in
+                                open(base_full_lst_fn, "rt").readlines())
+    base_paths = set(base_all_paths) - set(paths)
+
+    with open(base_lst_fn, "wt") as base_lst:
+        for path in base_paths:
+            print(path, file=base_lst)
+
+    logger.debug("compressing {0!r}".format(init_cpio_fn))
+    subprocess.check_call(config.compress_cmd + ["-f", init_cpio_fn])
+    compressed_fn = init_cpio_fn + config.compressed_ext
+    logger.debug("renaming {0!r} to {1!r}".format(compressed_fn, init_cpio_fn))
+    os.rename(compressed_fn, init_cpio_fn)
 
 if __name__ == "__main__":
     main()

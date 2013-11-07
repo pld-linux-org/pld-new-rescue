@@ -1,0 +1,17 @@
+# install those first with --nodeps --nofollow
+# to fix wrong install ordering due to package loops
+
+# Ideally this file should not be needed
+
+# a lot of tools
+coreutils
+
+# /bin/systemd_booted
+systemd-units
+systemd-libs
+
+# useradd 
+pwdutils
+openldap-libs
+libnscd
+cyrus-sasl-libs

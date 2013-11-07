@@ -3,7 +3,7 @@
 [ -e /tmp/boot.vdi ] && rm -f /tmp/boot.vdi
 
 VBoxManage convertfromraw \
-	boot.img /tmp/boot.vdi \
+	../pld-nr-32.img /tmp/boot.vdi \
 	--format VDI \
 	--uuid "$(cat uuid)"
 

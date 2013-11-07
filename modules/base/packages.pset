@@ -1,6 +1,6 @@
 
 # the very base packages
-# for the system and the initramfs
+# for the system (just so it boots) and the initramfs
 
 basesystem
 systemd-init
