@@ -100,6 +100,10 @@ class Config(object):
         else:
             self._choose_grub_platforms()
 
+        self.memtest86 = self._config.getboolean("memtest86", fallback=False)
+        self.memtest86_plus = self._config.getboolean("memtest86+",
+                                                    fallback=False)
+
     def _choose_grub_platforms(self):
         self.grub_platforms = []
         if self.bios:
@@ -124,6 +128,8 @@ class Config(object):
             result["efi_arch"] = ""
         result["grub_platforms"] = ",".join(self.grub_platforms)
         result["version"] = self.version
+        result["memtest86"] = "yes" if self.memtest86 else "no"
+        result["memtest86+"] = "yes" if self.memtest86_plus else "no"
         return result
 
     def substitute_bytes(self, data):

@@ -140,6 +140,10 @@ def main():
                     module_fn = os.path.basename(module_f)
                     shutil.copy(module_f,
                             os.path.join(pldnr_dir, module_fn))
+                if config.memtest86:
+                    shutil.copy("/boot/memtest86", boot_mnt_dir)
+                if config.memtest86_plus:
+                    shutil.copy("/boot/memtest86+", boot_mnt_dir)
                 config.copy_template_dir(boot_img_dir, boot_mnt_dir)
                 for platform in config.grub_platforms:
                     install_grub(config, platform, lodev, boot_mnt_dir,
