@@ -16,6 +16,9 @@ logger = logging.getLogger()
 X86_RE = re.compile("^(i[3-6]86|ia32)$")
 X86_64_RE = re.compile("^(x86_64|amd64)$")
 
+GRUB_VERSION_RE = re.compile(r"\(GRUB\)\s+2\.\d+")
+RPM_VERSION_RE = re.compile(r"\(RPM\)\s+5.\d+(.\d+)*")
+
 ARCH_EFI_TO_GRUB = { "ia32": "i386", "x64": "x86_64" }
 
 def _get_default_arch():
@@ -28,6 +31,41 @@ def _get_default_arch():
 
 class ConfigError(Exception):
     pass
+
+def _check_tool(tool, description=None, args=["--version"],
+                get_output=False, ignore_error=False, quiet=False):
+    if isinstance(tool, str):
+        tool = [tool]
+    if not description:
+        description = "command"
+    try:
+        if quiet:
+            stderr = stdout=open("/dev/null", "wb")
+        else:
+            stderr = None
+        if get_output:
+            return subprocess.check_output(tool + args, stderr=stderr)
+        else:
+            subprocess.check_call(tool + args,
+                                  stdout=open("/dev/null", "wb"),
+                                  stderr=stderr)
+    except FileNotFoundError:
+        raise ConfigError("{0!r} {1} not found".format(tool[0], description))
+    except OSError as err:
+        raise ConfigError("{0!r} {1} cannot be executed: {2}"
+                                .format(tool[0], description, err))
+    except subprocess.CalledProcessError as err:
+        if ignore_error:
+            return err.output
+        raise ConfigError("{0!r} {1} returned {2} exit status"
+                        .format(" ".join(tool), description, err.returncode))
+
+def _check_tool_version(command, regexp):
+    ver = _check_tool(command, get_output=True)
+    ver = ver.decode("utf-8", "replace").strip()
+    if not regexp.search(ver):
+        raise ConfigError("Usupported {0!r} version: {1!r}"
+                                                .format(command, ver))
 
 class Config(object):
     _instance = None
@@ -88,6 +126,8 @@ class Config(object):
                 self.efi_arch = "ia32"
             else:
                 self.efi_arch = None
+        else:
+            self.efi_arch = self.efi_arch.lower()
             
         if X86_64_RE.match(self.arch):
             self.bits = 64
@@ -111,6 +151,56 @@ class Config(object):
         if self.efi and self.efi_arch:
             self.grub_platforms.append("{0}-efi".format(
                                         ARCH_EFI_TO_GRUB[self.efi_arch]))
+
+    def verify(self):
+        if not X86_RE.match(self.arch) and not X86_64_RE.match(self.arch):
+            raise ConfigError("Architecture not supported: {0!r}"
+                                                        .format(self.arch))
+        for m in self.modules:
+            module_dir = os.path.join("../modules", m)
+            if not os.path.isdir(module_dir):
+                raise ConfigError("Invalid module: '{0}' - there is no '{1}'"
+                                    " directory".format(m, module_dir))
+        if self.compression not in ("xz", "gzip"):
+            raise ConfigError("Unsupported compression: {0!r}"
+                                            .format(self.compression))
+        if self.compression_level and (
+                self.compression_level < 0 or self.compression_level > 9):
+            raise ConfigError("Unsupported compression level: {0!r}"
+                                            .format(self.compression_level))
+
+        _check_tool(self.compress_cmd, "compress command")
+
+        if self.efi and self.efi_arch not in ("x64", "ia32"):
+            raise ConfigError("EFI architecture not supported: {0!r}"
+                                                        .format(self.efi_arch))
+
+        _check_tool_version("grub-mkimage", GRUB_VERSION_RE)
+        _check_tool_version("grub-bios-setup", GRUB_VERSION_RE)
+
+        for plat in self.grub_platforms:
+            plat_dir = os.path.join("/lib/grub", plat)
+            if not os.path.isdir(plat_dir):
+                raise ConfigError("Grub platform directory {0!r} not found"
+                                                        .format(plat_dir))
+
+        if self.memtest86 and not os.path.exists("/boot/memtest86"):
+            raise ConfigError("/boot/memtest86 missing")
+        
+        if self.memtest86_plus and not os.path.exists("/boot/memtest86+"):
+            raise ConfigError("/boot/memtest86+ missing")
+
+        _check_tool("rpm")
+        _check_tool("poldek")
+        _check_tool("du")
+        _check_tool("dd")
+        _check_tool("losetup")
+        _check_tool("mkdosfs", ignore_error=True, quiet=True)
+        _check_tool("sfdisk")
+        _check_tool("cpio")
+        _check_tool("gen_init_cpio", ignore_error=True, quiet=True)
+        _check_tool("mksquashfs", args=["-version"])
+        _check_tool("mkisofs")
 
     def get_config_vars(self):
         """Return current config as string->string mapping."""
@@ -255,10 +345,15 @@ def main():
                         action="store_const",
                         const="sub",
                         help="Substitute @variables@ in stdin.")
+    parser.add_argument("--verify",
+                        action="store_true",
+                        help="Verify config and requirements")
     parser.set_defaults(mode="dump")
     args = parser.parse_args()
     setup_logging(args)
     config = Config.get_config()
+    if args.verify:
+        config.verify()
     if args.mode == "dump":
         print(config)
     elif args.mode == "make_vars":
@@ -275,7 +370,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except subprocess.CalledProcessError as err:
+    except (subprocess.CalledProcessError, ConfigError) as err:
         logger.error(str(err))
 
 # vi: sw=4 sts=4 et

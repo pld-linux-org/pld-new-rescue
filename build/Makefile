@@ -36,9 +36,9 @@ clean:
 endif
 
 make.vars: ../build.conf ./pld_nr_buildconf.py
-	./pld_nr_buildconf.py --make-vars > make.vars
+	./pld_nr_buildconf.py --verify --make-vars > make.vars
 
-make.deps: ../build.conf ./pld_nr_buildconf.py
+make.deps: make.vars
 	./pld_nr_buildconf.py --make-deps > make.deps
 
 include make.deps
