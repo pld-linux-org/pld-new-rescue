@@ -1,0 +1,12 @@
+
+PLD New Rescue @version@ (@arch@)
+=====================================
+
+This is a PLD New Rescue image, which can be booted from a USB stick or used as
+a part of a PLD New Rescue CD image.
+
+https://github.com/jajcus/pld-new-rescue/
+
+Modules enabled: @modules@
+EFI boot support: @efi@ @efi_arch@
+Legacy BIOS boot support: @bios@

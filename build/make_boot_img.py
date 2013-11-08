@@ -21,23 +21,9 @@ CYLINDER=8225280
 
 DU_OUTPUT_RE = re.compile("^(\d+)\s+total", re.MULTILINE)
 
-def copy_dir(source, dest):
-    os.chdir(source)
-    for dirpath, dirnames, filenames in os.walk("."):
-        dirpath = dirpath[2:] # strip "./"
-        for dirname in dirnames:
-            path = os.path.join(dirpath, dirname)
-            dst_path = os.path.join(dest, path)
-            if not os.path.exists(dst_path):
-                os.makedirs(dst_path)
-        for filename in filenames:
-            if filename.endswith("~"):
-                continue
-            path = os.path.join(dirpath, filename)
-            dst_path = os.path.join(dest, path)
-            shutil.copy(path, dst_path)
-
-def install_grub(platform, lodev, boot_mnt_dir, grub_prefix, grub_early_fn):
+def install_grub(config, platform, lodev, boot_mnt_dir, grub_prefix,
+                                                            grub_early_fn):
+    logger.info("Installing GRUB for {0}".format(platform))
     grub_prefix_dir = os.path.join(boot_mnt_dir, grub_prefix)
     grub_plat_dir = os.path.join(grub_prefix_dir, platform)
     if not os.path.exists(grub_plat_dir):
@@ -68,7 +54,7 @@ def install_grub(platform, lodev, boot_mnt_dir, grub_prefix, grub_early_fn):
         subprocess.check_call(["grub-bios-setup",
                                 "--directory", grub_plat_dir,
                                 lodev])
-    copy_dir("/lib/grub/{0}".format(platform), grub_plat_dir)
+    config.copy_dir("/lib/grub/{0}".format(platform), grub_plat_dir)
 
 def main():
     log_parser = pld_nr_buildconf.get_logging_args_parser()
@@ -89,6 +75,7 @@ def main():
     boot_mnt_dir = os.path.abspath("boot_mnt")
     if not os.path.isdir(boot_mnt_dir):
         os.makedirs(boot_mnt_dir)
+    pldnr_dir = os.path.join(boot_mnt_dir, "pld-nr-{0}".format(config.bits))
     grub_early_fn = os.path.abspath("grub_early.cfg")
     grub_prefix = "grub"
 
@@ -106,9 +93,11 @@ def main():
     boot_vol_id = md5(img_uuid.bytes).hexdigest()[:8]
 
     with open(grub_early_fn, "wt") as grub_early:
-        grub_early.write("search.fs_uuid {0}-{1} root\nset prefix=($root)/grub\n"
+        grub_early.write("search.fs_uuid {0}-{1} root\n"
+                            "set prefix=($root)/grub\n"
                 .format(boot_vol_id[:4], boot_vol_id[4:]))
 
+    logger.info("Computing required image size")
     du_output = subprocess.check_output(["du", "-sbcD",
                                             "/lib/grub",
                                             boot_img_dir,
@@ -121,6 +110,7 @@ def main():
     cylinders_needed = max(bytes_needed // CYLINDER + 2, 2)
     logger.debug("cylinders needed: {0!r}".format(cylinders_needed))
 
+    logger.info("Creating the image")
     subprocess.check_call(["dd", "if=/dev/zero", "of=" + boot_img_fn,
                             "bs={0}".format(CYLINDER),
                             "count={0}".format(cylinders_needed)])
@@ -140,18 +130,20 @@ def main():
             subprocess.check_call(["mount", "-t", "vfat", lodev + "p1",
                                         boot_mnt_dir])
             try:
+                logger.info("Installing PLD NR files")
+                os.makedirs(pldnr_dir)
                 shutil.copy(vmlinuz_fn,
-                            os.path.join(boot_mnt_dir, "vmlinuz"))
+                            os.path.join(pldnr_dir, "vmlinuz"))
                 shutil.copy(init_cpio_fn,
-                            os.path.join(boot_mnt_dir, "init.cpi"))
+                            os.path.join(pldnr_dir, "init.cpi"))
                 for module_f in module_files:
                     module_fn = os.path.basename(module_f)
                     shutil.copy(module_f,
-                            os.path.join(boot_mnt_dir, module_fn))
-                copy_dir(boot_img_dir, boot_mnt_dir)
+                            os.path.join(pldnr_dir, module_fn))
+                config.copy_template_dir(boot_img_dir, boot_mnt_dir)
                 for platform in config.grub_platforms:
-                    install_grub(platform, lodev, boot_mnt_dir, grub_prefix,
-                                                                grub_early_fn)
+                    install_grub(config, platform, lodev, boot_mnt_dir,
+                                                grub_prefix, grub_early_fn)
             finally:
                 subprocess.call(["umount", boot_mnt_dir])
         finally:

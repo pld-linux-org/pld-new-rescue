@@ -7,6 +7,8 @@ import subprocess
 import logging
 import re
 import argparse
+import shutil
+
 from collections import OrderedDict
 
 logger = logging.getLogger()
@@ -118,6 +120,8 @@ class Config(object):
         result["bios"] = "yes" if self.bios else "no"
         if self.efi:
             result["efi_arch"] = self.efi_arch
+        else:
+            result["efi_arch"] = ""
         result["grub_platforms"] = ",".join(self.grub_platforms)
         result["version"] = self.version
         return result
@@ -139,10 +143,33 @@ class Config(object):
     def copy_substituting(self, source, dest):
         """Copy `source` file to `dest` substituting @var@ strings."""
         with open(source, "rb") as source_f:
-            data = source.read()
+            data = source_f.read()
             data = self.substitute_bytes(data)
             with open(dest, "wb") as dest_f:
                 dest_f.write(data)
+
+    def copy_dir(self, source, dest, substitution=False):
+        os.chdir(source)
+        for dirpath, dirnames, filenames in os.walk("."):
+            dirpath = dirpath[2:] # strip "./"
+            for dirname in dirnames:
+                path = os.path.join(dirpath, dirname)
+                dst_path = os.path.join(dest, path)
+                if not os.path.exists(dst_path):
+                    os.makedirs(dst_path)
+            for filename in filenames:
+                if filename.endswith("~"):
+                    continue
+                path = os.path.join(dirpath, filename)
+                dst_path = os.path.join(dest, path)
+                if substitution and filename.endswith(".pldnrt"):
+                    dst_path = dst_path[:-7]
+                    self.copy_substituting(path, dst_path)
+                else:
+                    shutil.copy(path, dst_path)
+
+    def copy_template_dir(self, source, dest):
+        return self.copy_dir(source, dest, True)
 
     def __str__(self):
         return "[config]\n{0}\n".format(
