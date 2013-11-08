@@ -267,6 +267,9 @@ def main():
         sys.stdout.write(config.substitute_bytes(data))
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except subprocess.CalledProcessError as err:
+        logger.error(str(err))
 
 # vi: sw=4 sts=4 et

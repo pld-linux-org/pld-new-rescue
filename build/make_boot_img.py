@@ -153,6 +153,9 @@ def main():
         raise
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except subprocess.CalledProcessError as err:
+        logger.error(str(err))
 
 # vi: sts=4 sw=4 et
