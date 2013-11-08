@@ -44,6 +44,12 @@ class Config(object):
             build_dir = os.path.join(os.path.dirname(filename), "build")
         self.build_dir = build_dir
 
+        if os.path.isdir("../.git"):
+            version = subprocess.check_output(["git", "describe", "--dirty"])
+            self.version = version.decode("utf-8").strip()
+        else:
+            self.version = self._config.get("version", fallback="unknown")
+
         self.arch = self._config.get("arch")
         if not self.arch:
             self.arch = _get_default_arch()
@@ -113,6 +119,7 @@ class Config(object):
         if self.efi:
             result["efi_arch"] = self.efi_arch
         result["grub_platforms"] = ",".join(self.grub_platforms)
+        result["version"] = self.version
         return result
 
     def substitute_bytes(self, data):
