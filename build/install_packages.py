@@ -168,6 +168,10 @@ def main():
             if os.path.exists(pset_fn):
                 logger.debug("Installing packages for {0}".format(module))
                 installer.poldek("--install", "--pset", pset_fn)
+            script_fn = "../modules/{0}/post-install.sh".format(module)
+            if os.path.exists(script_fn):
+                logger.debug("Running the 'post-install' script")
+                config.run_script(script_fn)
             logger.debug("Getting list of installed files")
             files = set(installer.get_file_list())
             module_files = files - prev_files
@@ -180,9 +184,6 @@ def main():
             for pkg in module_pkgs:
                 if pkg not in package_modules:
                     package_modules[pkg] = module
-            script_fn = "../modules/{0}/post-install.sh".format(module)
-            if os.path.exists(script_fn):
-                config.run_script(script_fn)
         write_package_list("../pld-nr-{}.packages".format(config.bits),
                             installer, config.modules, package_modules)
     except:
