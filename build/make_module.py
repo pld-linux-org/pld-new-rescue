@@ -49,10 +49,9 @@ def main():
     module_files = set(l.rstrip() for l in open(lst_fn, "rt").readlines())
     module_dirs = set()
     for path in module_files:
-        if "/" not in path:
-            continue
-        dir_path = path.rsplit("/", 1)[0]
-        module_dirs.add(dir_path)
+        while "/" in path:
+            path = path.rsplit("/", 1)[0]
+            module_dirs.add(path)
     
     logger.debug("Building the exclude file")
     excludes = all_files - module_files - module_dirs
