@@ -28,7 +28,7 @@ poldek.conf: ../modules/poldek.conf ../build.conf
 	./pld_nr_buildconf.py --substitute < ../modules/poldek.conf > poldek.conf
 
 clean:
-	-rm -rf root
+	-rm -rf --one-file-system root
 	-rm -rf *.lst *.full-lst gen_init_cpio.list *.exclude
 	-rm -rf *.cpi *.sqf *.img
 	-rm -rf poldek.conf grub*.cfg
