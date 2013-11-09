@@ -4,6 +4,7 @@
 
 /*.img
 /*.iso
+/*.packages
 
 /build/*.cpi
 /build/*.img

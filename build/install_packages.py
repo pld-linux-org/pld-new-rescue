@@ -63,6 +63,27 @@ class PackageInstaller(object):
             os.chdir(old_dir)
         return result
 
+    def get_installed_pkg_list(self):
+        cmd = ["rpm", "--root", self.dst_dir, "-qa",
+                                    "--queryformat", "%{name}\n"]
+        pkg_list = subprocess.check_output(cmd)
+        pkg_list = pkg_list.decode("utf-8").strip().split("\n")
+        logger.debug("Installed packages: {!r}".format(pkg_list))
+        return pkg_list
+
+    def get_installed_pkg_info(self):
+        cmd = ["rpm", "--root", self.dst_dir, "-qa", "--queryformat",
+                        "%{name}\t%{version}-%{release}\t%{summary}\n"]
+        result = []
+        rpm_p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        for line in rpm_p.stdout:
+            line = line.decode("utf-8").strip()
+            if not line:
+                continue
+            pkg, version, summary = line.split("\t", 2)
+            result.append((pkg, version, summary))
+        return result
+
     def cleanup(self, total=False):
         dev_dir = os.path.join(self.dst_dir, "dev")
         dev_pts_dir = os.path.join(dev_dir, "pts")
@@ -74,6 +95,31 @@ class PackageInstaller(object):
         subprocess.call(["umount", dev_dir])
         if total and os.path.isdir(self.dst_dir):
             shutil.rmtree(self.dst_dir)
+
+def write_package_list(filename, installer, modules, package_modules):
+    packages_info = installer.get_installed_pkg_info()
+    name_width = max(len(p[0]) for p in packages_info)
+    ver_width = max(len(p[1]) for p in packages_info)
+    sum_width = max(len(p[2]) for p in packages_info)
+    module_width = max(len(m) for m in modules)
+    with open(filename, "wt") as pkg_lst_file:
+        print("{:<{}} {:<{}} {:<{}} {}"
+                    .format("name", name_width,
+                            "version", ver_width,
+                            "module", module_width,
+                            "summary"), file=pkg_lst_file)
+        print("{} {} {} {}"
+                    .format("-" * name_width,
+                            "-" * ver_width,
+                            "-" * module_width,
+                            "-" * sum_width), file=pkg_lst_file)
+        for pkg_name, pkg_ver, pkg_sum in sorted(packages_info):
+            module = package_modules.get(pkg_name)
+            print("{:<{}} {:<{}} {:<{}} {}"
+                        .format(pkg_name, name_width,
+                                pkg_ver, ver_width,
+                                module, module_width,
+                                pkg_sum), file=pkg_lst_file)
 
 def main():
     log_parser = pld_nr_buildconf.get_logging_args_parser()
@@ -95,6 +141,7 @@ def main():
         prev_files = set()
         installer.poldek("--install", "filesystem")
         installer.setup_chroot()
+        package_modules = {}
         for module in config.modules:
             if module == "base":
                 lst_fn = "base.full-lst"
@@ -126,6 +173,12 @@ def main():
             with open(lst_fn, "wt") as lst_f:
                 for path in sorted(module_files):
                     print(path, file=lst_f)
+            module_pkgs = installer.get_installed_pkg_list()
+            for pkg in module_pkgs:
+                if pkg not in package_modules:
+                    package_modules[pkg] = module
+        write_package_list("../pld-nr-{}.packages".format(config.bits),
+                            installer, config.modules, package_modules)
     except:
         if not args.no_clean:
             installer.cleanup(True)
