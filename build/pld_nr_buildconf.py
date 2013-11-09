@@ -8,6 +8,7 @@ import logging
 import re
 import argparse
 import shutil
+import locale
 
 from collections import OrderedDict
 
@@ -153,6 +154,8 @@ class Config(object):
                                         ARCH_EFI_TO_GRUB[self.efi_arch]))
 
     def verify(self):
+        if locale.getpreferredencoding() not in ["UTF-8", "ANSI_X3.4-1968"]:
+            raise ConfigError("Non-UTF-8 locales not supported")
         if not X86_RE.match(self.arch) and not X86_64_RE.match(self.arch):
             raise ConfigError("Architecture not supported: {0!r}"
                                                         .format(self.arch))
