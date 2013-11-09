@@ -117,7 +117,7 @@ def find_deps(files, all_files, root_dir):
                 all_files.append(dep_path)
                 unprocessed.append(dep_path)
 
-def process_files_list(file_list_fn, gic_list_fn, skel_dir, root_dir):
+def process_files_list(file_list_fn, gic_list_fn, root_dir):
     files = []
     globs = []
     with open(file_list_fn, "rt") as files_list:
@@ -130,8 +130,7 @@ def process_files_list(file_list_fn, gic_list_fn, skel_dir, root_dir):
                 if parts[0] == "*" and len(parts) == 2:
                     globs.append(parts[1])
                 elif len(parts) >= 5:
-                    parts[2] = parts[2].replace("@skel@", skel_dir).replace(
-                                                            "@root@", root_dir)
+                    parts[2] = parts[2].replace("@root@", root_dir)
                     files.append(parts[1].lstrip("/"))
                     cpio_list.write(" ".join(parts) + "\n")
                 else:
@@ -171,17 +170,17 @@ def main():
 
     skel_dir = os.path.abspath("../initramfs/skel")
     root_dir = os.path.abspath("root")
+    built_skel_dir = os.path.abspath("initramfs")
     init_cpio_fn = os.path.abspath("init.cpi")
     files_list_fn = os.path.abspath("../initramfs/files.list")
     gic_list_fn = os.path.abspath("gen_init_cpio.list")
     init_lst_fn = os.path.abspath("init.lst")
     base_lst_fn = os.path.abspath("base.lst")
     base_full_lst_fn = os.path.abspath("base.full-lst")
-    
+
     os.chdir(root_dir)
 
-    files, globs = process_files_list(files_list_fn, gic_list_fn,
-                                      skel_dir, root_dir)
+    files, globs = process_files_list(files_list_fn, gic_list_fn, root_dir)
     subprocess.check_call(["gen_init_cpio", gic_list_fn],
                           stdout=open(init_cpio_fn, "wb"))
 
@@ -193,6 +192,30 @@ def main():
     paths.sort()
 
     cpio_append(init_cpio_fn, paths)
+
+    if os.path.exists(built_skel_dir):
+        shutil.rmtree(built_skel_dir)
+    os.makedirs(built_skel_dir)
+    try:
+        config.copy_template_dir(skel_dir, built_skel_dir)
+        os.chdir(built_skel_dir)
+        built_paths = []
+        for dirpath, dirnames, filenames in os.walk("."):
+            dirpath = dirpath[2:] # strip "./"
+            for dirname in dirnames:
+                path = os.path.join(dirpath, dirname)
+                os.chown(path, 0, 0)
+                built_paths.append(path)
+            for filename in filenames:
+                path = os.path.join(dirpath, filename)
+                os.chown(path, 0, 0)
+                built_paths.append(path)
+        if os.path.exists("init"):
+            os.chmod("init", 0o755)
+        cpio_append(init_cpio_fn, built_paths)
+    finally:
+        os.chdir(root_dir)
+        shutil.rmtree(built_skel_dir)
 
     with open(init_lst_fn, "wt") as init_lst:
         for path in paths:

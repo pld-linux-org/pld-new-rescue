@@ -1,0 +1,6 @@
+
+version="@version@"
+modules="$(echo "@modules@" | tr ',' ' ')"
+uuid="@uuid@"
+hd_vol_id="@hd_vol_id@"
+cd_vol_id="@cd_vol_id@"

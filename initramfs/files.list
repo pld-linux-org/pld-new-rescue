@@ -21,11 +21,9 @@ dir /tmp 0755 0 0
 dir /run 0755 0 0
 slink /bin/sh busybox 0755 0 0
 slink /bin/echo busybox 0755 0 0
-slink /bin/mount busybox 0755 0 0
 slink /bin/mkdir busybox 0755 0 0
 slink /bin/losetup busybox 0755 0 0
-slink /bin/blkid busybox 0755 0 0
-file /init @skel@/init 0755 0 0
+slink /bin/tr busybox 0755 0 0
 #file /bin/busybox /bin/busybox.static 0755 0 0
 
 # files to be copied from the rootfs (with dependencies)
@@ -34,9 +32,11 @@ file /init @skel@/init 0755 0 0
 * /etc/passwd
 * /lib/libnss_files*
 * /bin/busybox
+* /bin/mount
 * /sbin/losetup
 * /sbin/udevd
 * /sbin/udevadm
+* /sbin/blkid
 * /etc/udev/*
 * /lib/udev/*
 * /lib/modules/*/modules.*
@@ -46,6 +46,7 @@ file /init @skel@/init 0755 0 0
 * /lib/modules/*/kernel/drivers/scsi/sr_mod*
 * /lib/modules/*/kernel/drivers/ide
 * /lib/modules/*/kernel/drivers/block/loop.ko*
+* /lib/modules/*/kernel/fs/autofs4
 * /lib/modules/*/kernel/fs/isofs
 * /lib/modules/*/kernel/fs/fat/vfat*
 * /lib/modules/*/kernel/fs/squashfs
