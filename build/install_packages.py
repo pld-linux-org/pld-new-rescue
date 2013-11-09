@@ -86,6 +86,8 @@ def main():
 
     config = pld_nr_buildconf.Config.get_config()
 
+    lst_files = []
+
     installer = PackageInstaller(config)
     try:
         installer.init_rpm_db()
@@ -98,6 +100,7 @@ def main():
                 lst_fn = "base.full-lst"
             else:
                 lst_fn = "{0}.lst".format(module)
+            lst_files.append(lst_fn)
             logger.debug("Checking if {0!r} already exists".format(lst_fn))
             if os.path.exists(lst_fn):
                 files = [l.strip() for l in open(lst_fn, "rt").readlines()]
@@ -126,6 +129,12 @@ def main():
     except:
         if not args.no_clean:
             installer.cleanup(True)
+            for lst_fn in lst_files:
+                if os.path.exists(lst_fn):
+                    try:
+                        os.unlink(lst_fn)
+                    except OSError as err:
+                        logger.warning(str(err))
         raise
     else:
         installer.cleanup(False)
