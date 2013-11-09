@@ -5,7 +5,7 @@
 VBoxManage convertfromraw \
 	../pld-nr-32.img /tmp/boot.vdi \
 	--format VDI \
-	--uuid "$(cat uuid)"
+	--uuid "38ab3e27-302b-445b-ab04-5a35a5120147"
 
 chown root:vbox /tmp/boot.vdi
 #chmod ug+rw /tmp/boot.vdi

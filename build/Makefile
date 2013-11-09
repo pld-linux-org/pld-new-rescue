@@ -35,8 +35,8 @@ clean:
 
 endif
 
-make.vars: ../build.conf ./pld_nr_buildconf.py
-	./pld_nr_buildconf.py --verify --make-vars > make.vars
+make.vars uuids: ../build.conf ./pld_nr_buildconf.py
+	./pld_nr_buildconf.py --verify --gen-uuids --make-vars > make.vars
 
 make.deps: make.vars
 	./pld_nr_buildconf.py --make-deps > make.deps

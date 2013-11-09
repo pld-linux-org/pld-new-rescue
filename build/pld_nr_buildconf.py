@@ -9,13 +9,20 @@ import re
 import argparse
 import shutil
 import locale
+import crypt
+import uuid
 
+from hashlib import md5
+from datetime import datetime
 from collections import OrderedDict
 
 logger = logging.getLogger()
 
 X86_RE = re.compile("^(i[3-6]86|ia32)$")
 X86_64_RE = re.compile("^(x86_64|amd64)$")
+
+HOSTNAME_RE = re.compile("^[a-z0-9][a-z0-9-]{0,63}$")
+LOCALE_RE = re.compile("^[a-z]+_[A-Z]+$")
 
 GRUB_VERSION_RE = re.compile(r"\(GRUB\)\s+2\.\d+")
 RPM_VERSION_RE = re.compile(r"\(RPM\)\s+5.\d+(.\d+)*")
@@ -145,6 +152,50 @@ class Config(object):
         self.memtest86_plus = self._config.getboolean("memtest86+",
                                                     fallback=False)
 
+        self.hashed_root_password = self._config.get("hashed_root_password")
+        if not self.hashed_root_password:
+            root_password = self._config.get("root_password")
+            if root_password:
+                self.hashed_root_password = crypt.crypt(root_password,
+                                                crypt.mksalt(crypt.METHOD_MD5))
+            else:
+                self.hashed_root_password = ""
+
+        locales = self._config.get("locales")
+        if locales.strip():
+            self.locales = [l.strip() for l in locales.split(",")]
+        else:
+            self.locales = ["en_US"]
+
+        self.hostname = self._config.get("hostname", fallback="pld-new-rescue")
+
+        # dummy values
+        self.uuid = uuid.UUID("0"*32)
+        self.hd_vol_id = "0000-0000"
+        self.cd_vol_id = "0000-00-00-00-00-00-00"
+
+        self.load_uuids()
+
+    def load_uuids(self):
+        try:
+            with open("uuids", "rt") as uuid_f:
+                self.uuid = uuid.UUID(uuid_f.readline().strip())
+                self.hd_vol_id = uuid_f.readline().strip()
+                self.cd_vol_id = uuid_f.readline().strip()
+        except IOError as err:
+            logger.debug("Cannot load uuids: {}".format(err))
+
+    def gen_uuids(self):
+        self.uuid = uuid.uuid4()
+        hexdigest = md5(self.uuid.bytes).hexdigest()
+        self.hd_vol_id = "{}-{}".format(hexdigest[:4], hexdigest[4:8])
+        timestamp = datetime.now()
+        self.cd_vol_id = "{:%Y-%m-%d-%H-%M-%S-%f}".format(timestamp)[:22]
+        with open("uuids", "wt") as uuid_f:
+            print(str(self.uuid), file=uuid_f)
+            print(self.hd_vol_id, file=uuid_f)
+            print(self.cd_vol_id, file=uuid_f)
+
     def _choose_grub_platforms(self):
         self.grub_platforms = []
         if self.bios:
@@ -193,6 +244,13 @@ class Config(object):
         if self.memtest86_plus and not os.path.exists("/boot/memtest86+"):
             raise ConfigError("/boot/memtest86+ missing")
 
+        if not HOSTNAME_RE.match(self.hostname):
+            raise ConfigError("Bad host name: {0!r}".format(self.hostname))
+
+        for loc in self.locales:
+            if not LOCALE_RE.match(loc):
+                raise ConfigError("Bad locale name: {!r}".format(loc))
+
         _check_tool("rpm")
         _check_tool("poldek")
         _check_tool("du")
@@ -221,8 +279,14 @@ class Config(object):
             result["efi_arch"] = ""
         result["grub_platforms"] = ",".join(self.grub_platforms)
         result["version"] = self.version
+        result["hashed_root_password"] = self.hashed_root_password
         result["memtest86"] = "yes" if self.memtest86 else "no"
         result["memtest86+"] = "yes" if self.memtest86_plus else "no"
+        result["hostname"] = self.hostname
+        result["locales"] = ",".join(self.locales)
+        result["uuid"] = str(self.uuid)
+        result["hd_vol_id"] = self.hd_vol_id
+        result["cd_vol_id"] = self.cd_vol_id
         return result
 
     def substitute_bytes(self, data):
@@ -269,6 +333,11 @@ class Config(object):
 
     def copy_template_dir(self, source, dest):
         return self.copy_dir(source, dest, True)
+
+    def run_script(self, script):
+        env = {"pldnr_" + k: v for k, v in self.get_config_vars().items()}
+        env["PATH"] = "/usr/bin:/usr/sbin:/bin:/sbin"
+        subprocess.check_call(["/bin/sh", "-ex", script], env=env)
 
     def __str__(self):
         return "[config]\n{0}\n".format(
@@ -351,10 +420,15 @@ def main():
     parser.add_argument("--verify",
                         action="store_true",
                         help="Verify config and requirements")
+    parser.add_argument("--gen-uuids",
+                        action="store_true",
+                        help="Generate new UUIDs for build")
     parser.set_defaults(mode="dump")
     args = parser.parse_args()
     setup_logging(args)
     config = Config.get_config()
+    if args.gen_uuids:
+        config.gen_uuids()
     if args.verify:
         config.verify()
     if args.mode == "dump":

@@ -8,3 +8,6 @@ udev
 kernel
 busybox
 losetup
+
+# this will be removed shortly after
+localedb-src

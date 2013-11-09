@@ -155,6 +155,9 @@ def main():
                 logger.info("'{0}' packages already installed".format(module))
                 open(lst_fn, "a").close() # update mtime
                 continue
+            script_fn = "../modules/{0}/pre-install.sh".format(module)
+            if os.path.exists(script_fn):
+                config.run_script(script_fn)
             pset_fn = "../modules/{0}/conds_workaround.pset".format(module)
             if os.path.exists(pset_fn):
                 logger.debug("Installing conds_workaround packages for {0}"
@@ -177,6 +180,9 @@ def main():
             for pkg in module_pkgs:
                 if pkg not in package_modules:
                     package_modules[pkg] = module
+            script_fn = "../modules/{0}/post-install.sh".format(module)
+            if os.path.exists(script_fn):
+                config.run_script(script_fn)
         write_package_list("../pld-nr-{}.packages".format(config.bits),
                             installer, config.modules, package_modules)
     except:

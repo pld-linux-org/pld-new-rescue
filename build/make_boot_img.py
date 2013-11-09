@@ -7,7 +7,6 @@ import subprocess
 import shutil
 import re
 import stat
-import uuid
 import logging
 
 from hashlib import md5
@@ -83,19 +82,10 @@ def main():
     for module in config.modules:
         module_files.append(os.path.abspath("{0}.cpi".format(module)))
 
-    if os.path.exists("uuid"):
-        with open("uuid", "rt") as uuid_f:
-            img_uuid = uuid.UUID(uuid_f.read().strip())
-    else:
-        img_uuid = uuid.uuid4()
-        with open("uuid", "wt") as uuid_f:
-            print(str(img_uuid), file=uuid_f)
-    boot_vol_id = md5(img_uuid.bytes).hexdigest()[:8]
-
     with open(grub_early_fn, "wt") as grub_early:
-        grub_early.write("search.fs_uuid {0}-{1} root\n"
+        grub_early.write("search.fs_uuid {} root\n"
                             "set prefix=($root)/grub\n"
-                .format(boot_vol_id[:4], boot_vol_id[4:]))
+                            .format(config.hd_vol_id))
 
     logger.info("Computing required image size")
     du_output = subprocess.check_output(["du", "-sbcD",
@@ -126,7 +116,8 @@ def main():
             if rc:
                 raise subprocess.CalledProcessError(rc, ["sfdisk"])
             subprocess.check_call(["mkdosfs", "-F", "16", "-I",
-                                        "-i", boot_vol_id, lodev + "p1"])
+                                    "-i", config.hd_vol_id.replace("-", ""),
+                                    lodev + "p1"])
             subprocess.check_call(["mount", "-t", "vfat", lodev + "p1",
                                         boot_mnt_dir])
             try:
