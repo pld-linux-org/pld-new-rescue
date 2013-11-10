@@ -1,6 +1,7 @@
 
 # the 'basic' package set
 
+bash
 bzip2
 cpio
 cryptsetup

@@ -1,4 +1,14 @@
 
+#######################################################3
+# config root shell
+
+chroot root chsh -s /bin/bash root
+mkdir -p root/root
+cp -au root/etc/skel/.bash* root/root/
+
+#######################################################3
+# config syslog
+
 cat <<EOF >root/etc/syslog-ng/syslog-ng.conf
 @version: 3.3
 

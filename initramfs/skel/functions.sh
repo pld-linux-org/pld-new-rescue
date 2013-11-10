@@ -114,7 +114,7 @@ load_module() {
         fi
     done
 
-    for dir in boot usr sbin lib lib64 etc bin opt ; do
+    for dir in boot usr sbin lib lib64 etc bin opt root ; do
         if [ -d /.rcd/m/${module}/$dir ] ; then
             mount -o remount,add:1:/.rcd/m/${module}/$dir=rr /root/$dir
         fi
