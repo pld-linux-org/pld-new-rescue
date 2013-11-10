@@ -68,6 +68,12 @@ if [ -n "$font" ] ; then
     echo "FONT=$font" >> root/etc/vconsole.conf
 fi
 
+if [ ! -x "/root/$c_init" ] ; then
+    echo "Something went wrong, init binary ($c_init) not found under /root"
+    echo "Kernel will panic, so dropping to shell"
+    /bin/sh
+fi
+
 umount_media
 
 udevadm control --exit
