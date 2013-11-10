@@ -57,6 +57,7 @@ fsarchiver
 genromfs
 gnupg
 #gnupg-plugin-idea
+gpm
 #gpart
 grub2
 #grub2-platform-efi
