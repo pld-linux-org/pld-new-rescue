@@ -6,9 +6,9 @@
 for service in \
 		arpwatch blkmapd dhcp-relay dhcpd dhcpd6 dnsmasq \
 		gssd httptunnel idmapd ipmievd iscsi-devices mdadm \
-		nfsd-mountd nfslock nut-driver nut-monitor nut-server \
-		p0f pure-ftpd racoon rdate rpcbind rstatd rusersd rwhod \
-		smartd snmpd svcgssd tftpd-hpa tinyproxy ups upsmon \
+		nfsd nfsd-exportfs nfsd-mountd nfslock nut-driver nut-monitor \
+		nut-server p0f pure-ftpd racoon rdate rpcbind rstatd rusersd \
+		rwhod smartd snmpd svcgssd tftpd-hpa tinyproxy ups upsmon \
 		vtund zfs-fuse \
 	; do
 	chroot root /bin/systemctl disable ${service}.service || :
