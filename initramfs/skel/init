@@ -53,9 +53,10 @@ for dir in tmp run dev ; do
     umount /$dir
 done
 
+rm /.rcd/modules/*
+
 cd /root
-mkdir old-root
-pivot_root . ./old-root
-exec usr/sbin/chroot . /sbin/init
+mount --move . /
+exec chroot . /sbin/init
 
 # vi: ft=sh sw=4 sts=4 et
