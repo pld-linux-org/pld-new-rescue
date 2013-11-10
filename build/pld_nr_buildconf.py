@@ -189,6 +189,7 @@ class Config(object):
         self.uuid = uuid.uuid4()
         hexdigest = md5(self.uuid.bytes).hexdigest()
         self.hd_vol_id = "{}-{}".format(hexdigest[:4], hexdigest[4:8])
+        self.hd_vol_id = self.hd_vol_id.upper()
         timestamp = datetime.now()
         self.cd_vol_id = "{:%Y-%m-%d-%H-%M-%S-%f}".format(timestamp)[:22]
         with open("uuids", "wt") as uuid_f:
