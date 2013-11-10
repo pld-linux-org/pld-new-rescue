@@ -36,11 +36,9 @@ clean:
 	-rm -rf poldek.conf grub*.cfg
 	-rm -f make.vars make.deps
 
-make.vars uuids: ../build.conf ./pld_nr_buildconf.py /usr/bin/python3
+make.vars make.deps uuids: ../build.conf ./pld_nr_buildconf.py /usr/bin/python3
 	./pld_nr_buildconf.py --verify --gen-uuids --make-vars > make.vars
-
-make.deps: make.vars /usr/bin/python3
-	[ -s make.vars ] && ./pld_nr_buildconf.py --make-deps > make.deps
+	./pld_nr_buildconf.py --make-deps > make.deps
 
 /usr/bin/python3:
 	echo "ERROR: python3 interpreter missing"
