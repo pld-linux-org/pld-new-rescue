@@ -41,11 +41,14 @@ class ConfigError(Exception):
     pass
 
 def _check_tool(tool, description=None, args=["--version"],
-                get_output=False, ignore_error=False, quiet=False):
+                get_output=False, ignore_error=False, quiet=False,
+                package=None):
     if isinstance(tool, str):
         tool = [tool]
     if not description:
         description = "command"
+        if package:
+            description += " (from the '{}' package)".format(package)
     try:
         if quiet:
             stderr = stdout=open("/dev/null", "wb")
@@ -68,8 +71,8 @@ def _check_tool(tool, description=None, args=["--version"],
         raise ConfigError("{0!r} {1} returned {2} exit status"
                         .format(" ".join(tool), description, err.returncode))
 
-def _check_tool_version(command, regexp):
-    ver = _check_tool(command, get_output=True)
+def _check_tool_version(command, regexp, package=None):
+    ver = _check_tool(command, get_output=True, package=package)
     ver = ver.decode("utf-8", "replace").strip()
     if not regexp.search(ver):
         raise ConfigError("Usupported {0!r} version: {1!r}"
@@ -233,8 +236,8 @@ class Config(object):
             raise ConfigError("EFI architecture not supported: {0!r}"
                                                         .format(self.efi_arch))
 
-        _check_tool_version("grub-mkimage", GRUB_VERSION_RE)
-        _check_tool_version("grub-bios-setup", GRUB_VERSION_RE)
+        _check_tool_version("grub-mkimage", GRUB_VERSION_RE, package="grub2")
+        _check_tool_version("grub-bios-setup", GRUB_VERSION_RE, package="grub2")
 
         for plat in self.grub_platforms:
             plat_dir = os.path.join("/lib/grub", plat)
@@ -260,12 +263,14 @@ class Config(object):
         _check_tool("du")
         _check_tool("dd")
         _check_tool("losetup")
-        _check_tool("mkdosfs", ignore_error=True, quiet=True)
-        _check_tool("sfdisk")
+        _check_tool("mkdosfs", ignore_error=True, quiet=True,
+                                                        package="dosfstools")
+        _check_tool("sfdisk", package="util-linux")
         _check_tool("cpio")
-        _check_tool("gen_init_cpio", ignore_error=True, quiet=True)
-        _check_tool("mksquashfs", args=["-version"])
-        _check_tool("mkisofs")
+        _check_tool("gen_init_cpio", ignore_error=True, quiet=True,
+                                                        package="kernel-tools")
+        _check_tool("mksquashfs", args=["-version"], package="squashfs")
+        _check_tool("mkisofs", package="cdrkit-mkisofs")
 
     def get_config_vars(self):
         """Return current config as string->string mapping."""
