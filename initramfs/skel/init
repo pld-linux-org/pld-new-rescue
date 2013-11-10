@@ -17,7 +17,7 @@ mkdir -p /.rcd/modules
 mv *.sqf /.rcd/modules
 
 mkdir -p /root/dev /root/proc /root/sys
-cp -a /dev/* /root/dev
+mount -t devtmpfs none /root/dev
 mount --bind /root/dev /dev
 
 for dir in tmp run ; do
