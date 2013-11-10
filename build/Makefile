@@ -42,6 +42,8 @@ make.vars uuids: ../build.conf ./pld_nr_buildconf.py /usr/bin/python3
 make.deps: make.vars /usr/bin/python3
 	[ -s make.vars ] && ./pld_nr_buildconf.py --make-deps > make.deps
 
+.DELETE_ON_ERROR: make.vars make.deps
+
 /usr/bin/python3:
 	echo "ERROR: python3 interpreter missing"
 	exit 1
