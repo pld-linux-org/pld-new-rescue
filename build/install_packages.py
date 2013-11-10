@@ -24,11 +24,15 @@ class PackageInstaller(object):
         packages_db = os.path.join(self.dst_dir, "var/lib/rpm/Packages")
         if not os.path.exists(packages_db):
             subprocess.check_call(["rpm", "--initdb", "--root", self.dst_dir])
-    def poldek(self, *args):
-        subprocess.check_call(["poldek", "--root", self.dst_dir,
+    def poldek(self, *args, ignore_errors=False):
+        try:
+            subprocess.check_call(["poldek", "--root", self.dst_dir,
                                 "--conf", "poldek.conf",
                                 "--cachedir", self.cache_dir]
                                 + list(args))
+        except subprocess.CalledProcessError as err:
+            if not ignore_errors:
+                raise
     def setup_chroot(self):
         dev_dir = os.path.join(self.dst_dir, "dev")
         subprocess.check_call(["mount", "--bind", "/dev", dev_dir])
@@ -137,7 +141,7 @@ def main():
     installer = PackageInstaller(config)
     try:
         installer.init_rpm_db()
-        installer.poldek("--upa")
+        installer.poldek("--upa", ignore_errors=True)
         prev_files = set()
         installer.poldek("--install", "filesystem")
         installer.setup_chroot()

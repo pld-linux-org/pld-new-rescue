@@ -6,6 +6,8 @@
 /*.iso
 /*.packages
 
+/extra_packages/*.rpm
+
 /build/*.cpi
 /build/*.img
 /build/*.lst
