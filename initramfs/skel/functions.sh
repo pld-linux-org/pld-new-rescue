@@ -19,8 +19,26 @@ parse_cmdline() {
 
 mount_media() {
 
+    local boot_dev=""
+
     if [ "$c_pldnr_nomedia" = "yes" ] ; then
         return 0
+    fi
+
+    echo "Attempting to mount the boot CD"
+    modprobe isofs
+    modprobe nls_utf8
+    mkdir -p /root/media/pld-nr-cd
+    if /bin/mount -t iso9660 -outf8 UUID="$cd_vol_id" /root/media/pld-nr-cd 2>/dev/null ; then
+        echo "PLD New Rescue CD found"
+        ls -l /root/media/pld-nr-cd
+        if boot_dev="$(/sbin/losetup --find --show --partscan /root/media/pld-nr-cd/pld-nr-${bits}.img)" ; then
+            boot_dev="${boot_dev}p1"
+        fi
+    fi
+
+    if [ -z "$boot_dev" ] ; then
+        boot_dev="UUID=$hd_vol_id"
     fi
 
     echo "Mounting the boot image"
@@ -28,12 +46,7 @@ mount_media() {
     modprobe nls_cp437
     modprobe nls_iso8859-1
     mkdir -p /root/media/pld-nr-hd
-    /bin/mount -t vfat -outf8=true,codepage=437 UUID="$hd_vol_id" /root/media/pld-nr-hd || :
-
-    echo "Attempting to mount the boot CD"
-    modprobe isofs
-    mkdir -p /root/media/pld-nr-cd
-    /bin/mount -t iso9660 -outf8 UUID="$cd_vol_id" /root/media/pld-nr-cd 2>/dev/null || :
+    /bin/mount -t vfat -outf8=true,codepage=437 $boot_dev /root/media/pld-nr-hd || :
 
     ln -sf /root/media /media
 }
