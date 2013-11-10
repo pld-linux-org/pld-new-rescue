@@ -3,7 +3,7 @@ terminal_input serial console
 terminal_output serial console
 
 if [ -e /pld-nr-64/vmlinuz ] ; then
-    menuentry "PLD new rescue 64 (All in RAM)" {
+    menuentry "PLD New Rescue 64 (all in RAM)" {
         linux /pld-nr-64/vmlinuz console=ttyS0,115200n8 console=tty0
         if [ -e /pld-nr-64/rescue.cpi ] ; then
             initrd /pld-nr-64/init.cpi /pld-nr-64/base.cpi /pld-nr-64/basic.cpi /pld-nr-64/rescue.cpi
@@ -18,14 +18,14 @@ if [ -e /pld-nr-64/vmlinuz ] ; then
 fi
 
 if [ -e /pld-nr-64/vmlinuz ] ; then
-    menuentry "PLD new rescue 64 (Minimum RAM)" {
+    menuentry "PLD New Rescue 64 (minimum RAM)" {
         linux /pld-nr-64/vmlinuz console=ttyS0,115200n8 console=tty0
         initrd /pld-nr-64/init.cpi
     }
 fi
 
 if [ -e /pld-nr-32/vmlinuz ] ; then
-    menuentry "PLD new rescue (All in RAM)" {
+    menuentry "PLD New Rescue (all in RAM)" {
         linux /pld-nr-32/vmlinuz console=ttyS0,115200n8 console=tty0
         if [ -e /pld-nr-32/rescue.cpi ] ; then
             initrd /pld-nr-32/init.cpi /pld-nr-32/base.cpi /pld-nr-32/basic.cpi /pld-nr-32/rescue.cpi
@@ -40,14 +40,14 @@ if [ -e /pld-nr-32/vmlinuz ] ; then
 fi
 
 if [ -e /pld-nr-32/vmlinuz ] ; then
-    menuentry "PLD new rescue (Minimum RAM)" {
+    menuentry "PLD New Rescue (minimum RAM)" {
         linux /pld-nr-32/vmlinuz console=ttyS0,115200n8 console=tty0
         initrd /pld-nr-32/init.cpi
     }
 fi
 
 if [ -e /pld-nr-64/vmlinuz ] ; then
-    menuentry "PLD new rescue 64 (Serial console, All in RAM)" {
+    menuentry "PLD New Rescue 64 (serial console, all in RAM)" {
         linux /pld-nr-64/vmlinuz console=tty0 console=ttyS0,115200n8
         if [ -e /pld-nr-64/rescue.cpi ] ; then
             initrd /pld-nr-64/init.cpi /pld-nr-64/base.cpi /pld-nr-64/basic.cpi /pld-nr-64/rescue.cpi
@@ -62,14 +62,14 @@ if [ -e /pld-nr-64/vmlinuz ] ; then
 fi
 
 if [ -e /pld-nr-64/vmlinuz ] ; then
-    menuentry "PLD new rescue 64 (Serial console, Minimum RAM)" {
+    menuentry "PLD New Rescue 64 (serial console, minimum RAM)" {
         linux /pld-nr-64/vmlinuz console=tty0 console=ttyS0,115200n8
         initrd /pld-nr-64/init.cpi
     }
 fi
 
 if [ -e /pld-nr-32/vmlinuz ] ; then
-    menuentry "PLD new rescue (Serial Console, All in RAM)" {
+    menuentry "PLD New Rescue (serial console, all in RAM)" {
         linux /pld-nr-32/vmlinuz console=tty0 console=ttyS0,115200n8
         if [ -e /pld-nr-32/rescue.cpi ] ; then
             initrd /pld-nr-32/init.cpi /pld-nr-32/base.cpi /pld-nr-32/basic.cpi /pld-nr-32/rescue.cpi
@@ -84,7 +84,7 @@ if [ -e /pld-nr-32/vmlinuz ] ; then
 fi
 
 if [ -e /pld-nr-32/vmlinuz ] ; then
-    menuentry "PLD new rescue (Serial Console, Minimum RAM)" {
+    menuentry "PLD New Rescue (serial console, minimum RAM)" {
         linux /pld-nr-32/vmlinuz console=tty0 console=ttyS0,115200n8
         initrd /pld-nr-32/init.cpi
     }
