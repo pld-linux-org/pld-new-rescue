@@ -32,6 +32,7 @@ clean:
 	-rm -rf *.lst *.full-lst gen_init_cpio.list *.exclude
 	-rm -rf *.cpi *.sqf *.img
 	-rm -rf poldek.conf grub*.cfg
+	-rm -f make.vars make.deps
 
 endif
 
