@@ -12,7 +12,7 @@ ifeq ($(MAKE_VARS_INCLUDED),yes)
 ../pld-nr-$(BITS).img: uuids init.cpi $(MODULE_FILES) ../boot_img/* ../boot_img/*/*
 	./make_boot_img.py $@
 
-init.cpi base.lst: base.full-lst ../initramfs/files.list ../initramfs/skel/*
+init.cpi base.lst: uuids base.full-lst ../initramfs/files.list ../initramfs/skel/*
 	./make_initramfs.py
 
 %.cpi: %.sqf
