@@ -1,10 +1,38 @@
 
+###########################################################
+# set up the root password
+
 if [ -n "$pldnr_hashed_root_password" ] ; then
 	chroot root /usr/sbin/pwconv
 	echo "root:$pldnr_hashed_root_password" | chroot root /usr/sbin/chpasswd -e
 fi
 
+###########################################################
+# set up the systemd
+
+# default unit
 ln -sf /lib/systemd/system/multi-user.target root/etc/systemd/system/default.target
+
+# disable tty1 clearing
+rm root/etc/systemd/system/getty.target.wants/getty@tty1.service
+sed -e 's/TTYVTDisallocate=yes/TTYVTDisallocate=no/' \
+	root/lib/systemd/system/getty@.service \
+	> root/etc/systemd/system/getty.target.wants/getty@tty1.service
+
+# enable services
+for service in network ; do
+	chroot root /bin/systemctl enable "${service}".service || :
+	# systemctl enable/disable is not reliable for chroot
+#	if [ -L root/etc/systemd/system/getty.target.wants/${service}.service ] ; then
+#		rm root/etc/systemd/system/getty.target.wants/${service}.service
+#	fi
+#	if [ -e root/etc/rc.d/init.d/service ] ; then
+#		chroot root /sbin/chkconfig "${service}" on
+#	fi
+done
+
+###########################################################
+# set up the fstab
 
 cat <<EOF >root/etc/fstab
 none		/			tmpfs	defaults		0 0
