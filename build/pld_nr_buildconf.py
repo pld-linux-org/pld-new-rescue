@@ -268,6 +268,7 @@ class Config(object):
         """Return current config as string->string mapping."""
         result = OrderedDict()
         result["arch"] = self.arch
+        result["bits"] = str(self.bits)
         result["modules"] = ",".join(self.modules)
         result["compression"] = self.compression
         if self.compression_level is not None:

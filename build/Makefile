@@ -9,7 +9,7 @@ cd:	../pld-nr-$(BITS).iso
 
 ifeq ($(MAKE_VARS_INCLUDED),yes)
 
-../pld-nr-$(BITS).img: init.cpi $(MODULE_FILES) ../boot_img/* ../boot_img/*/*
+../pld-nr-$(BITS).img: uuids init.cpi $(MODULE_FILES) ../boot_img/* ../boot_img/*/*
 	./make_boot_img.py $@
 
 init.cpi base.lst: base.full-lst ../initramfs/files.list ../initramfs/skel/*

@@ -64,9 +64,21 @@ load_module() {
     local sqf=/.rcd/modules/${module}.sqf
 
     if [ ! -e "$sqf" ] ; then
+        name_len=$(expr length $module)
+        offset=$(( ((118 + $name_len)/4) * 4 ))
+        for sqf in /root/media/pld-nr-hd$prefix/${module}.cpi \
+                   /root/media/pld-nr-cd$prefix/${module}.cpi \
+                   /root/media/pld-nr-cd/${module}.cpi ; do
+            [ -e "$sqf" ] && break
+        done
+    fi
+
+    if [ ! -e "$sqf" ] ; then
         echo "Module '$module' not found"
         return 1
     fi
+
+    echo "Activating '$module' module"
 
     lodev=$(/sbin/losetup -o $offset --find --show $sqf)
     mkdir -p "/.rcd/m/${module}"
