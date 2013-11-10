@@ -2,6 +2,9 @@ serial --unit=0 --speed=115200
 terminal_input serial console
 terminal_output serial console
 
+timout=15
+default=1
+
 if [ -e /pld-nr-64/vmlinuz ] ; then
     menuentry "PLD New Rescue 64 (all in RAM)" {
         linux /pld-nr-64/vmlinuz console=ttyS0,115200n8 console=tty0
