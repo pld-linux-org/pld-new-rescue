@@ -76,5 +76,6 @@ if __name__ == "__main__":
         main()
     except subprocess.CalledProcessError as err:
         logger.error(str(err))
+        sys.exit(1)
 
 # vi: sts=4 sw=4 et

@@ -461,5 +461,6 @@ if __name__ == "__main__":
         main()
     except (subprocess.CalledProcessError, ConfigError) as err:
         logger.error(str(err))
+        sys.exit(1)
 
 # vi: sw=4 sts=4 et
