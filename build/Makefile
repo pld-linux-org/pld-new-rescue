@@ -27,14 +27,14 @@ $(PSET_LST_FILES): poldek.conf
 poldek.conf: ../modules/poldek.conf ../build.conf
 	./pld_nr_buildconf.py --substitute < ../modules/poldek.conf > poldek.conf
 
+endif
+
 clean:
 	-rm -rf --one-file-system root
 	-rm -rf *.lst *.full-lst gen_init_cpio.list *.exclude
 	-rm -rf *.cpi *.sqf *.img
 	-rm -rf poldek.conf grub*.cfg
 	-rm -f make.vars make.deps
-
-endif
 
 make.vars uuids: ../build.conf ./pld_nr_buildconf.py /usr/bin/python3
 	./pld_nr_buildconf.py --verify --gen-uuids --make-vars > make.vars
