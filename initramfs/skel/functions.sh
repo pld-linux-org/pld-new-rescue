@@ -1,5 +1,27 @@
 
+parse_cmdline() {
+    local name
+    local value
+
+    while [ -n "$1" ] ; do
+        o_name="${1%%=*}"
+        name="$(echo -n $o_name | tr " .'\"\\\`\\\\\\n-" "________")"
+        value="${1#*=}"
+        value="$(echo -n $value | tr "'\\\\\\n" "___")"
+        if [ "$1" = "$o_name" ] ; then
+            echo "c_$name=yes"
+        else
+            echo "c_$name='$value'"
+        fi
+        shift
+    done
+}
+
 mount_media() {
+
+    if [ "$c_pldnr_nomedia" = "yes" ] ; then
+        return 0
+    fi
 
     echo "Mounting the boot image"
     modprobe vfat

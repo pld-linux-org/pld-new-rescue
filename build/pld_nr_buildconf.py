@@ -176,6 +176,9 @@ class Config(object):
 
         self.load_uuids()
 
+        self.defaults = {k[8:]: v for k, v in self._config.items()
+                                                if k.startswith("default_")}
+
     def load_uuids(self):
         try:
             with open("uuids", "rt") as uuid_f:
@@ -289,6 +292,8 @@ class Config(object):
         result["uuid"] = str(self.uuid)
         result["hd_vol_id"] = self.hd_vol_id
         result["cd_vol_id"] = self.cd_vol_id
+        for k, v in self.defaults.items():
+            result["default_" + k] = v
         return result
 
     def substitute_bytes(self, data):

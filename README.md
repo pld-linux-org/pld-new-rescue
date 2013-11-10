@@ -25,3 +25,19 @@ Goals
 * Everyone familiar with PLD Linux should be able to build and customize 
   the image.
 
+Kernel command-line options
+---------------------------
+
+* init=<path> – init binary (default: /sbin/init)
+
+* pldnr.debug – enable initramfs debugging
+
+* pldnr.nomedia – do not mount the boot media in initramfs ('minimum RAM' boot
+  mode won't work)
+
+* pldnr.modules=<module>,<module>... – PLD NR modules to load (order matters)
+
+* pldnr.keymap=<name> – keymap (default: from build.conf)
+
+* pldnr.font=<name>... – font (default: from build.conf)
+

@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh
 
 . /variables.sh
 . /functions.sh
@@ -9,6 +9,18 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin
 
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
+
+c_init=/sbin/init
+
+eval $(parse_cmdline $(cat /proc/cmdline))
+
+if [ "$c_pldnr_debug" = "yes" ] ; then
+    set -x
+fi
+
+if [ -n "$c_pldnr_modules" ] ; then
+    modules="$(echo "$c_pldnr_modules" | tr "," " ")"
+fi
 
 mkdir -p /root
 mount -t tmpfs none /root
@@ -47,6 +59,15 @@ for module in $modules ; do
     load_module "$module"
 done
 
+keymap=${c_pldnr_keymap:-$default_keymap}
+if [ -n "$keymap" ] ; then
+    echo "KEYMAP=$keymap" >> root/etc/vconsole.conf
+fi
+font=${c_pldnr_font:-$default_font}
+if [ -n "$font" ] ; then
+    echo "FONT=$font" >> root/etc/vconsole.conf
+fi
+
 umount_media
 
 udevadm control --exit
@@ -55,10 +76,10 @@ for dir in tmp run dev ; do
     umount /$dir
 done
 
-rm /.rcd/modules/*
+rm -f /.rcd/modules/* 2>/dev/null
 
 cd /root
 mount --move . /
-exec chroot . /sbin/init
+exec chroot . "$c_init"
 
 # vi: ft=sh sw=4 sts=4 et

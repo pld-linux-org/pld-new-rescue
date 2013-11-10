@@ -6,5 +6,7 @@ hd_vol_id="@hd_vol_id@"
 cd_vol_id="@cd_vol_id@"
 bits="@bits@"
 prefix="/pld-nr-@bits@"
+default_keymap="@default_keymap@"
+default_font="@default_font@"
 
 # vi: ft=sh
