@@ -18,6 +18,17 @@ class PackageInstaller(object):
         self.cache_dir = os.path.abspath("cache")
         if not os.path.isdir(self.cache_dir):
             os.makedirs(self.cache_dir)
+        if config.locales:
+            langs = set(config.locales)
+            langs.add("C")
+            for loc in config.locales:
+                if "_" in loc:
+                    langs.add(loc.split("_", 1)[0])
+            self.langs_opts = ["-O", "rpmdef=_install_langs {}"
+                                            .format(":".join(langs))]
+        else:
+            self.langs_opts = []
+
     def init_rpm_db(self):
         if not os.path.isdir(self.dst_dir):
             os.makedirs(self.dst_dir)
@@ -29,7 +40,7 @@ class PackageInstaller(object):
             subprocess.check_call(["poldek", "--root", self.dst_dir,
                                 "--conf", "poldek.conf",
                                 "--cachedir", self.cache_dir]
-                                + list(args))
+                                + self.langs_opts + list(args))
         except subprocess.CalledProcessError as err:
             if not ignore_errors:
                 raise
