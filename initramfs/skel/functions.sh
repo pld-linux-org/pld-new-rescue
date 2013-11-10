@@ -1,4 +1,40 @@
 
+mount_media() {
+
+    echo "Mounting the boot image"
+    modprobe vfat
+    modprobe nls_cp437
+    modprobe nls_iso8859-1
+    mkdir -p /root/media/pld-nr-hd
+    /bin/mount -t vfat -outf8=true,codepage=437 UUID="$hd_vol_id" /root/media/pld-nr-hd || :
+
+    echo "Attempting to mount the boot CD"
+    modprobe isofs
+    mkdir -p /root/media/pld-nr-cd
+    /bin/mount -t iso9660 -outf8 UUID="$cd_vol_id" /root/media/pld-nr-cd 2>/dev/null || :
+
+    ln -sf /root/media /media
+}
+
+umount_media() {
+
+    if mountpoint -q /root/media/pld-nr-hd ; then
+        if umount /root/media/pld-nr-hd 2>/dev/null ; then
+            echo "Boot image unmounted"
+        else
+            echo "Boot image in use, keeping it mounted"
+        fi
+    fi
+    if mountpoint -q /root/media/pld-nr-cd ; then
+        if umount /root/media/pld-nr-cd 2>/dev/null ; then
+            echo "Boot CD unmounted"
+        else
+            echo "Boot CD in use, keeping it mounted"
+        fi
+    fi
+    rm /media
+}
+
 mount_aufs() {
 
     for dir in var ; do

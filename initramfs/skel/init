@@ -36,16 +36,18 @@ udevadm trigger --type=devices --action=add
 echo "Waiting for udev to setlle"
 udevadm settle
 
-/sbin/blkid
-
 modprobe squashfs
 modprobe aufs
+
+mount_media
 
 mount_aufs
 
 for module in $modules ; do
     load_module "$module"
 done
+
+umount_media
 
 udevadm control --exit
 

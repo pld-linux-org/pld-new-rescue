@@ -118,8 +118,9 @@ def main():
             subprocess.check_call(["mkdosfs", "-F", "16", "-I",
                                     "-i", config.hd_vol_id.replace("-", ""),
                                     lodev + "p1"])
-            subprocess.check_call(["mount", "-t", "vfat", lodev + "p1",
-                                        boot_mnt_dir])
+            subprocess.check_call(["mount", "-t", "vfat",
+                                    "-o", "utf8=true",
+                                    lodev + "p1", boot_mnt_dir])
             try:
                 logger.info("Installing PLD NR files")
                 os.makedirs(pldnr_dir)
