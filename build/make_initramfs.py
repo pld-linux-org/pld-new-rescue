@@ -45,9 +45,15 @@ def find_kernel_mod_deps(kernel_ver, mod_path):
         result.append("lib/modules/{0}/{1}".format(kernel_ver, path))
     return result
 
-def find_executable_deps(path, root_dir):
+def find_executable_deps(path, root_dir, bits):
     logger.debug("find_executable_deps({0!r})".format(path))
-    if path.startswith("lib/ld-"):
+    if bits == 64:
+        lib = "lib64"
+        ld_linux = "/lib64/ld-linux-x86-64.so.2"
+    else:
+        lib = "lib"
+        ld_linux = "/lib/ld-linux.so.2"
+    if path.startswith("lib/ld-") or path.startswith("lib64/ld-"):
         logger.debug("Returning empty list for dynamic loader")
         return []
     with open(path, "rb") as exec_f:
@@ -59,15 +65,14 @@ def find_executable_deps(path, root_dir):
 
     try:
         output = subprocess.check_output(
-                        ["chroot", root_dir, "/lib/ld-linux.so.2",
-                            "--list", "/" + path])
+                        ["chroot", root_dir, ld_linux, "--list", "/" + path])
     except subprocess.CalledProcessError as err:
         logger.error(err)
         return []
 
-    result = ["lib/ld-linux.so.2"]
-    target = os.readlink("lib/ld-linux.so.2")
-    target = os.path.join("/lib", target)
+    result = [ld_linux.lstrip("/")]
+    target = os.readlink(ld_linux.lstrip("/"))
+    target = os.path.join("/" + lib, target)
     result.append(os.path.abspath(target).lstrip("/"))
     for line in output.decode("utf-8").split("\n"):
         match = LD_LIST_RE.match(line)
@@ -80,7 +85,7 @@ def find_executable_deps(path, root_dir):
                 result.append(os.path.abspath(target).lstrip("/"))
     return result
 
-def find_deps(files, all_files, root_dir):
+def find_deps(config, files, all_files, root_dir):
     present = set(all_files)
     unprocessed = list(files)
     while unprocessed:
@@ -106,7 +111,7 @@ def find_deps(files, all_files, root_dir):
         if match:
             deps = find_kernel_mod_deps(match.group(1), match.group(2))
         elif (stat.S_IMODE(path_stat.st_mode) & 0o111):
-            deps = find_executable_deps(path, root_dir)
+            deps = find_executable_deps(path, root_dir, config.bits)
         else:
             continue
         logger.debug("deps={0!r}".format(deps))
@@ -117,7 +122,11 @@ def find_deps(files, all_files, root_dir):
                 all_files.append(dep_path)
                 unprocessed.append(dep_path)
 
-def process_files_list(file_list_fn, gic_list_fn, root_dir):
+def process_files_list(config, file_list_fn, gic_list_fn, root_dir):
+    if config.bits == 64:
+        lib = "lib64"
+    else:
+        lib = "lib"
     files = []
     globs = []
     with open(file_list_fn, "rt") as files_list:
@@ -128,9 +137,10 @@ def process_files_list(file_list_fn, gic_list_fn, root_dir):
                     continue
                 parts = line.split()
                 if parts[0] == "*" and len(parts) == 2:
-                    globs.append(parts[1])
+                    globs.append(parts[1].replace("@lib@", lib))
                 elif len(parts) >= 5:
-                    parts[2] = parts[2].replace("@root@", root_dir)
+                    parts[2] = parts[2].replace("@root@", root_dir).replace(
+                                                            "@lib@", lib)
                     files.append(parts[1].lstrip("/"))
                     cpio_list.write(" ".join(parts) + "\n")
                 else:
@@ -180,14 +190,15 @@ def main():
 
     os.chdir(root_dir)
 
-    files, globs = process_files_list(files_list_fn, gic_list_fn, root_dir)
+    files, globs = process_files_list(config, files_list_fn, gic_list_fn,
+                                                                    root_dir)
     subprocess.check_call(["gen_init_cpio", gic_list_fn],
                           stdout=open(init_cpio_fn, "wb"))
 
     paths = expand_globs(globs)
     files += paths
 
-    find_deps(paths, files, root_dir)
+    find_deps(config, paths, files, root_dir)
 
     paths.sort()
 

@@ -14,6 +14,7 @@ dir /dev/pts 0755 0 0
 dir /bin 0755 0 0
 dir /sbin 0755 0 0
 dir /lib 0755 0 0
+dir /lib64 0755 0 0
 dir /etc 0755 0 0
 dir /proc 0755 0 0
 dir /sys 0755 0 0
@@ -30,7 +31,7 @@ slink /bin/tr busybox 0755 0 0
 * /etc/ld.so.cache
 * /etc/group
 * /etc/passwd
-* /lib/libnss_files*
+* /@lib@/libnss_files*
 * /bin/busybox
 * /bin/mount
 * /sbin/losetup
