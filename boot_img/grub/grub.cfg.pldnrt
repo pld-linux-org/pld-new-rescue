@@ -1,5 +1,5 @@
 serial --unit=0 --speed=115200
-terminal_input console
+terminal_input serial console
 terminal_output serial console
 
 if [ -e /pld-nr-64/vmlinuz ] ; then
