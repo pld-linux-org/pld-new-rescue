@@ -41,14 +41,28 @@ def install_grub(config, platform, lodev, boot_mnt_dir, grub_prefix,
         efi_arch = ""
 
     with open(grub_early_fn, "wt") as grub_early:
-        grub_early.write( "search.fs_uuid {} root\n"
+        grub_early.write("echo \"starting grub\"\n"
+                         "search.fs_uuid {} root\n"
                          "set prefix=($root)/grub\n"
-                         "set efi={}\n"
-                         .format(config.hd_vol_id, efi_arch))
+                         .format(config.hd_vol_id))
+        if platform.endswith("-efi"):
+            # grub does not recognize partitions of the EFI eltorito image
+            # so let's try the other way round
+            grub_early.write("set efi={}\n"
+                            "configfile $prefix/go_normal.cfg\n"
+                            "echo \"boot partition not found"
+                                    " falling back to loopback device\"\n"
+                            "search.fs_uuid {} cd\n"
+                            "loopback loop ($cd)/pld-nr-{}.img\n"
+                            "set root=(loop,msdos1)\n"
+                            "set prefix=($root)/grub\n"
+                            .format(efi_arch, config.cd_vol_id, config.bits))
 
-    grub_core_modules = ["search", "search_label", "fat", "part_msdos"]
+    grub_core_modules = ["search", "search_label", "fat", "part_msdos", "echo"]
     if platform.endswith("-pc"):
-        grub_core_modules += ["biosdisk"]
+        grub_core_modules += ["biosdisk", "minicmd"]
+    elif platform.endswith("-efi"):
+        grub_core_modules += ["iso9660", "loopback", "configfile"]
     subprocess.check_call(["grub-mkimage",
                             "--output", grub_img_fn,
                             "--format", platform,
