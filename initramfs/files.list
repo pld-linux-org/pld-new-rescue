@@ -20,6 +20,8 @@ dir /proc 0755 0 0
 dir /sys 0755 0 0
 dir /tmp 0755 0 0
 dir /run 0755 0 0
+dir /.rcd 0755 0 0
+dir /.rcd/modules 0755 0 0
 slink /bin/sh busybox 0755 0 0
 slink /bin/echo busybox 0755 0 0
 slink /bin/mkdir busybox 0755 0 0

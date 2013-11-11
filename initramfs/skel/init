@@ -25,7 +25,6 @@ fi
 mkdir -p /root
 mount -t tmpfs none /root
 
-mkdir -p /.rcd/modules
 mv *.sqf /.rcd/modules
 
 mkdir -p /root/dev /root/proc /root/sys

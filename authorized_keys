@@ -1,0 +1,3 @@
+# SSH keys file to be built-in as /root/.ssh/authorized_keys in the image
+# It can be overriden by 'authorized_keys' file in the root directory of the
+# boot medium

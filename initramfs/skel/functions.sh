@@ -114,6 +114,10 @@ load_module() {
             mount -o remount,add:1:/.rcd/m/${module}/$dir=rr /root/$dir
         fi
     done
+
+    if [ -f /.rcd/modules/${module}.init ] ; then
+        . /.rcd/modules/${module}.init
+    fi
 }
 
 # vi: ft=sh sw=4 sts=4 et

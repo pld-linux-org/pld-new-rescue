@@ -122,7 +122,8 @@ def find_deps(config, files, all_files, root_dir):
                 all_files.append(dep_path)
                 unprocessed.append(dep_path)
 
-def process_files_list(config, file_list_fn, gic_list_fn, root_dir):
+def process_files_list(config, file_list_fn, gic_list_fn, root_dir,
+                                                            extra_files):
     if config.bits == 64:
         lib = "lib64"
     else:
@@ -146,6 +147,8 @@ def process_files_list(config, file_list_fn, gic_list_fn, root_dir):
                 else:
                     raise ValueError("Invalid files.list line: {0!r}"
                                                             .format(line))
+            for rule in extra_files:
+                    cpio_list.write(rule + "\n")
     return files, globs
 
 def expand_globs(globs):
@@ -180,6 +183,7 @@ def main():
 
     skel_dir = os.path.abspath("../initramfs/skel")
     root_dir = os.path.abspath("root")
+    modules_dir = os.path.abspath("../modules")
     built_skel_dir = os.path.abspath("initramfs")
     init_cpio_fn = os.path.abspath("init.cpi")
     files_list_fn = os.path.abspath("../initramfs/files.list")
@@ -190,8 +194,19 @@ def main():
 
     os.chdir(root_dir)
 
+    extra_files = []
+    logger.debug("Looking for module scripts")
+    for module in config.modules:
+        module_init_fn = os.path.join(modules_dir, module, "init.sh")
+        logger.debug("  {}".format(module_init_fn))
+        if os.path.exists(module_init_fn):
+            logger.debug("    got it")
+            extra_files.append("file /.rcd/modules/{}.init {} 0644 0 0"
+                                            .format(module, module_init_fn))
+
+    logger.debug("Completing file list")
     files, globs = process_files_list(config, files_list_fn, gic_list_fn,
-                                                                    root_dir)
+                                                        root_dir, extra_files)
     subprocess.check_call(["gen_init_cpio", gic_list_fn],
                           stdout=open(init_cpio_fn, "wb"))
 

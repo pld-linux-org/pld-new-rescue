@@ -7,6 +7,34 @@ mkdir -p root/root
 cp -au root/etc/skel/.bash* root/root/
 
 #######################################################3
+# config sshd
+
+# embed authorized_keys file
+if [ -s ../authorized_keys ] ; then
+        mkdir -p root/root/.ssh
+        cat ../authorized_keys > root/root/.ssh/authorized_keys
+        chmod 700 root/root/.ssh
+        chmod 644 root/root/.ssh/authorized_keys
+fi
+
+# write config file
+cat <<EOF >root/etc/ssh/sshd_config
+PermitRootLogin without-password
+AuthorizedKeysFile	.ssh/authorized_keys
+IgnoreRhosts yes
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+PermitEmptyPasswords no
+UsePAM yes
+AllowAgentForwarding yes
+AllowTcpForwarding yes
+X11Forwarding yes
+UsePrivilegeSeparation sandbox
+AcceptEnv LANG LC_* LANGUAGE TZ GIT_AUTHOR_* GIT_COMMITTER_*
+Subsystem	sftp	/usr/lib/openssh/sftp-server
+EOF
+
+#######################################################3
 # config syslog
 
 cat <<EOF >root/etc/syslog-ng/syslog-ng.conf
