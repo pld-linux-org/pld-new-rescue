@@ -32,11 +32,19 @@ def install_grub(config, platform, lodev, boot_mnt_dir, grub_prefix,
         if not os.path.exists(efi_dir):
             os.makedirs(efi_dir)
         if "64" in platform:
-            grub_img_fn = os.path.join(efi_dir, "BOOTX64.EFI")
+            efi_arch = "X64"
         else:
-            grub_img_fn = os.path.join(efi_dir, "BOOTIA32.EFI")
+            efi_arch = "IA32"
+        grub_img_fn = os.path.join(efi_dir, "BOOT{}.EFI".format(efi_arch))
     else:
         grub_img_fn = os.path.join(grub_plat_dir, "core.img")
+        efi_arch = ""
+
+    with open(grub_early_fn, "wt") as grub_early:
+        grub_early.write( "search.fs_uuid {} root\n"
+                         "set prefix=($root)/grub\n"
+                         "set efi={}\n"
+                         .format(config.hd_vol_id, efi_arch))
 
     grub_core_modules = ["search", "search_label", "fat", "part_msdos"]
     if platform.endswith("-pc"):
@@ -53,6 +61,10 @@ def install_grub(config, platform, lodev, boot_mnt_dir, grub_prefix,
         subprocess.check_call(["grub-bios-setup",
                                 "--directory", grub_plat_dir,
                                 lodev])
+    elif platform.endswith("-efi"):
+        subprocess.check_call(["grub-mkfont",
+                                "--output", os.path.join(grub_prefix_dir,"font.pf2"),
+                                "/usr/share/fonts/TTF/DejaVuSansMono.ttf"])
     config.copy_dir("/lib/grub/{0}".format(platform), grub_plat_dir)
 
 def main():
@@ -81,11 +93,6 @@ def main():
     module_files = []
     for module in config.modules:
         module_files.append(os.path.abspath("{0}.cpi".format(module)))
-
-    with open(grub_early_fn, "wt") as grub_early:
-        grub_early.write("search.fs_uuid {} root\n"
-                            "set prefix=($root)/grub\n"
-                            .format(config.hd_vol_id))
 
     logger.info("Computing required image size")
     du_output = subprocess.check_output(["du", "-sbcD",

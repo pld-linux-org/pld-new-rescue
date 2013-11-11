@@ -1,9 +1,46 @@
-serial --unit=0 --speed=115200
-terminal_input serial console
-terminal_output serial console
+
+echo "starting grub.cfg"
+
+sleep -i 2
+
+if [ -n "$efi" ] ; then
+    echo "setting up EFI graphical console"
+    sleep -i 2
+    insmod efi_gop
+    insmod efi_uga
+    insmod font
+
+    if loadfont ${prefix}/font.pf2 ; then
+        insmod gfxterm
+        set gfxmode=auto
+        set gfxpayload=keep
+        terminal_output gfxterm
+    fi
+else
+    echo "setting up console"
+    terminal_input console
+    terminal_output console
+fi
+
+sleep -i 2
+
+if [ -n "$efi" ] ; then
+    echo "Skipping serial port set up, it may lock-up EFI boot"
+elif keystatus --ctrl ; then
+    echo "Ctrl pressed, skipping serial port set up"
+else
+    echo "setting up serial port (boot with Ctrl pressed to skip this)"
+    serial --unit=0 --speed=115200
+    terminal_input --append serial
+    terminal_output --append serial
+fi
+
+sleep -i 2
 
 timout=15
 default=1
+
+echo "building menu"
 
 if [ -e /pld-nr-64/vmlinuz ] ; then
     menuentry "PLD New Rescue 64 (all in RAM)" {

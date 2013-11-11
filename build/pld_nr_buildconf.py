@@ -237,7 +237,13 @@ class Config(object):
                                                         .format(self.efi_arch))
 
         _check_tool_version("grub-mkimage", GRUB_VERSION_RE, package="grub2")
-        _check_tool_version("grub-bios-setup", GRUB_VERSION_RE, package="grub2")
+        if self.bios:
+            _check_tool_version("grub-bios-setup", GRUB_VERSION_RE, package="grub2")
+        if self.efi:
+            _check_tool_version("grub-mkfont", GRUB_VERSION_RE, package="grub2-mkfont")
+            font_fn = "/usr/share/fonts/TTF/DejaVuSansMono.ttf"
+            if not os.path.exists(font_fn):
+                raise ConfigError("File {!r} (from fonts-TTF-DejaVu package) missing")
 
         for plat in self.grub_platforms:
             plat_dir = os.path.join("/lib/grub", plat)
