@@ -383,6 +383,7 @@ class Config(object):
         lines.append("GRUB_PLATFORMS={0}".format(" ".join(self.grub_platforms)))
 
         lines.append("COMPRESS={0}".format(" ".join(self.compress_cmd)))
+        lines.append("VERSION={0}".format(self.version))
         return "\n".join(lines)
 
     def build_make_deps(self):

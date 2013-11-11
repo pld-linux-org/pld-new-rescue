@@ -30,6 +30,13 @@ $(PSET_LST_FILES): poldek.conf
 poldek.conf: ../modules/poldek.conf ../build.conf
 	./pld_nr_buildconf.py --substitute < ../modules/poldek.conf > poldek.conf
 
+bindist: cd usb
+	mkdir -p ../dist
+	ln -f ../pld-nr-$(BITS).img ../dist/pld-new-rescue-$(VERSION)-$(BITS)bit.img
+	ln -f ../pld-nr-$(BITS).iso ../dist/pld-new-rescue-$(VERSION)-$(BITS)bit.iso
+	ln -f ../pld-nr-$(BITS).packages ../dist/pld-new-rescue-$(VERSION)-$(BITS)bit-packages.txt
+	cd .. && tar cvf dist/pld-new-rescue-$(VERSION)-$(ARCH)-extra_packages.tar extra_packages/*.$(ARCH).rpm
+
 endif
 
 clean:

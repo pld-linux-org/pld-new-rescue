@@ -6,6 +6,8 @@
 /*.iso
 /*.packages
 
+/dist/
+
 /extra_packages/*.rpm
 /extra_packages/*/*.rpm
 
