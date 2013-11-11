@@ -34,7 +34,9 @@ def _get_default_arch():
         result = subprocess.check_output(["rpm", "--eval", "%{_arch}"])
         result = result.decode("us-ascii").strip()
     except CalledProcessError:
-        return "i686"
+        return "i486"
+    if X86_RE.match(result):
+        result = "i486" # make the image compatible with old hardware
     return result
 
 class ConfigError(Exception):
