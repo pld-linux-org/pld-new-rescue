@@ -48,8 +48,7 @@ def install_grub(config, platform, lodev, boot_mnt_dir, grub_prefix,
         if platform.endswith("-efi"):
             # grub does not recognize partitions of the EFI eltorito image
             # so let's try the other way round
-            grub_early.write("set efi={}\n"
-                            "configfile $prefix/go_normal.cfg\n"
+            grub_early.write("configfile $prefix/go_normal.cfg\n"
                             "echo \"boot partition not found"
                                     " falling back to loopback device\"\n"
                             "search.fs_uuid {} cd\n"

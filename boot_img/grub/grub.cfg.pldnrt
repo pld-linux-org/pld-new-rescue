@@ -3,7 +3,7 @@ echo "starting grub.cfg"
 
 sleep -i 2
 
-if [ -n "$efi" ] ; then
+if [ "$grub_platform" = "efi" ] ; then
     echo "setting up EFI graphical console"
     sleep -i 2
     insmod efi_gop
@@ -24,7 +24,7 @@ fi
 
 sleep -i 2
 
-if [ -n "$efi" ] ; then
+if [ "$grub_platform" = "efi" ] ; then
     echo "Skipping serial port set up, it may lock-up EFI boot"
 elif keystatus --ctrl ; then
     echo "Ctrl pressed, skipping serial port set up"
