@@ -37,6 +37,7 @@ for dir in tmp run ; do
 done
 
 modprobe loop
+modprobe usb-storage
 
 echo "Starting udevd"
 mkdir -p /run/udev

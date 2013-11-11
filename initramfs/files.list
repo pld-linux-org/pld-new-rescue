@@ -57,3 +57,8 @@ slink /bin/tr busybox 0755 0 0
 * /lib/modules/*/kernel/fs/nls/nls_utf8.*
 * /lib/modules/*/kernel/fs/nls/nls_cp437.*
 * /lib/modules/*/kernel/fs/nls/nls_iso8859-1.*
+* /lib/modules/*/kernel/drivers/usb/host/ehci*
+* /lib/modules/*/kernel/drivers/usb/host/ohci*
+* /lib/modules/*/kernel/drivers/usb/host/uhci*
+* /lib/modules/*/kernel/drivers/usb/host/xhci*
+* /lib/modules/*/kernel/drivers/usb/storage/usb-storage.*

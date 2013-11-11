@@ -25,6 +25,14 @@ mount_media() {
         return 0
     fi
 
+    for i in 1 2 3 4 5 6 7 8 9 10; do
+        if /sbin/blkid -U "$cd_vol_id" 2>/dev/null || /sbin/blkid -U "$hd_vol_id" 2>/dev/null ; then
+            break
+        fi
+        echo "Waiting for the boot media to appear..."
+        sleep 1
+    done
+
     echo "Attempting to mount the boot CD"
     modprobe isofs
     modprobe nls_utf8
