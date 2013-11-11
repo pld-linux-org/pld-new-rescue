@@ -7,6 +7,7 @@
 /*.packages
 
 /extra_packages/*.rpm
+/extra_packages/*/*.rpm
 
 /build/*.cpi
 /build/*.img
