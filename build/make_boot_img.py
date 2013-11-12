@@ -15,8 +15,10 @@ import pld_nr_buildconf
 
 logger = logging.getLogger()
 
-
-CYLINDER=8225280
+HEADS = 255
+SECTORS = 32
+SECTOR = 512
+CYLINDER = HEADS*SECTORS*SECTOR
 
 DU_OUTPUT_RE = re.compile("^(\d+)\s+total", re.MULTILINE)
 
@@ -129,7 +131,11 @@ def main():
                                                         "--show", boot_img_fn])
         lodev = lodev.decode("utf-8").strip()
         try:
-            sfdisk_p = subprocess.Popen(["sfdisk", lodev],
+            sfdisk_p = subprocess.Popen(["sfdisk",
+                                         "-H", str(HEADS),
+                                         "-S", str(SECTORS),
+                                         "-C", str(cylinders_needed),
+                                         lodev],
                                         stdin=subprocess.PIPE)
             sfdisk_p.communicate(b"1,+,e,*\n0,0,0\n0,0,0\n0,0,0\n")
             rc = sfdisk_p.wait()
