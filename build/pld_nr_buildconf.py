@@ -176,7 +176,7 @@ class Config(object):
 
         # dummy values
         self.uuid = uuid.UUID("0"*32)
-        self.hd_vol_id = "0000-0000"
+        self.efi_vol_id = "0000-0000"
         self.cd_vol_id = "0000-00-00-00-00-00-00"
 
         self.load_uuids()
@@ -188,7 +188,7 @@ class Config(object):
         try:
             with open("uuids", "rt") as uuid_f:
                 self.uuid = uuid.UUID(uuid_f.readline().strip())
-                self.hd_vol_id = uuid_f.readline().strip()
+                self.efi_vol_id = uuid_f.readline().strip()
                 self.cd_vol_id = uuid_f.readline().strip()
         except IOError as err:
             logger.debug("Cannot load uuids: {}".format(err))
@@ -196,13 +196,13 @@ class Config(object):
     def gen_uuids(self):
         self.uuid = uuid.uuid4()
         hexdigest = md5(self.uuid.bytes).hexdigest()
-        self.hd_vol_id = "{}-{}".format(hexdigest[:4], hexdigest[4:8])
-        self.hd_vol_id = self.hd_vol_id.upper()
+        self.efi_vol_id = "{}-{}".format(hexdigest[:4], hexdigest[4:8])
+        self.efi_vol_id = self.efi_vol_id.upper()
         timestamp = datetime.now()
         self.cd_vol_id = "{:%Y-%m-%d-%H-%M-%S-%f}".format(timestamp)[:22]
         with open("uuids", "wt") as uuid_f:
             print(str(self.uuid), file=uuid_f)
-            print(self.hd_vol_id, file=uuid_f)
+            print(self.efi_vol_id, file=uuid_f)
             print(self.cd_vol_id, file=uuid_f)
 
     def _choose_grub_platforms(self):
@@ -278,7 +278,7 @@ class Config(object):
         _check_tool("gen_init_cpio", ignore_error=True, quiet=True,
                                                         package="kernel-tools")
         _check_tool("mksquashfs", args=["-version"], package="squashfs")
-        _check_tool("mkisofs", package="cdrkit-mkisofs")
+        _check_tool("xorriso")
 
     def get_config_vars(self):
         """Return current config as string->string mapping."""
@@ -303,7 +303,7 @@ class Config(object):
         result["hostname"] = self.hostname
         result["locales"] = ",".join(self.locales)
         result["uuid"] = str(self.uuid)
-        result["hd_vol_id"] = self.hd_vol_id
+        result["efi_vol_id"] = self.efi_vol_id
         result["cd_vol_id"] = self.cd_vol_id
         for k, v in self.defaults.items():
             result["default_" + k] = v
@@ -332,24 +332,28 @@ class Config(object):
                 dest_f.write(data)
 
     def copy_dir(self, source, dest, substitution=False):
+        old_pwd = os.getcwd()
         os.chdir(source)
-        for dirpath, dirnames, filenames in os.walk("."):
-            dirpath = dirpath[2:] # strip "./"
-            for dirname in dirnames:
-                path = os.path.join(dirpath, dirname)
-                dst_path = os.path.join(dest, path)
-                if not os.path.exists(dst_path):
-                    os.makedirs(dst_path)
-            for filename in filenames:
-                if filename.endswith("~"):
-                    continue
-                path = os.path.join(dirpath, filename)
-                dst_path = os.path.join(dest, path)
-                if substitution and filename.endswith(".pldnrt"):
-                    dst_path = dst_path[:-7]
-                    self.copy_substituting(path, dst_path)
-                else:
-                    shutil.copy(path, dst_path)
+        try:
+            for dirpath, dirnames, filenames in os.walk("."):
+                dirpath = dirpath[2:] # strip "./"
+                for dirname in dirnames:
+                    path = os.path.join(dirpath, dirname)
+                    dst_path = os.path.join(dest, path)
+                    if not os.path.exists(dst_path):
+                        os.makedirs(dst_path)
+                for filename in filenames:
+                    if filename.endswith("~"):
+                        continue
+                    path = os.path.join(dirpath, filename)
+                    dst_path = os.path.join(dest, path)
+                    if substitution and filename.endswith(".pldnrt"):
+                        dst_path = dst_path[:-7]
+                        self.copy_substituting(path, dst_path)
+                    else:
+                        shutil.copy(path, dst_path)
+        finally:
+            os.chdir(old_pwd)
 
     def copy_template_dir(self, source, dest):
         return self.copy_dir(source, dest, True)
@@ -381,7 +385,20 @@ class Config(object):
         lines.append("BIOS={0}".format("yes" if self.bios else "no"))
         lines.append("EFI_ARCH={0}".format(self.efi_arch if self.efi else ""))
         lines.append("GRUB_PLATFORMS={0}".format(" ".join(self.grub_platforms)))
-
+        lines.append("EFI_GRUB_PLATFORMS={0}".format(
+                            " ".join(p for p in self.grub_platforms
+                                            if p.endswith("-efi"))))
+        lines.append("PC_GRUB_PLATFORMS={0}".format(
+                            " ".join(p for p in self.grub_platforms
+                                            if p.endswith("-pc"))))
+        lines.append("EFI_GRUB_IMAGES={0}".format(
+                            " ".join("grub-{}.img".format(p)
+                                            for p in self.grub_platforms
+                                            if p.endswith("-efi"))))
+        if self.bios  and "i386-pc" in self.grub_platforms:
+            lines.append("PC_GRUB_IMAGES=cdboot.img hdboot.img")
+        else:
+            lines.append("PC_GRUB_IMAGES=")
         lines.append("COMPRESS={0}".format(" ".join(self.compress_cmd)))
         lines.append("VERSION={0}".format(self.version))
         return "\n".join(lines)

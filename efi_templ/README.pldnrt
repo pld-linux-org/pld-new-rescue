@@ -2,8 +2,9 @@
 PLD New Rescue @version@ (@arch@)
 =====================================
 
-This is a PLD New Rescue image, which can be booted from a USB stick or used as
-a part of a PLD New Rescue CD image.
+This is an EFI boot partition of the PLD New Rescue image.  Files here are used
+to boot the PLD New Rescue on EFI systems. Additional EFI utilities may be
+provided here.
 
 https://github.com/jajcus/pld-new-rescue/
 

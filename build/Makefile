@@ -1,19 +1,31 @@
 
 include make.vars
 
-usb:	../pld-nr-$(BITS).img
-
-cd:	../pld-nr-$(BITS).iso
+image:	../pld-nr-$(BITS).iso
 
 .PHONY: usb cd clean maintaner-clean
 
 ifeq ($(MAKE_VARS_INCLUDED),yes)
 
-../pld-nr-$(BITS).img: uuids init.cpi $(MODULE_FILES) ../boot_img/* ../boot_img/*/*
-	./make_boot_img.py $@
+../pld-nr-$(BITS).iso: uuids init.cpi $(MODULE_FILES) efi.img $(PC_GRUB_IMAGES) ../iso_templ/* ../iso_templ/*/*
+	./make_iso_img.py $@
 
-../pld-nr-$(BITS).iso: ../pld-nr-$(BITS).img ../iso_img/*
-	./make_iso_img.py $< $@
+efi.img: $(EFI_GRUB_IMAGES) ../efi_templ/*
+	./make_efi_img.py $@
+
+cdboot.img: grub-i386-pc.img
+	cat /lib/grub/i386-pc/cdboot.img grub-i386-pc.img > $@
+
+hdboot.img: grub-i386-pc.img
+	cat /lib/grub/i386-pc/diskboot.img grub-i386-pc.img > $@
+
+.DELETE: cdboot.img boot.img
+
+
+.DELETE: cdboot.img
+
+grub-%.img: uuids /lib/grub/%
+	./make_grub_img.py $* $@
 
 init.cpi base.lst: uuids base.full-lst ../initramfs/files.list ../initramfs/skel/*
 	./make_initramfs.py
@@ -23,6 +35,7 @@ init.cpi base.lst: uuids base.full-lst ../initramfs/files.list ../initramfs/skel
 
 %.sqf: %.lst
 	./make_module.py $*
+
 
 $(PSET_LST_FILES): poldek.conf
 	./install_packages.py

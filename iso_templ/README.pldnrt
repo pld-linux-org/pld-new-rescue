@@ -2,10 +2,7 @@
 PLD New Rescue @version@ (@arch@)
 =====================================
 
-This is a PLD New Rescue CD.
-
-This CD can be booted directly or the 'pld-nr-@bits@.img' file can be
-used to make a bootable USB disk.
+This is a PLD New Rescue image, which can be booted from a CD or USB stick.
 
 https://github.com/jajcus/pld-new-rescue/
 

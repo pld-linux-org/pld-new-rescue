@@ -8,7 +8,8 @@ import shutil
 import re
 import stat
 import logging
-from io import SEEK_CUR
+import struct
+from glob import glob
 
 from hashlib import md5
 
@@ -16,110 +17,166 @@ import pld_nr_buildconf
 
 logger = logging.getLogger()
 
+# Report layout: xt , Startlba ,   Blocks , Filesize , ISO image path
+HDBOOT_LBA_RE = re.compile(br"File data lba:"
+                            br"\s*(?P<xt>\d+)\s*,"
+                            br"\s*(?P<start_lba>\d+)\s*,"
+                            br"\s*(?P<blocks>\d+)\s*,"
+                            br"\s*(?P<filesize>\d+)\s*,"
+                            br"\s*'/boot/cdboot.img'\s*")
+
+# grub/i286/pc/boot.h
+GRUB_BOOT_MACHINE_DRIVE_CHECK = 0x66
+GRUB_BOOT_MACHINE_BPB_START = 0x3
+GRUB_BOOT_MACHINE_BPB_END = 0x5a
+GRUB_BOOT_MACHINE_KERNEL_SECTOR = 0x5c
+GRUB_BOOT_MACHINE_BOOT_DRIVE = 0x64
+GRUB_BOOT_MACHINE_PART_START = 0x1be
+GRUB_BOOT_MACHINE_PART_END = 0x1fe
+GRUB_BOOT_MACHINE_LIST_SIZE = 12
+
+GRUB_BLOCK_LIST = 0x200 - GRUB_BOOT_MACHINE_LIST_SIZE
+
+def patch_image_mbr(config, image):
+    lba_report = subprocess.check_output(["xorriso",
+                                        "-dev", image,
+                                        "-find", "/boot/cdboot.img",
+                                            "-exec", "report_lba"])
+    match = HDBOOT_LBA_RE.search(lba_report)
+    if not match:
+        logger.error("Could not find /boot/cdboot.img LBA")
+        sys.exit(1)
+    start_lba = int(match.group("start_lba"))
+    blocks = int(match.group("blocks"))
+    filesize = int(match.group("filesize"))
+    logger.info("/boot/cdboot.img start CD LBA: {} blocks: {} bytes: {}"
+                                        .format(start_lba, blocks, filesize))
+    start_sector = start_lba * 4
+    if filesize & 0x1ff:
+        sectors = (filesize >> 9) + 1
+    else:
+        sectors = filesize >> 9
+    logger.info("/boot/cdboot.img start HD LBA: {} sectors: {}"
+                                        .format(start_sector, sectors))
+
+    with open(image, "r+b") as image_f:
+        image_f.seek(0)
+        buf = bytearray(512)
+        image_f.readinto(buf)
+
+        if b"GRUB" not in buf:
+            logger.error("GRUB not found in MBR")
+            sys.exit(1)
+        if not buf.endswith(b"\x55\xaa"):
+            logger.error("The first 512 bytes of the image do not look like"
+                                                                    " an MBR")
+            sys.exit(1)
+
+        cur_boot_drive = buf[GRUB_BOOT_MACHINE_BOOT_DRIVE]
+        logger.debug("Current BIOS boot drive: {:0x}".format(cur_boot_drive))
+        cur_kernel_sector = struct.unpack("q", 
+                                buf[GRUB_BOOT_MACHINE_KERNEL_SECTOR
+                                    :GRUB_BOOT_MACHINE_KERNEL_SECTOR+8])[0]
+        logger.debug("Current kernel sector: {:0x}".format(cur_kernel_sector))
+
+        logger.info("Patching GRUBs MBR")
+
+        # set the address of the kernel
+        buf[GRUB_BOOT_MACHINE_KERNEL_SECTOR:GRUB_BOOT_MACHINE_KERNEL_SECTOR+8
+                ] = struct.pack("q", start_sector + 1)
+        image_f.seek(0)
+        image_f.write(buf)
+
+        # enable drive check logic
+        buf[GRUB_BOOT_MACHINE_DRIVE_CHECK:GRUB_BOOT_MACHINE_DRIVE_CHECK + 2
+                ] = b"\x90\x90"
+        
+        image_f.seek((start_sector + 1) * 512)
+        image_f.readinto(buf)
+
+        buf[GRUB_BLOCK_LIST:GRUB_BLOCK_LIST+10] = struct.pack("qh",
+                                                start_sector + 2, sectors - 2)
+        image_f.seek((start_sector + 1) * 512)
+        image_f.write(buf)
+
 def main():
     log_parser = pld_nr_buildconf.get_logging_args_parser()
-    parser = argparse.ArgumentParser(description="Make boot CD image",
-                                     parents=[log_parser])
-    parser.add_argument("source",
-                        help="PLD NR boot image")
+    parser = argparse.ArgumentParser(
+                                description="Make hybrid ISO/GPT boot image",
+                                parents=[log_parser])
     parser.add_argument("destination",
-                        help="Destination ISO file name")
+                        help="Destination image file name")
     args = parser.parse_args()
     pld_nr_buildconf.setup_logging(args)
-    
+
     config = pld_nr_buildconf.Config.get_config()
 
-    iso_img_dir = os.path.abspath("../iso_img")
-    tmp_img_dir = os.path.abspath("iso_img")
-    
-    grub_early_fn = "grub_early_iso.cfg"
-    grub_img_fn = os.path.join(tmp_img_dir, "eltorito-grub.img")
+    tmp_img_dir = os.path.abspath("tmp_img")
+    templ_dir = os.path.abspath("../iso_templ")
 
-    with open(grub_early_fn, "wt") as grub_early:
-        grub_early.write("search.fs_uuid {} cd\n"
-                         "loopback loop ($cd)/pld-nr-{}.img\n"
-                         "set root=(loop,msdos1)\n"
-                         "set prefix=($root)/grub\n"
-                         .format(config.cd_vol_id, config.bits))
+    if os.path.exists(args.destination):
+        os.unlink(args.destination)
 
-    if not os.path.isdir(tmp_img_dir):
-        os.makedirs(tmp_img_dir)
+    if os.path.exists(tmp_img_dir):
+        shutil.rmtree(tmp_img_dir)
+
+    os.makedirs(tmp_img_dir)
     try:
-        logger.debug("Building GRUB boot image")
-        grub_core_modules = ["search", "search_label", "fat", "part_msdos",
-                                "biosdisk", "loopback", "iso9660"]
-        subprocess.check_call(["grub-mkimage",
-                                "--output", "iso-grub.img",
-                                "--format", "i386-pc",
-                                "--prefix", "/grub",
-                                "--config", grub_early_fn,
-                                ] + grub_core_modules)
-        with open(grub_img_fn, "wb") as grub_img_f:
-            with open("/lib/grub/i386-pc/cdboot.img", "rb") as cdboot_f:
-                grub_img_f.write(cdboot_f.read())
-            with open("iso-grub.img", "rb") as iso_grub_f:
-                grub_img_f.write(iso_grub_f.read())
-
-        logger.debug("Copying CD contents template")
-        config.copy_template_dir(iso_img_dir, tmp_img_dir)
+        logger.debug("Copying ISO contents template")
+        config.copy_template_dir(templ_dir, tmp_img_dir)
 
         logger.debug("Creating the ISO image")
-        command = ["mkisofs",
-                "-verbose",
-                "-joliet",
-                "-jcharset", "utf-8",
-                "-rock",
-                "-appid", "PLD New Rescue",
-                "-volid", "PLD NR {}".format(config.version)[:32],
-                "-boot-info-table",
-                "-eltorito-catalog", "boot.catalog",
-                ]
+        command = ["xorriso",
+                "-report_about", "ALL",
+                "-dev", args.destination,
+                "-in_charset", "utf-8",
+                "-out_charset", "utf-8",
+                "-hardlinks", "on",
+                "-acl", "off",
+                "-xattr", "off",
+                "-pathspecs", "on",
+                "-uid", "0",
+                "-gid", "0",
 
-        if config.bios:
-            command += [
-                      "-no-emul-boot",
-                      "-boot-load-size", "4",
-                      "-eltorito-boot", "eltorito-grub.img",
-                      ]
-            if config.efi:
-                command += ["-eltorito-alt-boot"]
+                "-joliet", "on",
+                "-rockridge", "on",
+                "-volid", "PLD_NR",
+                "-volume_date", "uuid", config.cd_vol_id.replace("-", ""),
+                ]
+        if config.bios and "i386-pc" in config.grub_platforms:
+            # CD boot
+            command += ["-add", "/boot/cdboot.img=cdboot.img", "--"]
+            command += ["-boot_image", "grub", "bin_path=/boot/cdboot.img"]
+            command += ["-boot_image", "grub", "next"]
+            
+            # HDD boot
+            command += ["-boot_image", "any",
+                                    "system_area=/lib/grub/i386-pc/boot.img"]
+            command += ["-boot_image", "any", "next"]
+            # MBR and the image will be patched later
+
         if config.efi:
-            command += [
-                      "-hard-disk-boot",
-                      "-efi-boot", os.path.basename(args.source),
-                      ]
-        command += [
-                "-preparer", "https://github.com/Jajcus/pld-new-rescue",
-                #"-log-file", "mkisofs.log",
-                "-o", args.destination,
-                "-graft-points",
-                "{}={}".format(os.path.basename(args.source), args.source),
-                tmp_img_dir,
-                ]
-        subprocess.check_call(command)
+            command += ["-add", "/boot/efi.img=efi.img", "--"]
+            command += ["-boot_image", "any", "efi_path=/boot/efi.img"]
+            command += ["-boot_image", "any", "next"]
+            command += ["-boot_image", "any", "efi_boot_part=--efi-boot-image"]
+            command += ["-boot_image", "any", "next"]
 
-        logger.debug("Updating the image creation date ('UUID')")
-        with open(args.destination, "br+", buffering=0) as img_f:
-            logger.debug("    seeking to sector 16")
-            img_f.seek(16 * 2048)
-            buf = bytearray(2048)
-            while True:
-                length = img_f.readinto(buf)
-                logger.debug("    {} bytes read".format(length))
-                if buf[1:6] != b"CD001":
-                    raise RuntimeError("Primary Volume Descriptor not found")
-                d_type = buf[0]
-                logger.debug("    Volume Descriptor type {} found"
-                                                            .format(d_type))
-                if d_type == 1:
-                    break
-            if length != 2048:
-                raise RuntimeError("Primary Volume Descriptor too short")
-            buf[813:829] = config.cd_vol_id.replace("-", "").encode("ascii")
-            buf[829] = 0
-            buf[830:847] = buf[813:830]
-            img_f.seek(-2048, SEEK_CUR)
-            img_f.write(buf)
+        command.append("-add")
+        for plat in config.grub_platforms:
+            src_dir = os.path.join("/lib/grub", plat)
+            for path in glob(os.path.join(src_dir, "*")):
+                if path.endswith(".module"):
+                    continue
+                dst_path = "/boot/grub" + path[len("/lib/grub"):]
+                command.append("{}={}".format(dst_path, path))
+        command.append("/={}".format(tmp_img_dir))
+        command.append("--")
+
+        subprocess.check_call(command)
+        
+        if config.bios and "i386-pc" in config.grub_platforms:
+            patch_image_mbr(config, args.destination)
     finally:
         shutil.rmtree(tmp_img_dir)
 
