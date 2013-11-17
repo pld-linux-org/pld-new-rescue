@@ -9,6 +9,7 @@ ifeq ($(MAKE_VARS_INCLUDED),yes)
 
 ../pld-nr-$(BITS).iso: uuids init.cpi $(MODULE_FILES) efi.img $(PC_GRUB_IMAGES) ../iso_templ/* ../iso_templ/*/*
 	./make_iso_img.py $@
+	./fix_gpt.py --write $@
 
 efi.img: $(EFI_GRUB_IMAGES) ../efi_templ/*
 	./make_efi_img.py $@
