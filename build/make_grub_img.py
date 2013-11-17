@@ -25,17 +25,26 @@ def main():
     
     config = pld_nr_buildconf.Config.get_config()
 
+    if args.platform == "i386-efi":
+        efi_arch = "ia32"
+    elif args.platform == "x86_64-efi":
+        efi_arch = "x64"
+    else:
+        efi_arch = ""
+
     with tempfile.NamedTemporaryFile(mode="w+t") as grub_early:
         grub_early.write("""
 echo "starting grub ({platform})"
 search.fs_uuid {vol_id} root
 search.fs_uuid {efi_id} efi_part
 set prefix=($root)/boot/grub
-echo "using prefix: $prefix efi_part: $efi_part"
+set efi_suffix={efi_suffix}
+echo "using prefix: $prefix efi_part: $efi_part $efi_suffix"
 """
                      .format(platform=args.platform,
                              vol_id=config.cd_vol_id,
-                             efi_id=config.efi_vol_id))
+                             efi_id=config.efi_vol_id,
+                             efi_suffix=efi_arch.upper()))
         grub_early.flush()
         grub_core_modules = ["minicmd"]
         if args.platform.endswith("-pc"):

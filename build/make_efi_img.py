@@ -48,6 +48,11 @@ def main():
 
     logger.info("Computing required image size")
     extra_files = list(grub_files)
+
+    if config.efi_shell:
+        efi_shell_path = "/lib/efi/{}/Shell.efi".format(config.efi_arch)
+        extra_files.append(efi_shell_path)
+
     du_output = subprocess.check_output(["du", "-sbcD",
                                             "../efi_templ",
                                             ] + extra_files)
@@ -72,6 +77,9 @@ def main():
             logger.info("Installing PLD NR EFI files")
             efi_boot_dir = os.path.join(efi_mnt_dir, "EFI/BOOT")
             os.makedirs(efi_boot_dir)
+            if config.efi_shell:
+                shutil.copy(efi_shell_path, os.path.join(efi_mnt_dir, "EFI",
+                                "SHELL{}.EFI".format(config.efi_arch.upper())))
             config.copy_template_dir(efi_templ_dir, efi_mnt_dir)
             for source, efi_arch in grub_files.items():
                 dst = os.path.join(efi_boot_dir, "BOOT{}.EFI".format(efi_arch))

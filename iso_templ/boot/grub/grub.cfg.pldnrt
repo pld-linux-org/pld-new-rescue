@@ -143,4 +143,10 @@ if [ -e /boot/memtest86+ ] ; then
     }
 fi
 
+if [ -e ($efi_part)/EFI/SHELL${efi_suffix}.EFI ] ; then
+    menuentry "EFI Shell" {
+        chainloader ($efi_part)/EFI/SHELL${efi_suffix}.EFI
+    }
+fi
+
 # vi: et sw=4 sts=4

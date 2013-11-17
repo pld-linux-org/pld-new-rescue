@@ -157,6 +157,12 @@ class Config(object):
         self.memtest86_plus = self._config.getboolean("memtest86+",
                                                     fallback=False)
 
+        if self.efi:
+            self.efi_shell = self._config.getboolean("efi_shell",
+                                                        fallback=False)
+        else:
+            self.efi_shell = False
+
         self.hashed_root_password = self._config.get("hashed_root_password")
         if not self.hashed_root_password:
             root_password = self._config.get("root_password")
@@ -259,6 +265,11 @@ class Config(object):
         if self.memtest86_plus and not os.path.exists("/boot/memtest86+"):
             raise ConfigError("/boot/memtest86+ missing")
 
+        if self.efi_shell:
+            efi_shell_path = "/lib/efi/{}/Shell.efi".format(self.efi_arch)
+            if not os.path.exists(efi_shell_path):
+                raise ConfigError("{} missing".format(efi_shell_path))
+
         if not HOSTNAME_RE.match(self.hostname):
             raise ConfigError("Bad host name: {0!r}".format(self.hostname))
 
@@ -300,6 +311,7 @@ class Config(object):
         result["hashed_root_password"] = self.hashed_root_password
         result["memtest86"] = "yes" if self.memtest86 else "no"
         result["memtest86+"] = "yes" if self.memtest86_plus else "no"
+        result["efi_shell"] = "yes" if self.efi_shell else "no"
         result["hostname"] = self.hostname
         result["locales"] = ",".join(self.locales)
         result["uuid"] = str(self.uuid)
