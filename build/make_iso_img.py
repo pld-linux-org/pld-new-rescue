@@ -181,6 +181,8 @@ def main():
         for mod in config.modules:
             command.append("{0}/{1}.cpi={1}.cpi".format(pld_nr_prefix, mod))
         command.append("{}/vmlinuz={}".format(pld_nr_prefix, vmlinuz_fn))
+        if config.efi:
+            command.append("/boot/grub/font.pf2=font.pf2")
         command.append("/={}".format(tmp_img_dir))
         if config.memtest86:
             command.append("/boot/memtest86=/boot/memtest86")

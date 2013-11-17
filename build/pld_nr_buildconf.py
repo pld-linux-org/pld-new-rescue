@@ -411,6 +411,8 @@ class Config(object):
             lines.append("PC_GRUB_IMAGES=boot.img")
         else:
             lines.append("PC_GRUB_IMAGES=")
+        if self.efi:
+            lines.append("FONT_FILE=font.pf2")
         lines.append("COMPRESS={0}".format(" ".join(self.compress_cmd)))
         lines.append("VERSION={0}".format(self.version))
         return "\n".join(lines)

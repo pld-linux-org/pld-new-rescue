@@ -16,6 +16,7 @@
 /build/*.lst
 /build/*.full-lst
 /build/*.exclude
+/build/*.pf2
 /build/cache/
 /build/gen_init_cpio.list
 /build/grub_early.cfg

@@ -7,7 +7,7 @@ image:	../pld-nr-$(BITS).iso
 
 ifeq ($(MAKE_VARS_INCLUDED),yes)
 
-../pld-nr-$(BITS).iso: uuids init.cpi $(MODULE_FILES) efi.img $(PC_GRUB_IMAGES) ../iso_templ/* ../iso_templ/*/* ../iso_templ/*/*/*
+../pld-nr-$(BITS).iso: uuids init.cpi $(MODULE_FILES) efi.img $(PC_GRUB_IMAGES) $(FONT_FILE) ../iso_templ/* ../iso_templ/*/* ../iso_templ/*/*/*
 	./make_iso_img.py $@
 	./fix_gpt.py --write $@
 
@@ -18,6 +18,10 @@ boot.img: grub-i386-pc.img
 	cat /lib/grub/i386-pc/cdboot.img grub-i386-pc.img > $@
 
 .DELETE: boot.img
+
+font.pf2: /usr/share/fonts/TTF/DejaVuSansMono.ttf
+	grub-mkfont --output $@ $<
+
 
 grub-%.img: uuids /lib/grub/%
 	./make_grub_img.py $* $@
@@ -30,7 +34,6 @@ init.cpi base.lst: uuids base.full-lst ../initramfs/files.list ../initramfs/skel
 
 %.sqf: %.lst
 	./make_module.py $*
-
 
 $(PSET_LST_FILES): poldek.conf
 	./install_packages.py
@@ -51,6 +54,7 @@ clean:
 	-rm -rf *.lst *.full-lst gen_init_cpio.list *.exclude
 	-rm -rf *.cpi *.sqf *.img
 	-rm -rf poldek.conf grub*.cfg
+	-rm -f font.pf2
 	-rm -f make.vars make.deps
 	-rmdir efi_mnt boot_mnt
 
