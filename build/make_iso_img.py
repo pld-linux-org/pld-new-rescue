@@ -182,6 +182,10 @@ def main():
             command.append("{0}/{1}.cpi={1}.cpi".format(pld_nr_prefix, mod))
         command.append("{}/vmlinuz={}".format(pld_nr_prefix, vmlinuz_fn))
         command.append("/={}".format(tmp_img_dir))
+        if config.memtest86:
+            command.append("/boot/memtest86=/boot/memtest86")
+        if config.memtest86_plus:
+            command.append("/boot/memtest86+=/boot/memtest86+")
         command.append("--")
 
         subprocess.check_call(command)

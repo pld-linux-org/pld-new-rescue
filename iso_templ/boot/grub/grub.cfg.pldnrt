@@ -131,15 +131,15 @@ if [ -e /pld-nr-32/vmlinuz ] ; then
 fi
 
 
-if [ -e /memtest86 ] ; then
+if [ -e /boot/memtest86 ] ; then
     menuentry "Memtest86" {
-        linux16 /memtest86
+        linux16 /boot/memtest86
     }
 fi
 
-if [ -e /memtest86+ ] ; then
+if [ -e /boot/memtest86+ ] ; then
     menuentry "Memtest86+" {
-        linux16 /memtest86+
+        linux16 /boot/memtest86+
     }
 fi
 
