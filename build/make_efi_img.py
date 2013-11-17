@@ -112,9 +112,9 @@ def main():
                                             "../efi_templ",
                                             ] + extra_files)
     match = DU_OUTPUT_RE.search(du_output.decode("utf-8"))
-    bytes_needed = int(int(match.group(1)) * 1.1)
+    bytes_needed = int(int(match.group(1)) * 1.2)
     logger.debug("bytes needed: {0!r}".format(bytes_needed))
-    blocks_needed = max(bytes_needed // 1024, 4096)
+    blocks_needed = max(bytes_needed // 1024, 256)
 
     logger.info("Creating the image")
     subprocess.check_call(["dd", "if=/dev/zero", "of=" + efi_img_fn,
