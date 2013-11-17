@@ -1,13 +1,10 @@
 
 .PHONY: cd usb bindist clean
 
-all: usb cd
+all: image
 
-cd:
-	$(MAKE) -C build cd
-
-usb:
-	$(MAKE) -C build cd
+image:
+	$(MAKE) -C build image
 
 clean:
 	$(MAKE) -C build clean
