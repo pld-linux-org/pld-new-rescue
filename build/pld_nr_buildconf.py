@@ -16,7 +16,7 @@ from hashlib import md5
 from datetime import datetime
 from collections import OrderedDict
 
-logger = logging.getLogger()
+logger = logging.getLogger("pld_nr_buildconf")
 
 X86_RE = re.compile("^(i[3-6]86|ia32)$")
 X86_64_RE = re.compile("^(x86_64|amd64)$")

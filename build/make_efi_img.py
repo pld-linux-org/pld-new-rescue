@@ -13,7 +13,7 @@ from hashlib import md5
 
 import pld_nr_buildconf
 
-logger = logging.getLogger()
+logger = logging.getLogger("make_efi_img")
 
 DU_OUTPUT_RE = re.compile("^(\d+)\s+total", re.MULTILINE)
 

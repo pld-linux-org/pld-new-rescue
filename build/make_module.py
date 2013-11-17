@@ -13,8 +13,7 @@ from glob import glob
 
 import pld_nr_buildconf
 
-logger = logging.getLogger()
-
+logger = logging.getLogger("make_module")
 
 def main():
     log_parser = pld_nr_buildconf.get_logging_args_parser()

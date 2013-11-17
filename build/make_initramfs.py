@@ -14,7 +14,7 @@ from glob import glob
 
 import pld_nr_buildconf
 
-logger = logging.getLogger()
+logger = logging.getLogger("make_initramfs")
 
 KERNEL_MOD_RE = re.compile("^lib/modules/([^/]*)/(.*\.ko(?:\.gz)?)$")
 

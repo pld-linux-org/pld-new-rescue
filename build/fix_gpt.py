@@ -16,7 +16,7 @@ import copy
 
 import pld_nr_buildconf
 
-logger = logging.getLogger()
+logger = logging.getLogger("fix_gpt")
 
 # /usr/include/asm-generic/ioctl.h
 def _IO(type_, nr):

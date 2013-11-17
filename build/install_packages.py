@@ -9,7 +9,7 @@ import logging
 
 import pld_nr_buildconf
 
-logger = logging.getLogger()
+logger = logging.getLogger("install_packages")
 
 class PackageInstaller(object):
     def __init__(self, config):

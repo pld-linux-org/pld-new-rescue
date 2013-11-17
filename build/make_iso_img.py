@@ -15,7 +15,7 @@ from hashlib import md5
 
 import pld_nr_buildconf
 
-logger = logging.getLogger()
+logger = logging.getLogger("make_iso_img")
 
 # Report layout: xt , Startlba ,   Blocks , Filesize , ISO image path
 HDBOOT_LBA_RE = re.compile(br"File data lba:"
