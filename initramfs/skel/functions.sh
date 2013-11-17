@@ -26,53 +26,30 @@ mount_media() {
     fi
 
     for i in 1 2 3 4 5 6 7 8 9 10; do
-        if /sbin/blkid -U "$cd_vol_id" 2>/dev/null || /sbin/blkid -U "$hd_vol_id" 2>/dev/null ; then
+        if /sbin/blkid -U "$cd_vol_id" ; then
             break
         fi
         echo "Waiting for the boot media to appear..."
         sleep 1
     done
 
-    echo "Attempting to mount the boot CD"
+    echo "Attempting to mount the boot file system"
     modprobe isofs
     modprobe nls_utf8
-    mkdir -p /root/media/pld-nr-cd
-    if /bin/mount -t iso9660 -outf8 UUID="$cd_vol_id" /root/media/pld-nr-cd 2>/dev/null ; then
-        echo "PLD New Rescue CD found"
-        ls -l /root/media/pld-nr-cd
-        if boot_dev="$(/sbin/losetup --find --show --partscan /root/media/pld-nr-cd/pld-nr-${bits}.img)" ; then
-            boot_dev="${boot_dev}p1"
-        fi
+    mkdir -p /root/media/pld-nr
+    if /bin/mount -t iso9660 -outf8 UUID="$cd_vol_id" /root/media/pld-nr 2>/dev/null ; then
+        echo "PLD New Rescue medium found"
+        ls -l /root/media/pld-nr
     fi
-
-    if [ -z "$boot_dev" ] ; then
-        boot_dev="UUID=$hd_vol_id"
-    fi
-
-    echo "Mounting the boot image"
-    modprobe vfat
-    modprobe nls_cp437
-    modprobe nls_iso8859-1
-    mkdir -p /root/media/pld-nr-hd
-    /bin/mount -t vfat -outf8=true,codepage=437 $boot_dev /root/media/pld-nr-hd || :
-
-    ln -sf /root/media /media
 }
 
 umount_media() {
 
-    if mountpoint -q /root/media/pld-nr-hd ; then
-        if umount /root/media/pld-nr-hd 2>/dev/null ; then
-            echo "Boot image unmounted"
+    if mountpoint -q /root/media/pld-nr ; then
+        if umount /root/media/pld-nr 2>/dev/null ; then
+            echo "Boot medium unmounted"
         else
-            echo "Boot image in use, keeping it mounted"
-        fi
-    fi
-    if mountpoint -q /root/media/pld-nr-cd ; then
-        if umount /root/media/pld-nr-cd 2>/dev/null ; then
-            echo "Boot CD unmounted"
-        else
-            echo "Boot CD in use, keeping it mounted"
+            echo "Boot medium in use, keeping it mounted"
         fi
     fi
     rm /media
@@ -99,11 +76,7 @@ load_module() {
     if [ ! -e "$sqf" ] ; then
         name_len=$(expr length $module)
         offset=$(( ((118 + $name_len)/4) * 4 ))
-        for sqf in /root/media/pld-nr-hd$prefix/${module}.cpi \
-                   /root/media/pld-nr-cd$prefix/${module}.cpi \
-                   /root/media/pld-nr-cd/${module}.cpi ; do
-            [ -e "$sqf" ] && break
-        done
+        sqf="/root/media/pld-nr$prefix/${module}.cpi"
     fi
 
     if [ ! -e "$sqf" ] ; then

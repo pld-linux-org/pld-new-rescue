@@ -7,23 +7,17 @@ image:	../pld-nr-$(BITS).iso
 
 ifeq ($(MAKE_VARS_INCLUDED),yes)
 
-../pld-nr-$(BITS).iso: uuids init.cpi $(MODULE_FILES) efi.img $(PC_GRUB_IMAGES) ../iso_templ/* ../iso_templ/*/*
+../pld-nr-$(BITS).iso: uuids init.cpi $(MODULE_FILES) efi.img $(PC_GRUB_IMAGES) ../iso_templ/* ../iso_templ/*/* ../iso_templ/*/*/*
 	./make_iso_img.py $@
 	./fix_gpt.py --write $@
 
 efi.img: $(EFI_GRUB_IMAGES) ../efi_templ/*
 	./make_efi_img.py $@
 
-cdboot.img: grub-i386-pc.img
+boot.img: grub-i386-pc.img
 	cat /lib/grub/i386-pc/cdboot.img grub-i386-pc.img > $@
 
-hdboot.img: grub-i386-pc.img
-	cat /lib/grub/i386-pc/diskboot.img grub-i386-pc.img > $@
-
-.DELETE: cdboot.img boot.img
-
-
-.DELETE: cdboot.img
+.DELETE: boot.img
 
 grub-%.img: uuids /lib/grub/%
 	./make_grub_img.py $* $@
@@ -59,6 +53,7 @@ clean:
 	-rm -rf *.cpi *.sqf *.img
 	-rm -rf poldek.conf grub*.cfg
 	-rm -f make.vars make.deps
+	-rmdir efi_mnt boot_mnt
 
 make.vars uuids: ../build.conf ./pld_nr_buildconf.py /usr/bin/python3
 	./pld_nr_buildconf.py --verify --gen-uuids --make-vars > make.vars

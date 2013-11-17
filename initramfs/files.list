@@ -51,11 +51,9 @@ slink /bin/tr busybox 0755 0 0
 * /lib/modules/*/kernel/drivers/block/loop.ko*
 * /lib/modules/*/kernel/fs/autofs4
 * /lib/modules/*/kernel/fs/isofs
-* /lib/modules/*/kernel/fs/fat/vfat*
 * /lib/modules/*/kernel/fs/squashfs
 * /lib/modules/*/kernel/fs/aufs
 * /lib/modules/*/kernel/fs/nls/nls_utf8.*
-* /lib/modules/*/kernel/fs/nls/nls_cp437.*
 * /lib/modules/*/kernel/fs/nls/nls_iso8859-1.*
 * /lib/modules/*/kernel/drivers/usb/host/ehci*
 * /lib/modules/*/kernel/drivers/usb/host/ohci*

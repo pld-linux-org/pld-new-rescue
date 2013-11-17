@@ -396,7 +396,7 @@ class Config(object):
                                             for p in self.grub_platforms
                                             if p.endswith("-efi"))))
         if self.bios  and "i386-pc" in self.grub_platforms:
-            lines.append("PC_GRUB_IMAGES=cdboot.img hdboot.img")
+            lines.append("PC_GRUB_IMAGES=boot.img")
         else:
             lines.append("PC_GRUB_IMAGES=")
         lines.append("COMPRESS={0}".format(" ".join(self.compress_cmd)))

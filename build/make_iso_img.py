@@ -23,7 +23,7 @@ HDBOOT_LBA_RE = re.compile(br"File data lba:"
                             br"\s*(?P<start_lba>\d+)\s*,"
                             br"\s*(?P<blocks>\d+)\s*,"
                             br"\s*(?P<filesize>\d+)\s*,"
-                            br"\s*'/boot/cdboot.img'\s*")
+                            br"\s*'/boot/boot.img'\s*")
 
 # grub/i286/pc/boot.h
 GRUB_BOOT_MACHINE_DRIVE_CHECK = 0x66
@@ -40,23 +40,23 @@ GRUB_BLOCK_LIST = 0x200 - GRUB_BOOT_MACHINE_LIST_SIZE
 def patch_image_mbr(config, image):
     lba_report = subprocess.check_output(["xorriso",
                                         "-dev", image,
-                                        "-find", "/boot/cdboot.img",
+                                        "-find", "/boot/boot.img",
                                             "-exec", "report_lba"])
     match = HDBOOT_LBA_RE.search(lba_report)
     if not match:
-        logger.error("Could not find /boot/cdboot.img LBA")
+        logger.error("Could not find /boot/boot.img LBA")
         sys.exit(1)
     start_lba = int(match.group("start_lba"))
     blocks = int(match.group("blocks"))
     filesize = int(match.group("filesize"))
-    logger.info("/boot/cdboot.img start CD LBA: {} blocks: {} bytes: {}"
+    logger.info("/boot/boot.img start CD LBA: {} blocks: {} bytes: {}"
                                         .format(start_lba, blocks, filesize))
     start_sector = start_lba * 4
     if filesize & 0x1ff:
         sectors = (filesize >> 9) + 1
     else:
         sectors = filesize >> 9
-    logger.info("/boot/cdboot.img start HD LBA: {} sectors: {}"
+    logger.info("/boot/boot.img start HD LBA: {} sectors: {}"
                                         .format(start_sector, sectors))
 
     with open(image, "r+b") as image_f:
@@ -111,8 +111,14 @@ def main():
 
     config = pld_nr_buildconf.Config.get_config()
 
+    root_dir = os.path.abspath("root")
     tmp_img_dir = os.path.abspath("tmp_img")
     templ_dir = os.path.abspath("../iso_templ")
+    vmlinuz_fn = os.path.join(root_dir, "boot/vmlinuz")
+    while os.path.islink(vmlinuz_fn):
+        link_target = os.readlink(vmlinuz_fn)
+        link_target = os.path.join("/boot", link_target)
+        vmlinuz_fn = os.path.join(root_dir, link_target.lstrip("/"))
 
     if os.path.exists(args.destination):
         os.unlink(args.destination)
@@ -145,8 +151,8 @@ def main():
                 ]
         if config.bios and "i386-pc" in config.grub_platforms:
             # CD boot
-            command += ["-add", "/boot/cdboot.img=cdboot.img", "--"]
-            command += ["-boot_image", "grub", "bin_path=/boot/cdboot.img"]
+            command += ["-add", "/boot/boot.img=boot.img", "--"]
+            command += ["-boot_image", "grub", "bin_path=/boot/boot.img"]
             command += ["-boot_image", "grub", "next"]
             
             # HDD boot
@@ -170,6 +176,11 @@ def main():
                     continue
                 dst_path = "/boot/grub" + path[len("/lib/grub"):]
                 command.append("{}={}".format(dst_path, path))
+        pld_nr_prefix = "/pld-nr-{}".format(config.bits)
+        command.append("{}/init.cpi=init.cpi".format(pld_nr_prefix))
+        for mod in config.modules:
+            command.append("{0}/{1}.cpi={1}.cpi".format(pld_nr_prefix, mod))
+        command.append("{}/vmlinuz={}".format(pld_nr_prefix, vmlinuz_fn))
         command.append("/={}".format(tmp_img_dir))
         command.append("--")
 

@@ -1,11 +1,16 @@
 #!/bin/sh
 
+# Utility script to prepare images for testing in VirtualBox
+
 [ -e /tmp/boot.vdi ] && rm -f /tmp/boot.vdi
 
 VBoxManage convertfromraw \
 	../pld-nr-32.iso /tmp/boot.vdi \
 	--format VDI \
 	--uuid "38ab3e27-302b-445b-ab04-5a35a5120147"
+
+# to preven I/O errors due to searching for further iso9660 sessions
+VBoxManage modifyhd /tmp/boot.vdi --resize 1024
 
 chown root:vbox /tmp/boot.vdi
 #chmod ug+rw /tmp/boot.vdi

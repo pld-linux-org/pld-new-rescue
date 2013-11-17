@@ -1,5 +1,12 @@
 
 ###########################################################
+# Make udev use the provided blkid
+# the built-in does not work properly for our image
+
+sed -i -es'@IMPORT{builtin}="blkid"@IMPORT{program}="/sbin/blkid -o udev $devnode"@' \
+	root/lib/udev/rules.d/*.rules
+
+###########################################################
 # set up the root password
 
 if [ -n "$pldnr_hashed_root_password" ] ; then
@@ -37,8 +44,8 @@ done
 cat <<EOF >root/etc/fstab
 none		/			tmpfs	defaults		0 0
 
-UUID=$pldnr_hd_vol_id /media/pld-nr-hd	vfat	noauto,utf8=true	0 0
-UUID=$pldnr_cd_vol_id /media/pld-nr-cd	iso9660	noauto,utf8,ro		0 0
+UUID=$pldnr_cd_vol_id /media/pld-nr	iso9660	noauto,utf8,ro		0 0
+UUID=$pldnr_efi_vol_id /boot/efi	vfat	noauto,utf8=true	0 0
 
 none		/proc			proc	defaults,noauto,hidepid=2,gid=17	0 0
 none		/sys			sysfs	defaults,noauto,gid=17	0 0
