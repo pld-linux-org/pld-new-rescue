@@ -50,13 +50,14 @@ bindist: cd usb
 endif
 
 clean:
+	-if mountpoint -q efi_mnt ; then umount efi_mnt ; fi
 	-rm -rf --one-file-system root
 	-rm -rf *.lst *.full-lst gen_init_cpio.list *.exclude
 	-rm -rf *.cpi *.sqf *.img
 	-rm -rf poldek.conf grub*.cfg
 	-rm -f font.pf2
 	-rm -f make.vars make.deps
-	-rmdir efi_mnt boot_mnt
+	-rmdir efi_mnt
 
 make.vars uuids: ../build.conf ./pld_nr_buildconf.py /usr/bin/python3
 	./pld_nr_buildconf.py --verify --gen-uuids --make-vars > make.vars
