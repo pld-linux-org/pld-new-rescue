@@ -1,7 +1,10 @@
 
 include make.vars
 
+.PHONY: image
+
 image:	../pld-nr-$(BITS).iso
+	echo ; echo "$$(readlink -f $<) image built ($$(($$(stat --printf="%s" $<)/1048576)) MiB)" ; echo
 
 .PHONY: usb cd clean maintaner-clean
 
