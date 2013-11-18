@@ -225,6 +225,9 @@ class Config(object):
         if not X86_RE.match(self.arch) and not X86_64_RE.match(self.arch):
             raise ConfigError("Architecture not supported: {0!r}"
                                                         .format(self.arch))
+        if os.getuid() != 0:
+            raise ConfigError(
+                        "I am sorry, but you need to be root to build this.")
         for m in self.modules:
             module_dir = os.path.join("../modules", m)
             if not os.path.isdir(module_dir):
