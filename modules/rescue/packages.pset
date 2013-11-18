@@ -210,7 +210,7 @@ reiserfsprogs
 #revinetd
 rexec
 #ripmime
-rlinetd
+systemd-inetd
 rlogin
 rmt
 rp-pppoe
