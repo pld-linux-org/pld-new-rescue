@@ -58,7 +58,7 @@ def main():
     du_output = subprocess.check_output(["du", "-sbcD",
                                             "../efi_templ",
                                             ] + extra_files,
-                                            env=save_env)
+                                            env=safe_env)
     match = DU_OUTPUT_RE.search(du_output.decode("utf-8"))
     bytes_needed = int(int(match.group(1)) * 1.2)
     logger.debug("bytes needed: {0!r}".format(bytes_needed))
