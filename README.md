@@ -2,6 +2,8 @@
 PLD New Rescue
 ==============
 
+https://github.com/Jajcus/pld-new-rescue
+
 Bootable disk image with 'live' [PLD Linux](http://www.pld-linux.org/) system
 aimed especially for system rescue and maintenance.
 
@@ -10,6 +12,15 @@ This project is inspired by the original [PLD Rescue CD](http://rescuecd.pld-lin
 This is still work in progress.
 
 List of packages included in image should be available with the binary releases.
+
+### About this version
+
+This is the 'th-current' branch of the PLD New Rescue, based on most current
+PLD Linux Th packages. Due to the dynamic nature of PLD Th and its package
+repositories, what builds and works today may fail to build or work tomorrow.
+But the software is more up to date.
+
+For reproducible results use code from the 'master' branch.
 
 Goals
 -----
