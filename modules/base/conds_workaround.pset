@@ -10,8 +10,12 @@ coreutils
 systemd-units
 systemd-libs
 
+# /usr/lib/rpm/user_group.sh
+rpm-base
+
 # useradd 
 pwdutils
 openldap-libs
 libnscd
 cyrus-sasl-libs
+openssl
