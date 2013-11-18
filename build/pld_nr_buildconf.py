@@ -259,19 +259,25 @@ class Config(object):
         for plat in self.grub_platforms:
             plat_dir = os.path.join("/lib/grub", plat)
             if not os.path.isdir(plat_dir):
-                raise ConfigError("Grub platform directory {0!r} not found"
-                                                        .format(plat_dir))
+                if "-" in plat:
+                    plat = plat.split("-", 1)[1]
+                pkg_name = "grub2-platform-{}".format(plat)
+                raise ConfigError("Grub platform directory {!r} not found."
+                                " You may need to the install {!r} package."
+                                                .format(plat_dir, pkg_name))
 
         if self.memtest86 and not os.path.exists("/boot/memtest86"):
             raise ConfigError("/boot/memtest86 missing")
-        
+
         if self.memtest86_plus and not os.path.exists("/boot/memtest86+"):
             raise ConfigError("/boot/memtest86+ missing")
 
         if self.efi_shell:
             efi_shell_path = "/lib/efi/{}/Shell.efi".format(self.efi_arch)
             if not os.path.exists(efi_shell_path):
-                raise ConfigError("{} missing".format(efi_shell_path))
+                raise ConfigError("{} missing. You should install"
+                                            " the 'efi-shell-{}' package."
+                                        .format(efi_shell_path, self.efi_arch))
 
         if not HOSTNAME_RE.match(self.hostname):
             raise ConfigError("Bad host name: {0!r}".format(self.hostname))
@@ -284,6 +290,8 @@ class Config(object):
         _check_tool("poldek")
         _check_tool("du")
         _check_tool("dd")
+        _check_tool("mount")
+        _check_tool("umount")
         _check_tool("losetup")
         _check_tool("mkdosfs", ignore_error=True, quiet=True,
                                                         package="dosfstools")
