@@ -53,9 +53,12 @@ def main():
         efi_shell_path = "/lib/efi/{}/Shell.efi".format(config.efi_arch)
         extra_files.append(efi_shell_path)
 
+    safe_env = dict(os.environ)
+    safe_env["LC_ALL"] = "C"
     du_output = subprocess.check_output(["du", "-sbcD",
                                             "../efi_templ",
-                                            ] + extra_files)
+                                            ] + extra_files,
+                                            env=save_env)
     match = DU_OUTPUT_RE.search(du_output.decode("utf-8"))
     bytes_needed = int(int(match.group(1)) * 1.2)
     logger.debug("bytes needed: {0!r}".format(bytes_needed))
