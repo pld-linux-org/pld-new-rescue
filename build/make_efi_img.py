@@ -88,7 +88,7 @@ def main():
                 dst = os.path.join(efi_boot_dir, "BOOT{}.EFI".format(efi_arch))
                 shutil.copy(source, dst)
         finally:
-            subprocess.call(["umount", efi_mnt_dir])
+            subprocess.call(["umount", "--lazy", efi_mnt_dir])
     except:
         os.unlink(efi_img_fn)
         raise
