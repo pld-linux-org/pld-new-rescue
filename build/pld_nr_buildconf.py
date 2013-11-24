@@ -11,6 +11,8 @@ import shutil
 import locale
 import crypt
 import uuid
+import tempfile
+import shlex
 
 from hashlib import md5
 from datetime import datetime
@@ -189,10 +191,30 @@ class Config(object):
 
         self.defaults = {k[8:]: v for k, v in self._config.items()
                                                 if k.startswith("default_")}
+        if os.getuid() == 0:
+            self.c_sudo = []
+        else:
+            self.c_sudo = ["sudo"]
+
+        self.extra_path = self._config.get("extra_path", None)
+
+        self.update_path()
+
+    def update_path(self):
+        if not self.extra_path:
+            return
+        current_path = os.environ.get("PATH", "")
+        paths = current_path.split(":")
+        new_paths = self.extra_path.split(":")
+        for path in new_paths:
+            if path not in paths:
+                paths.append(path)
+        os.environ["PATH"] = ":".join(paths)
+        logger.debug("PATH={!r}".format(os.environ["PATH"]))
 
     def load_uuids(self):
         try:
-            with open("uuids", "rt") as uuid_f:
+            with open(os.path.join(self.build_dir, "uuids"), "rt") as uuid_f:
                 self.uuid = uuid.UUID(uuid_f.readline().strip())
                 self.efi_vol_id = uuid_f.readline().strip()
                 self.cd_vol_id = uuid_f.readline().strip()
@@ -226,13 +248,20 @@ class Config(object):
             raise ConfigError("Architecture not supported: {0!r}"
                                                         .format(self.arch))
         if os.getuid() != 0:
-            raise ConfigError(
-                        "I am sorry, but you need to be root to build this.")
+            try:
+                _check_tool("sudo", args=["-V"])
+            except ConfigError as err:
+                raise ConfigError(
+                        "I am sorry, but you need to be root or use sudo"
+                                                        " to build this. {}"
+                                                            .format(err))
+
         for m in self.modules:
             module_dir = os.path.join("../modules", m)
             if not os.path.isdir(module_dir):
                 raise ConfigError("Invalid module: '{0}' - there is no '{1}'"
                                     " directory".format(m, module_dir))
+
         if self.compression not in ("xz", "gzip"):
             raise ConfigError("Unsupported compression: {0!r}"
                                             .format(self.compression))
@@ -301,6 +330,9 @@ class Config(object):
                                                         package="kernel-tools")
         _check_tool("mksquashfs", args=["-version"], package="squashfs")
         _check_tool("xorriso")
+        
+        _check_tool("mcopy", package="mtools")
+        _check_tool("mmd", package="mtools")
 
     def get_config_vars(self):
         """Return current config as string->string mapping."""
@@ -330,6 +362,7 @@ class Config(object):
         result["cd_vol_id"] = self.cd_vol_id
         for k, v in self.defaults.items():
             result["default_" + k] = v
+        result["extra_path"] = self.extra_path
         return result
 
     def substitute_bytes(self, data):
@@ -354,7 +387,14 @@ class Config(object):
             with open(dest, "wb") as dest_f:
                 dest_f.write(data)
 
-    def copy_dir(self, source, dest, substitution=False):
+    def copy_dir(self, source, dest, substitution=False,
+                        copy=shutil.copy, copy_subst=None, mkdirs=None):
+        if copy_subst is None:
+            copy_subst = self.copy_substituting
+        if mkdirs is None:
+            def mkdirs(path):
+                if not os.path.exists(path):
+                    os.makedirs(path)
         old_pwd = os.getcwd()
         os.chdir(source)
         try:
@@ -363,8 +403,7 @@ class Config(object):
                 for dirname in dirnames:
                     path = os.path.join(dirpath, dirname)
                     dst_path = os.path.join(dest, path)
-                    if not os.path.exists(dst_path):
-                        os.makedirs(dst_path)
+                    mkdirs(dst_path)
                 for filename in filenames:
                     if filename.endswith("~"):
                         continue
@@ -372,19 +411,54 @@ class Config(object):
                     dst_path = os.path.join(dest, path)
                     if substitution and filename.endswith(".pldnrt"):
                         dst_path = dst_path[:-7]
-                        self.copy_substituting(path, dst_path)
+                        copy_subst(path, dst_path)
                     else:
-                        shutil.copy(path, dst_path)
+                        copy(path, dst_path)
         finally:
             os.chdir(old_pwd)
 
     def copy_template_dir(self, source, dest):
         return self.copy_dir(source, dest, True)
 
-    def run_script(self, script):
-        env = {"pldnr_" + k: v for k, v in self.get_config_vars().items()}
-        env["PATH"] = "/usr/bin:/usr/sbin:/bin:/sbin"
-        subprocess.check_call(["/bin/sh", "-ex", script], env=env)
+    def mcopy_template_dir(self, source, dest, image=None):
+        if image:
+            img_opt = ["-i", image]
+        else:
+            img_opt = []
+        def copy(src, dst):
+            subprocess.check_call(["mcopy", "-D", "o"] + img_opt + [src, dst])
+        def mkdirs(src, dst):
+            subprocess.check_call(["mmd", "-D", "s"] + img_opt + [path])
+        def copy_subst(src, dst):
+            with tempfile.NamedTemporaryFile() as tmp_f:
+                self.copy_substituting(src, tmp_f.name)
+                subprocess.check_call(["mcopy", "-D", "o"] + img_opt + [
+                                                    tmp_f.name, dst])
+
+        return self.copy_dir(source, dest, True,
+                            copy=copy, copy_subst=copy_subst, mkdirs=mkdirs )
+
+    def run_script(self, script, sudo=False):
+        env = {"pldnr_" + k.replace("+", "_plus"): v
+                                for k, v in self.get_config_vars().items()}
+        env["PATH"] = os.environ["PATH"]
+        if sudo and self.c_sudo:
+            # sudo clears the environment
+            # we need to populate it within sudo
+            cmd = self.c_sudo + ["/bin/sh", "-s"]
+            commands = "".join("{}={}\n".format(k, shlex.quote(v))
+                                            for k, v in env.items())
+            commands += "export {}\n".format(" ".join(env.keys()))
+            commands += "set -ex\n"
+            commands += ". {}".format(shlex.quote(os.path.abspath(script)))
+            shell_p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+            shell_p.communicate(commands.encode("utf-8"))
+            rc = shell_p.wait()
+            if rc:
+                raise subprocess.CalledProcessError(rc, cmd)
+        else:
+            cmd = ["/bin/sh", "-ex", script]
+            subprocess.check_call(cmd, env=env, stdin=open("/dev/null", "rb"))
 
     def __str__(self):
         return "[config]\n{0}\n".format(
@@ -424,6 +498,8 @@ class Config(object):
             lines.append("PC_GRUB_IMAGES=")
         if self.efi:
             lines.append("FONT_FILE=font.pf2")
+        lines.append("PATH={}".format(os.environ["PATH"]))
+        lines.append("SUDO={}".format(" ".join(self.c_sudo)))
         lines.append("COMPRESS={0}".format(" ".join(self.compress_cmd)))
         lines.append("VERSION={0}".format(self.version))
         return "\n".join(lines)

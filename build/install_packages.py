@@ -34,10 +34,12 @@ class PackageInstaller(object):
             os.makedirs(self.dst_dir)
         packages_db = os.path.join(self.dst_dir, "var/lib/rpm/Packages")
         if not os.path.exists(packages_db):
-            subprocess.check_call(["rpm", "--initdb", "--root", self.dst_dir])
+            subprocess.check_call(self.config.c_sudo + 
+                                    ["rpm", "--initdb", "--root", self.dst_dir])
     def poldek(self, *args, ignore_errors=False):
         try:
-            subprocess.check_call(["poldek", "--root", self.dst_dir,
+            subprocess.check_call(self.config.c_sudo + 
+                                ["poldek", "--root", self.dst_dir,
                                 "--conf", "poldek.conf",
                                 "--cachedir", self.cache_dir]
                                 + self.langs_opts + list(args))
@@ -46,49 +48,56 @@ class PackageInstaller(object):
                 raise
     def setup_chroot(self):
         dev_dir = os.path.join(self.dst_dir, "dev")
-        subprocess.check_call(["mount", "--bind", "/dev", dev_dir])
+        subprocess.check_call(self.config.c_sudo + [
+                                        "mount", "--bind", "/dev", dev_dir])
         dev_pts_dir = os.path.join(dev_dir, "pts")
         if not os.path.isdir(dev_pts_dir):
             os.makedirs(dev_pts_dir)
-        subprocess.check_call(["mount", "-t", "devpts", 
-                               "-o", "gid=5,mode=620",
-                               "none", dev_pts_dir])
+        subprocess.check_call(self.config.c_sudo + [
+                                    "mount", "-t", "devpts", 
+                                    "-o", "gid=5,mode=620",
+                                    "none", dev_pts_dir])
         proc_dir = os.path.join(self.dst_dir, "proc")
-        subprocess.check_call(["mount", "-t", "proc", "none", proc_dir])
+        subprocess.check_call(self.config.c_sudo + [
+                                "mount", "-t", "proc", "none", proc_dir])
         sys_dir = os.path.join(self.dst_dir, "sys")
-        subprocess.check_call(["mount", "-t", "sysfs", "none", sys_dir])
+        subprocess.check_call(self.config.c_sudo + [
+                                "mount", "-t", "sysfs", "none", sys_dir])
 
     def get_file_list(self):
         result = []
         old_dir = os.getcwd()
         os.chdir(self.dst_dir)
         try:
-            for dirpath, dirnames, filenames in os.walk("."):
-                dirpath = dirpath[2:] # strip "./"
-                if not dirpath:
-                    dirnames[:] = [d for d in dirnames 
-                                    if d not in ["dev", "proc", "sys", "tmp"]]
-                elif dirpath == "var":
-                    dirnames[:] = [d for d in dirnames if d not in ["tmp"]]
-                for dirname in dirnames:
-                    result.append(os.path.join(dirpath, dirname))
-                for filename in filenames:
-                    result.append(os.path.join(dirpath, filename))
+            paths = subprocess.check_output(
+                                        self.config.c_sudo + [
+                                            "find", ".",
+                                            "-path", "./dev",
+                                            "-o", "-path", "./proc",
+                                            "-o", "-path", "./sys",
+                                            "-o", "-path", "./tmp",
+                                            "-o", "-path", "./var/tmp",
+                                            "-prune", "-o", "-print0"])
+            for path in paths.split(b"\000"):
+                path = path[2:] # strip "./"
+                if not path:
+                    continue
+                result.append(path.decode("utf-8"))
         finally:
             os.chdir(old_dir)
         return result
 
     def get_installed_pkg_list(self):
-        cmd = ["rpm", "--root", self.dst_dir, "-qa",
-                                    "--queryformat", "%{name}\n"]
+        cmd = self.config.c_sudo + ["rpm", "--root", self.dst_dir, "-qa",
+                                                "--queryformat", "%{name}\n"]
         pkg_list = subprocess.check_output(cmd)
         pkg_list = pkg_list.decode("utf-8").strip().split("\n")
         logger.debug("Installed packages: {!r}".format(pkg_list))
         return pkg_list
 
     def get_installed_pkg_info(self):
-        cmd = ["rpm", "--root", self.dst_dir, "-qa", "--queryformat",
-                        "%{name}\t%{version}-%{release}\t%{summary}\n"]
+        cmd = self.config.c_sudo + ["rpm", "--root", self.dst_dir, "-qa",
+            "--queryformat", "%{name}\t%{version}-%{release}\t%{summary}\n"]
         result = []
         rpm_p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         for line in rpm_p.stdout:
@@ -104,12 +113,16 @@ class PackageInstaller(object):
         dev_pts_dir = os.path.join(dev_dir, "pts")
         proc_dir = os.path.join(self.dst_dir, "proc")
         sys_dir = os.path.join(self.dst_dir, "sys")
-        subprocess.call(["umount", sys_dir])
-        subprocess.call(["umount", proc_dir])
-        subprocess.call(["umount", dev_pts_dir])
-        subprocess.call(["umount", dev_dir])
+        subprocess.call(self.config.c_sudo + ["umount", sys_dir])
+        subprocess.call(self.config.c_sudo + ["umount", proc_dir])
+        subprocess.call(self.config.c_sudo + ["umount", dev_pts_dir])
+        subprocess.call(self.config.c_sudo + ["umount", dev_dir])
         if total and os.path.isdir(self.dst_dir):
-            shutil.rmtree(self.dst_dir)
+            if self.config.c_sudo:
+                subprocess.call(self.config.c_sudo + [
+                                        "rm", "-rf", self.dst_dir])
+            else:
+                shutil.rmtree(self.dst_dir)
 
 def write_package_list(filename, installer, modules, package_modules):
     packages_info = installer.get_installed_pkg_info()
@@ -172,7 +185,7 @@ def main():
                 continue
             script_fn = "../modules/{0}/pre-install.sh".format(module)
             if os.path.exists(script_fn):
-                config.run_script(script_fn)
+                config.run_script(script_fn, sudo=True)
             pset_fn = "../modules/{0}/conds_workaround.pset".format(module)
             if os.path.exists(pset_fn):
                 logger.debug("Installing conds_workaround packages for {0}"
@@ -186,7 +199,7 @@ def main():
             script_fn = "../modules/{0}/post-install.sh".format(module)
             if os.path.exists(script_fn):
                 logger.debug("Running the 'post-install' script")
-                config.run_script(script_fn)
+                config.run_script(script_fn, sudo=True)
             logger.debug("Getting list of installed files")
             files = set(installer.get_file_list())
             module_files = files - prev_files
@@ -219,5 +232,6 @@ if __name__ == "__main__":
         main()
     except subprocess.CalledProcessError as err:
         logger.error(str(err))
+        sys.exit(1)
 
 # vi: sts=4 sw=4 et

@@ -34,7 +34,7 @@ def main():
         os.unlink(squashfs_fn)
 
     logger.debug("Getting list of all files in 'root'")
-    find_p = subprocess.Popen(["find", "root"],
+    find_p = subprocess.Popen(config.c_sudo + ["find", "root"],
                                 stdout=subprocess.PIPE)
     all_files = [l.strip(b"root/").decode("utf-8").rstrip()
                                         for l in find_p.stdout.readlines()]
@@ -63,9 +63,15 @@ def main():
 
     try:
         logger.debug("Calling mksquashfs")
-        subprocess.check_call(["mksquashfs", "root/", squashfs_fn,
+        subprocess.check_call(config.c_sudo + [
+                                "mksquashfs", "root/", squashfs_fn,
                                 "-comp", config.compression,
                                 "-ef", exclude_fn])
+        if os.getuid() != 0:
+            subprocess.check_call(config.c_sudo + [
+                                "chown", "{}:{}".format(os.getuid(),
+                                                        os.getgid()),
+                                                squashfs_fn])
     except:
         if os.path.exists(squashfs_fn):
             os.unlink(squashfs_fn)

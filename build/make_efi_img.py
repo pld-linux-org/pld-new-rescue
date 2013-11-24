@@ -64,6 +64,11 @@ def main():
     logger.debug("bytes needed: {0!r}".format(bytes_needed))
     blocks_needed = max(bytes_needed // 1024, 256)
 
+    if blocks_needed & 0x0f:
+        # so mtools doesn't complain that:
+        # Total number of sectors not a multiple of sectors per track (32)!
+        blocks_needed = (blocks_needed & 0xfffffff0) + 0x10
+
     logger.info("Creating the image")
     subprocess.check_call(["dd", "if=/dev/zero", "of=" + efi_img_fn,
                             "bs=1024", "count={0}".format(blocks_needed)])
@@ -73,22 +78,18 @@ def main():
                                 efi_img_fn])
         if not os.path.exists(efi_mnt_dir):
             os.makedirs(efi_mnt_dir)
-        subprocess.check_call(["mount", "-t", "vfat",
-                                "-o", "utf8=true,loop",
-                                efi_img_fn, efi_mnt_dir])
-        try:
-            logger.info("Installing PLD NR EFI files")
-            efi_boot_dir = os.path.join(efi_mnt_dir, "EFI/BOOT")
-            os.makedirs(efi_boot_dir)
-            if config.efi_shell:
-                shutil.copy(efi_shell_path, os.path.join(efi_mnt_dir, "EFI",
-                                "SHELL{}.EFI".format(config.efi_arch.upper())))
-            config.copy_template_dir(efi_templ_dir, efi_mnt_dir)
-            for source, efi_arch in grub_files.items():
-                dst = os.path.join(efi_boot_dir, "BOOT{}.EFI".format(efi_arch))
-                shutil.copy(source, dst)
-        finally:
-            subprocess.call(["umount", "--lazy", efi_mnt_dir])
+        logger.info("Installing PLD NR EFI files")
+        subprocess.check_call(["mmd", "-i", efi_img_fn,
+                                                "::/EFI", "::/EFI/BOOT"])
+        if config.efi_shell:
+            subprocess.check_call(["mcopy", "-i", efi_img_fn,
+                                    efi_shell_path,
+                                    "::/EFI/SHELL{}.EFI".format(
+                                                    config.efi_arch.upper())])
+        config.mcopy_template_dir(efi_templ_dir, "::/", image=efi_img_fn)
+        for source, efi_arch in grub_files.items():
+            dst = "::/EFI/BOOT/BOOT{}.EFI".format(efi_arch)
+            subprocess.check_call(["mcopy", "-i", efi_img_fn, source, dst])
     except:
         os.unlink(efi_img_fn)
         raise
