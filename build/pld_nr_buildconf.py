@@ -192,7 +192,7 @@ class Config(object):
 
     def load_uuids(self):
         try:
-            with open("uuids", "rt") as uuid_f:
+            with open(os.path.join(self.build_dir, "uuids"), "rt") as uuid_f:
                 self.uuid = uuid.UUID(uuid_f.readline().strip())
                 self.efi_vol_id = uuid_f.readline().strip()
                 self.cd_vol_id = uuid_f.readline().strip()
