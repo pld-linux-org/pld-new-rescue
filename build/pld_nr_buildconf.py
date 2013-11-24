@@ -189,6 +189,26 @@ class Config(object):
 
         self.defaults = {k[8:]: v for k, v in self._config.items()
                                                 if k.startswith("default_")}
+        if os.getuid() == 0:
+            self.c_sudo = []
+        else:
+            self.c_sudo = ["sudo"]
+
+        self.extra_path = self._config.get("extra_path", None)
+
+        self.update_path()
+
+    def update_path(self):
+        if not self.extra_path:
+            return
+        current_path = os.environ.get("PATH", "")
+        paths = current_path.split(":")
+        new_paths = self.extra_path.split(":")
+        for path in new_paths:
+            if path not in paths:
+                paths.append(path)
+        os.environ["PATH"] = ":".join(paths)
+        logger.debug("PATH={!r}".format(os.environ["PATH"]))
 
     def load_uuids(self):
         try:
@@ -226,13 +246,20 @@ class Config(object):
             raise ConfigError("Architecture not supported: {0!r}"
                                                         .format(self.arch))
         if os.getuid() != 0:
-            raise ConfigError(
-                        "I am sorry, but you need to be root to build this.")
+            try:
+                _check_tool("sudo", args=["-V"])
+            except ConfigError as err:
+                raise ConfigError(
+                        "I am sorry, but you need to be root or use sudo"
+                                                        " to build this. {}"
+                                                            .format(err))
+
         for m in self.modules:
             module_dir = os.path.join("../modules", m)
             if not os.path.isdir(module_dir):
                 raise ConfigError("Invalid module: '{0}' - there is no '{1}'"
                                     " directory".format(m, module_dir))
+
         if self.compression not in ("xz", "gzip"):
             raise ConfigError("Unsupported compression: {0!r}"
                                             .format(self.compression))
@@ -330,6 +357,7 @@ class Config(object):
         result["cd_vol_id"] = self.cd_vol_id
         for k, v in self.defaults.items():
             result["default_" + k] = v
+        result["extra_path"] = self.extra_path
         return result
 
     def substitute_bytes(self, data):
@@ -381,10 +409,13 @@ class Config(object):
     def copy_template_dir(self, source, dest):
         return self.copy_dir(source, dest, True)
 
-    def run_script(self, script):
+    def run_script(self, script, sudo=False):
         env = {"pldnr_" + k: v for k, v in self.get_config_vars().items()}
         env["PATH"] = "/usr/bin:/usr/sbin:/bin:/sbin"
-        subprocess.check_call(["/bin/sh", "-ex", script], env=env)
+        cmd = ["/bin/sh", "-ex", script]
+        if sudo:
+            cmd = self.c_sudo + cmd
+        subprocess.check_call(cmd, env=env)
 
     def __str__(self):
         return "[config]\n{0}\n".format(
@@ -424,6 +455,7 @@ class Config(object):
             lines.append("PC_GRUB_IMAGES=")
         if self.efi:
             lines.append("FONT_FILE=font.pf2")
+        lines.append("SUDO={}".format(" ".join(self.c_sudo)))
         lines.append("COMPRESS={0}".format(" ".join(self.compress_cmd)))
         lines.append("VERSION={0}".format(self.version))
         return "\n".join(lines)

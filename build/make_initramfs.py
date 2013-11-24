@@ -45,7 +45,7 @@ def find_kernel_mod_deps(kernel_ver, mod_path):
         result.append("lib/modules/{0}/{1}".format(kernel_ver, path))
     return result
 
-def find_executable_deps(path, root_dir, bits):
+def find_executable_deps(config, path, root_dir, bits):
     logger.debug("find_executable_deps({0!r})".format(path))
     if bits == 64:
         lib = "lib64"
@@ -64,8 +64,8 @@ def find_executable_deps(path, root_dir, bits):
         return [interpreter.lstrip("/")]
 
     try:
-        output = subprocess.check_output(
-                        ["chroot", root_dir, ld_linux, "--list", "/" + path])
+        output = subprocess.check_output(config.c_sudo + [
+                        "chroot", root_dir, ld_linux, "--list", "/" + path])
     except subprocess.CalledProcessError as err:
         logger.error(err)
         return []
@@ -111,7 +111,7 @@ def find_deps(config, files, all_files, root_dir):
         if match:
             deps = find_kernel_mod_deps(match.group(1), match.group(2))
         elif (stat.S_IMODE(path_stat.st_mode) & 0o111):
-            deps = find_executable_deps(path, root_dir, config.bits)
+            deps = find_executable_deps(config, path, root_dir, config.bits)
         else:
             continue
         logger.debug("deps={0!r}".format(deps))
@@ -151,12 +151,13 @@ def process_files_list(config, file_list_fn, gic_list_fn, root_dir,
                     cpio_list.write(rule + "\n")
     return files, globs
 
-def expand_globs(globs):
+def expand_globs(config, globs):
     search_paths = []
     for pattern in globs:
         pattern = os.path.abspath("/" + pattern).lstrip("/")
         search_paths += glob(pattern)
-    paths = subprocess.check_output(["find"] + search_paths + ["-print"])
+    paths = subprocess.check_output(config.c_sudo + [
+                                    "find"] + search_paths + ["-print"])
     paths = [p.decode("utf-8") for p in paths.split(b"\n") if p]
     return paths
 
@@ -210,7 +211,7 @@ def main():
     subprocess.check_call(["gen_init_cpio", gic_list_fn],
                           stdout=open(init_cpio_fn, "wb"))
 
-    paths = expand_globs(globs)
+    paths = expand_globs(config, globs)
     files += paths
 
     find_deps(config, paths, files, root_dir)
@@ -230,11 +231,9 @@ def main():
             dirpath = dirpath[2:] # strip "./"
             for dirname in dirnames:
                 path = os.path.join(dirpath, dirname)
-                os.chown(path, 0, 0)
                 built_paths.append(path)
             for filename in filenames:
                 path = os.path.join(dirpath, filename)
-                os.chown(path, 0, 0)
                 built_paths.append(path)
         if os.path.exists("init"):
             os.chmod("init", 0o755)
