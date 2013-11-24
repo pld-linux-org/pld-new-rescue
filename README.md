@@ -124,9 +124,13 @@ the PLD Linux 'Th 2012' snapshot, which is used as a base for this build (to
 provide reproducible results).
 
 When the preparations are done calling 'make' in the main directory of the
-distribution should start the build. Please note that 'root' privileges are
-required for the process. Things are much easier this way. But it also can 
-make some mistakes catastrophic. So be careful!
+distribution should start the build.
+
+Please note that 'root' privileges are required for the process. Only the
+'root' user or other user with full privileges granted via 'sudo' can build PLD
+NR (enabling 'only the commands actually used by PLD NR build' still gives the
+user full root access). Things are much easier this way. But it also can make
+some mistakes catastrophic. So be careful!
 
 For further customization one can also:
 
