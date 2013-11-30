@@ -38,101 +38,127 @@ fi
 sleep -i 2
 
 timout=15
-default=1
+default=0
 
 echo "building menu"
 
+#
+# [ -e ... ] test won't work for network files
+# we need to check this in a different way
+#
+function have_file {
+
+    rel_path="$1"
+
+    if [ "$netboot" = "yes" ] ; then
+        if [ -n "$pldnr_net_files" ] ; then
+            regexp ":${rel_path}:" "$pldnr_net_files"
+        else
+            return 0
+        fi
+    else
+        [ -e "${pldnr_prefix}/$rel_path" ]
+    fi
+}
+
+#
+# To have simple code in the menu entries
+# which can be easily edited by the user
+#
 function load_pldnr {
 
     boot_prefix=$1
     shift
 
-    linux "${boot_prefix}/vmlinuz" "$@"
+    echo "loading ${pldnr_prefix}/${boot_prefix}/vmlinuz..."
+    linux "${pldnr_prefix}/${boot_prefix}/vmlinuz" "$@"
 
     initrds=""
     for module in $preload_modules ; do
         if [ "$module" = "init" ] ; then
             continue
         fi
-        if [ -e "${boot_prefix}/${module}.cpi" ] ; then
-            initrds="$initrds ${boot_prefix}/${module}.cpi"
+        if have_file "${boot_prefix}/${module}.cpi" ; then
+            initrds="$initrds ${pldnr_prefix}/${boot_prefix}/${module}.cpi"
         fi
     done
-    initrd "${boot_prefix}/init.cpi" $initrds
+
+    echo "loading ${pldnr_prefix}/${boot_prefix}/init.cpi $initrds..."
+    initrd "${pldnr_prefix}/${boot_prefix}/init.cpi" $initrds
+
+    echo "booting..."
 }
 
-if [ -e /pld-nr-64/vmlinuz ] ; then
-    menuentry "PLD New Rescue 64 (all in RAM)" {
-        preload_modules="base basic rescue"
-        load_pldnr /pld-nr-64
-    }
-fi
+function pldnr_menuentry {
 
-if [ -e /pld-nr-64/vmlinuz ] ; then
-    menuentry "PLD New Rescue 64 (minimum RAM)" {
-        preload_modules=""
-        load_pldnr /pld-nr-64
-    }
-fi
+    echo "pldnr_menuentry $*"
 
-if [ -e /pld-nr-32/vmlinuz ] ; then
-    menuentry "PLD New Rescue 32 (all in RAM)" {
-        preload_modules="base basic rescue"
-        load_pldnr /pld-nr-32
-    }
-fi
+    title="$1"
+    net_ok="$2"
+    bits="$3"
+    modules="$4"
+    options="$5"
 
-if [ -e /pld-nr-32/vmlinuz ] ; then
-    menuentry "PLD New Rescue 32 (minimum RAM)" {
-        preload_modules=""
-        load_pldnr /pld-nr-32
-    }
-fi
+    if [ "$net_ok" = "no" -a "$netboot" = "yes" ] ; then
+        return 1
+    elif have_file pld-nr-$bits/vmlinuz ; then
 
-if [ -e /pld-nr-64/vmlinuz ] ; then
-    menuentry "PLD New Rescue 64 (serial console, all in RAM)" {
-        preload_modules="base basic rescue"
-        load_pldnr /pld-nr-64 console=tty0 console=ttyS0,115200n8
-    }
-fi
+        menuentry "$title" --source "preload_modules=\"$modules\"
+load_pldnr pld-nr-$bits $options
+"
+    else
+        return 1
+    fi
+}
 
-if [ -e /pld-nr-64/vmlinuz ] ; then
-    menuentry "PLD New Rescue 64 (serial console, minimum RAM)" {
-        preload_modules=""
-        load_pldnr /pld-nr-64 console=tty0 console=ttyS0,115200n8
-    }
-fi
+function other_menuentry {
 
-if [ -e /pld-nr-32/vmlinuz ] ; then
-    menuentry "PLD New Rescue 32 (serial console, all in RAM)" {
-        preload_modules="base basic rescue"
-        load_pldnr /pld-nr-32 console=tty0 console=ttyS0,115200n8
-    }
-fi
+    title="$1"
+    net_ok="$2"
+    loader="$3"
+    file="$4"
+    options="$5"
 
-if [ -e /pld-nr-32/vmlinuz ] ; then
-    menuentry "PLD New Rescue 32 (serial console, minimum RAM)" {
-        preload_modules=""
-        load_pldnr /pld-nr-32 console=tty0 console=ttyS0,115200n8
-    }
-fi
+    if [ "$net_ok" = "no" -a "$netboot" = "yes" ] ; then
+        return 1
+    elif have_file "$file" ; then
+        menuentry "$title" --source "$loader ${pldnr_prefix}/$file $options"
+    else
+        return 1
+    fi
+}
 
-if [ -e /boot/memtest86 ] ; then
-    menuentry "Memtest86" {
-        linux16 /boot/memtest86
-    }
-fi
 
-if [ -e /boot/memtest86+ ] ; then
-    menuentry "Memtest86+" {
-        linux16 /boot/memtest86+
-    }
-fi
+for bits in 64 32 ; do
+    pldnr_menuentry \
+                "PLD New Rescue $bits (minimum RAM)" \
+                no $bits ""
 
-if [ -e ($efi_part)/EFI/SHELL${efi_suffix}.EFI ] ; then
-    menuentry "EFI Shell" {
-        chainloader ($efi_part)/EFI/SHELL${efi_suffix}.EFI
-    }
-fi
+    pldnr_menuentry \
+                "PLD New Rescue $bits (all in RAM)" \
+                yes $bits "base basic rescue"
+
+    pldnr_menuentry \
+                "PLD New Rescue $bits (serial console, minimum RAM)" \
+                no $bits "" \
+                "console=tty0 console=ttyS0,115200n8"
+
+    pldnr_menuentry \
+                "PLD New Rescue $bits (serial console, all in RAM)" \
+                yes $bits "base basic rescue" \
+                "console=tty0 console=ttyS0,115200n8"
+done
+
+other_menuentry \
+            "Memtest86" \
+            yes linux16 boot/memtest86
+
+other_menuentry \
+            "Memtest86+" \
+            yes linux16 boot/memtest86_p
+
+other_menuentry \
+            "EFI Shell" \
+            no chainloader "($efi_part)/EFI/SHELL${efi_suffix}.EFI"
 
 # vi: et sw=4 sts=4

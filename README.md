@@ -34,8 +34,7 @@ Goals
 
 * It should be as easy to boot it from a USB disk as from a CD (got it!)
 
-* Setting up a network boot (PXE, including EFI PXE) should be easy too. (not
-  implemented yet)
+* Setting up a network boot (PXE, including EFI PXE) should be easy too.
 
 * Everyone familiar with PLD Linux should be able to build and customize 
   the image. (got it?)
@@ -60,6 +59,65 @@ Then boot a system from the CD or USB stick. That should work.
 When system boots one can log-in as 'root' using the 'pld' password.
 SSH login is available only through key authentication and no public
 keys are provided in the image by default.
+
+Network boot
+------------
+
+The image now also supports PXE boot (but only in the 'All in RAM' mode).
+
+To set up the network boot the following are needed:
+
+* the PLD NR image or its contents
+
+* a DHCP server
+
+* a TFTP server
+
+### TFTP server configuration
+
+The TFTP server must be able to handle big files through block number roll-over.
+*tftpd-hpa* does work correctly.
+
+Copy the `/boot/pld-nr-net.env` file from the PLD NR image to the your TFTP
+root directory and mount PLD NR image at, or copy its contents to, the
+`/pld-nr` directory under the TFTP root.
+
+Start the TFTP server to listen on the right network interface.
+
+### DHCP server configuration
+
+The DHCP server must provide IP address, TFTP server address and boot image
+file name to the machine to be booted.
+
+Here is a sample config file for ISC DHCP daemon for booting PLDNR:
+
+    allow booting;
+    allow bootp;
+    
+    default-lease-time 600;
+    max-lease-time 7200;
+    
+    ddns-update-style none;
+    
+    option arch code 93 = unsigned integer 16; # RFC4578
+    
+    subnet 192.168.10.0 netmask 255.255.255.0 {
+      range dynamic-bootp 192.168.10.100 192.168.10.200;
+      option routers 192.168.10.1;
+    
+      class "pxeclients" {
+        match if substring (option vendor-class-identifier, 0, 9) = "PXEClient";
+        next-server 192.168.10.1;
+        option tftp-server-name "192.168.10.1";
+        if option arch = 00:06 {
+          filename "/pld-nr/boot/net_ia32.efi";
+        } else if option arch = 00:07 {
+          filename "/pld-nr/boot/net_x64.efi";
+        } else {
+          filename "/pld-nr/boot/netboot.pxe";
+        }
+      }
+    }
 
 Kernel command-line options
 ---------------------------

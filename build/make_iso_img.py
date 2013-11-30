@@ -99,6 +99,14 @@ def patch_image_mbr(config, image):
         image_f.seek((start_sector + 1) * 512)
         image_f.write(buf)
 
+def write_netenv_file(netenv_fn, net_files):
+    subprocess.check_call(["grub-editenv", netenv_fn, "create"])
+    subprocess.check_call(["grub-editenv", netenv_fn,
+                                        "set", "pldnr_prefix=/pld-nr"])
+    subprocess.check_call(["grub-editenv", netenv_fn,
+                                    "set", "pldnr_net_files=:{}:"
+                                                .format(":".join(net_files))])
+
 def main():
     log_parser = pld_nr_buildconf.get_logging_args_parser()
     parser = argparse.ArgumentParser(
@@ -114,6 +122,8 @@ def main():
     root_dir = os.path.abspath("root")
     tmp_img_dir = os.path.abspath("tmp_img")
     templ_dir = os.path.abspath("../iso_templ")
+    netenv_fn = os.path.abspath("pld-nr-net.env")
+    net_files = []
     vmlinuz_fn = os.path.join(root_dir, "boot/vmlinuz")
     while os.path.islink(vmlinuz_fn):
         link_target = os.readlink(vmlinuz_fn)
@@ -176,18 +186,28 @@ def main():
                     continue
                 dst_path = "/boot/grub" + path[len("/lib/grub"):]
                 command.append("{}={}".format(dst_path, path))
-        pld_nr_prefix = "/pld-nr-{}".format(config.bits)
-        command.append("{}/init.cpi=init.cpi".format(pld_nr_prefix))
+        pld_nr_prefix = "pld-nr-{}".format(config.bits)
+        command.append("/{}/init.cpi=init.cpi".format(pld_nr_prefix))
+        net_files.append("{}/init.cpi".format(pld_nr_prefix))
         for mod in config.modules:
-            command.append("{0}/{1}.cpi={1}.cpi".format(pld_nr_prefix, mod))
-        command.append("{}/vmlinuz={}".format(pld_nr_prefix, vmlinuz_fn))
+            command.append("/{0}/{1}.cpi={1}.cpi".format(pld_nr_prefix, mod))
+            net_files.append("{}/{}.cpi".format(pld_nr_prefix, mod))
+        command.append("/{}/vmlinuz={}".format(pld_nr_prefix, vmlinuz_fn))
+        net_files.append("{}/vmlinuz".format(pld_nr_prefix))
         if config.efi:
             command.append("/boot/grub/font.pf2=font.pf2")
         command.append("/={}".format(tmp_img_dir))
         if config.memtest86:
             command.append("/boot/memtest86=/boot/memtest86")
+            net_files.append("boot/memtest86")
         if config.memtest86_plus:
-            command.append("/boot/memtest86+=/boot/memtest86+")
+            command.append("/boot/memtest86_p=/boot/memtest86+")
+            net_files.append("boot/memtest86_p")
+        for img in config.net_grub_images:
+            command.append("/boot/{0}={0}".format(img))
+        if config.net_grub_images:
+            write_netenv_file(netenv_fn, net_files)
+            command.append("/boot/pld-nr-net.env={}".format(netenv_fn))
         command.append("--")
 
         subprocess.check_call(command)

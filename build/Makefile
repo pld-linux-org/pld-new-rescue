@@ -10,7 +10,7 @@ image:	../pld-nr-$(BITS).iso
 
 ifeq ($(MAKE_VARS_INCLUDED),yes)
 
-../pld-nr-$(BITS).iso: uuids init.cpi $(MODULE_FILES) efi.img $(PC_GRUB_IMAGES) $(FONT_FILE) ../iso_templ/* ../iso_templ/*/* ../iso_templ/*/*/*
+../pld-nr-$(BITS).iso: uuids init.cpi $(MODULE_FILES) efi.img $(PC_GRUB_IMAGES) $(NET_GRUB_IMAGES) $(FONT_FILE) ../iso_templ/* ../iso_templ/*/* ../iso_templ/*/*/*
 	./make_iso_img.py $@
 	./fix_gpt.py --write $@
 
@@ -19,6 +19,15 @@ efi.img: $(EFI_GRUB_IMAGES) ../efi_templ/*
 
 boot.img: grub-i386-pc.img
 	cat /lib/grub/i386-pc/cdboot.img grub-i386-pc.img > $@
+
+netboot.pxe:
+	./make_grub_img.py --pxe i386-pc $@
+
+net_ia32.efi:
+	./make_grub_img.py --pxe i386-efi $@
+
+net_x64.efi:
+	./make_grub_img.py --pxe x86_64-efi $@
 
 .DELETE: boot.img
 

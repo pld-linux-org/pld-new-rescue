@@ -27,3 +27,6 @@
 /build/root/
 /build/uuids
 /build/poldek.conf
+/build/net_*.efi
+/build/netboot.pxe
+/build/pld-nr-net.env
