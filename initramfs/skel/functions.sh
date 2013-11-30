@@ -52,7 +52,6 @@ umount_media() {
             echo "Boot medium in use, keeping it mounted"
         fi
     fi
-    rm /media
 }
 
 mount_aufs() {
