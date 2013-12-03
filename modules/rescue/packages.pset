@@ -6,6 +6,10 @@ gdisk
 tftp-hpa
 tftpd-hpa-standalone
 
+# for usable Python console
+python
+python-modules
+
 # some packages from the old PLD Rescue CD
 arpwatch
 bbe
