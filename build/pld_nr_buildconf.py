@@ -296,7 +296,8 @@ class Config(object):
             _check_tool_version("grub-mkfont", GRUB_VERSION_RE, package="grub2-mkfont")
             font_fn = "/usr/share/fonts/TTF/DejaVuSansMono.ttf"
             if not os.path.exists(font_fn):
-                raise ConfigError("File {!r} (from fonts-TTF-DejaVu package) missing")
+                raise ConfigError("File {!r} (from fonts-TTF-DejaVu package)"
+                                                    " missing".format(font_fn))
         if self.net_grub_images:
             _check_tool_version("grub-mkimage", GRUB_VERSION_RE, package="grub2")
 
