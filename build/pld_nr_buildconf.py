@@ -31,6 +31,12 @@ RPM_VERSION_RE = re.compile(r"\(RPM\)\s+5.\d+(.\d+)*")
 
 ARCH_EFI_TO_GRUB = { "ia32": "i386", "x64": "x86_64" }
 
+NET_IMAGES = {
+        "i386-pc": "netboot.pxe",
+        "i386-efi": "net_ia32.efi",
+        "x86_64-efi": "net_x64.efi",
+        }
+
 def _get_default_arch():
     try:
         result = subprocess.check_output(["rpm", "--eval", "%{_arch}"])
@@ -132,6 +138,7 @@ class Config(object):
 
         self.efi = self._config.getboolean("efi", fallback=False)
         self.bios = self._config.getboolean("bios", fallback=True)
+        self.net_boot = self._config.getboolean("net_boot", fallback=False)
 
         self.efi_arch = self._config.get("efi_arch")
         if not self.efi_arch:
@@ -154,6 +161,12 @@ class Config(object):
             self.grub_platforms = [p.strip() for p in grub_platforms.split(",")]
         else:
             self._choose_grub_platforms()
+
+        if self.net_boot:
+            self.net_grub_images = [NET_IMAGES[p] for p in self.grub_platforms
+                                                        if p in NET_IMAGES]
+        else:
+            self.net_grub_images = []
 
         self.memtest86 = self._config.getboolean("memtest86", fallback=False)
         self.memtest86_plus = self._config.getboolean("memtest86+",
@@ -283,7 +296,10 @@ class Config(object):
             _check_tool_version("grub-mkfont", GRUB_VERSION_RE, package="grub2-mkfont")
             font_fn = "/usr/share/fonts/TTF/DejaVuSansMono.ttf"
             if not os.path.exists(font_fn):
-                raise ConfigError("File {!r} (from fonts-TTF-DejaVu package) missing")
+                raise ConfigError("File {!r} (from fonts-TTF-DejaVu package)"
+                                                    " missing".format(font_fn))
+        if self.net_grub_images:
+            _check_tool_version("grub-mkimage", GRUB_VERSION_RE, package="grub2")
 
         for plat in self.grub_platforms:
             plat_dir = os.path.join("/lib/grub", plat)
@@ -345,6 +361,7 @@ class Config(object):
             result["compression_level"] = self.compression_level
         result["efi"] = "yes" if self.efi else "no"
         result["bios"] = "yes" if self.bios else "no"
+        result["net_boot"] = "yes" if self.net_boot else "no"
         if self.efi:
             result["efi_arch"] = self.efi_arch
         else:
@@ -496,6 +513,7 @@ class Config(object):
             lines.append("PC_GRUB_IMAGES=boot.img")
         else:
             lines.append("PC_GRUB_IMAGES=")
+        lines.append("NET_GRUB_IMAGES=" + " ".join(self.net_grub_images))
         if self.efi:
             lines.append("FONT_FILE=font.pf2")
         lines.append("PATH={}".format(os.environ["PATH"]))

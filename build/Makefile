@@ -10,7 +10,7 @@ image:	../pld-nr-$(BITS).iso
 
 ifeq ($(MAKE_VARS_INCLUDED),yes)
 
-../pld-nr-$(BITS).iso: uuids init.cpi $(MODULE_FILES) efi.img $(PC_GRUB_IMAGES) $(FONT_FILE) ../iso_templ/* ../iso_templ/*/* ../iso_templ/*/*/*
+../pld-nr-$(BITS).iso: uuids init.cpi $(MODULE_FILES) efi.img $(PC_GRUB_IMAGES) $(NET_GRUB_IMAGES) $(FONT_FILE) ../iso_templ/* ../iso_templ/*/* ../iso_templ/*/*/*
 	./make_iso_img.py $@
 	./fix_gpt.py --write $@
 
@@ -19,6 +19,15 @@ efi.img: $(EFI_GRUB_IMAGES) ../efi_templ/*
 
 boot.img: grub-i386-pc.img
 	cat /lib/grub/i386-pc/cdboot.img grub-i386-pc.img > $@
+
+netboot.pxe:
+	./make_grub_img.py --pxe i386-pc $@
+
+net_ia32.efi:
+	./make_grub_img.py --pxe i386-efi $@
+
+net_x64.efi:
+	./make_grub_img.py --pxe x86_64-efi $@
 
 .DELETE: boot.img
 
@@ -48,9 +57,9 @@ bindist: cd usb
 	mkdir -p ../dist
 	ln -f ../pld-nr-$(BITS).iso ../dist/pld-new-rescue-$(VERSION)-$(BITS)bit.iso
 	ln -f ../pld-nr-$(BITS).packages ../dist/pld-new-rescue-$(VERSION)-$(BITS)bit-packages.txt
-	if [ "$$(echo extra_packages/$(ARCH)/*.rpm)" != "extra_packages/$(ARCH)/*.rpm" ] ; then \
+	if [ "$$(echo extra_packages/th-current/$(ARCH)/*.rpm)" != "extra_packages/th-current/$(ARCH)/*.rpm" ] ; then \
 		cd .. && \
-		tar cvf dist/pld-new-rescue-$(VERSION)-$(ARCH)-extra_packages.tar extra_packages/$(ARCH)/*.rpm ; \
+		tar cvf dist/pld-new-rescue-$(VERSION)-$(ARCH)-extra_packages.tar extra_packages/th-current/$(ARCH)/*.rpm ; \
 	fi
 endif
 

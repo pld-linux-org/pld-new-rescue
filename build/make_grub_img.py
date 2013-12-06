@@ -18,6 +18,8 @@ def main():
     parser.add_argument("platform",
                         default="i386-pc", 
                         help="Grub platform name")
+    parser.add_argument("--pxe", action="store_true",
+                        help="Build image for PXE boot")
     parser.add_argument("destination",
                         help="Destination file name")
     args = parser.parse_args()
@@ -33,10 +35,21 @@ def main():
         efi_arch = ""
 
     with tempfile.NamedTemporaryFile(mode="w+t") as grub_early:
-        grub_early.write("""
+        if args.pxe:
+# net_get_dhcp_option net_default_server pxe:dhcp 66 string
+            grub_early.write("""
+set pldnr_prefix=/pld-nr
+set netboot=yes
+set prefix=($root)$pldnr_prefix/boot/grub
+load_env -f ($root)/pld-nr-net.env
+echo "using pldnr_prefix: $pldnr_prefix prefix: $prefix"
+""")
+        else:
+            grub_early.write("""
 echo "starting grub ({platform})"
 search.fs_uuid {vol_id} root
 search.fs_uuid {efi_id} efi_part
+set pldnr_prefix=
 set prefix=($root)/boot/grub
 set efi_suffix={efi_suffix}
 echo "using prefix: $prefix efi_part: $efi_part $efi_suffix"
@@ -46,18 +59,29 @@ echo "using prefix: $prefix efi_part: $efi_part $efi_suffix"
                              efi_id=config.efi_vol_id,
                              efi_suffix=efi_arch.upper()))
         grub_early.flush()
-        grub_core_modules = ["minicmd"]
-        if args.platform.endswith("-pc"):
-            grub_core_modules += ["biosdisk"]
-        grub_core_modules += ["iso9660", "search", "search_label", "fat",
-                            "part_gpt", "echo", "iso9660", "minicmd"]
+        platform = args.platform
+        grub_core_modules = ["minicmd", "echo"]
+        if args.pxe:
+            if args.platform.endswith("-pc"):
+                platform += "-pxe"
+                grub_core_modules += ["pxe"]
+            else:
+                grub_core_modules += ["efinet"]
+            grub_core_modules += ["tftp", "loadenv"]
+            prefix = "/pld-nr/boot/grub"
+        else:
+            if args.platform.endswith("-pc"):
+                grub_core_modules += ["biosdisk"]
+            grub_core_modules += ["iso9660", "search", "search_label",
+                                    "fat", "part_gpt", "iso9660"]
+            prefix = "/boot/grub"
         logger.debug("Making {} grub image for {} with modules: {!r}"
                         .format(args.destination, args.platform,
                                                     grub_core_modules))
         subprocess.check_call(["grub-mkimage",
                                 "--output", args.destination,
-                                "--format", args.platform,
-                                "--prefix", "/boot/grub",
+                                "--format", platform,
+                                "--prefix", prefix,
                                 "--config", grub_early.name,
                                 ] + grub_core_modules)
 
