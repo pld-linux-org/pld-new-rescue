@@ -57,7 +57,7 @@ bindist: cd usb
 	mkdir -p ../dist
 	ln -f ../pld-nr-$(BITS).iso ../dist/pld-new-rescue-$(VERSION)-$(BITS)bit.iso
 	ln -f ../pld-nr-$(BITS).packages ../dist/pld-new-rescue-$(VERSION)-$(BITS)bit-packages.txt
-	cd .. && tar cvf dist/pld-new-rescue-$(VERSION)-$(ARCH)-extra_packages.tar extra_packages/$(ARCH)/*.rpm
+	cd .. && tar cvf dist/pld-new-rescue-$(VERSION)-$(ARCH)-extra_packages.tar extra_packages/master/$(ARCH)/*.rpm
 
 endif
 
