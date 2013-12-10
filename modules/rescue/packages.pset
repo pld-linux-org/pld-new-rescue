@@ -10,6 +10,11 @@ tftpd-hpa-standalone
 python
 python-modules
 
+# per user's request
+wicd
+wicd-client-cli
+wicd-client-curses
+
 # some packages from the old PLD Rescue CD
 arpwatch
 bbe
