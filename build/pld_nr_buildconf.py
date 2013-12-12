@@ -173,6 +173,13 @@ class Config(object):
             self.grub_progress_mod = "progress"
         else:
             self.grub_progress_mod = ""
+        if all(os.path.exists("/lib/grub/{0}/linuxefi.mod".format(p))
+                    for p in self.grub_platforms if p.endswith("-efi")):
+            self.grub_linuxefi = "linuxefi"
+            self.grub_initrdefi = "initrdefi"
+        else:
+            self.grub_linuxefi = "linux"
+            self.grub_initrdefi = "initrd"
 
         self.memtest86 = self._config.getboolean("memtest86", fallback=False)
         self.memtest86_plus = self._config.getboolean("memtest86+",
@@ -316,6 +323,9 @@ class Config(object):
                 raise ConfigError("Grub platform directory {!r} not found."
                                 " You may need to the install {!r} package."
                                                 .format(plat_dir, pkg_name))
+            elif plat.endswith("-efi"):
+                if not os.path.exists(os.path.join(plat_dir, "linuxefi.mod")):
+                    logger.warning("No linuxefi support in GRUB.")
 
         if self.memtest86 and not os.path.exists("/boot/memtest86"):
             raise ConfigError("/boot/memtest86 missing")
@@ -387,6 +397,8 @@ class Config(object):
             result["default_" + k] = v
         result["extra_path"] = self.extra_path
         result["grub_progress_mod"] = self.grub_progress_mod
+        result["grub_linuxefi"] = self.grub_linuxefi
+        result["grub_initrdefi"] = self.grub_initrdefi
         return result
 
     def substitute_bytes(self, data):

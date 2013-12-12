@@ -78,7 +78,11 @@ function load_pldnr {
     fi
 
     echo "loading ${pldnr_prefix}/${boot_prefix}/vmlinuz..."
-    linux "${pldnr_prefix}/${boot_prefix}/vmlinuz" "$@"
+    if [ "$grub_platform" = "efi" ] ; then
+        @grub_linuxefi@ "${pldnr_prefix}/${boot_prefix}/vmlinuz" "$@"
+    else
+        linux "${pldnr_prefix}/${boot_prefix}/vmlinuz" "$@"
+    fi
 
     initrds=""
     for module in $preload_modules ; do
@@ -91,7 +95,11 @@ function load_pldnr {
     done
 
     echo "loading ${pldnr_prefix}/${boot_prefix}/init.cpi $initrds..."
-    initrd "${pldnr_prefix}/${boot_prefix}/init.cpi" $initrds
+    if [ "$grub_platform" = "efi" ] ; then
+        @grub_initrdefi@ "${pldnr_prefix}/${boot_prefix}/init.cpi" $initrds
+    else
+        initrd "${pldnr_prefix}/${boot_prefix}/init.cpi" $initrds
+    fi
 
     echo "booting..."
 }
