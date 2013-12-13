@@ -135,6 +135,8 @@ function other_menuentry {
         return 1
     elif have_file "$file" ; then
         menuentry "$title" --source "$loader ${pldnr_prefix}/$file $options"
+    elif [ -e "$file" ] ; then
+        menuentry "$title" --source "$loader $file $options"
     else
         return 1
     fi
