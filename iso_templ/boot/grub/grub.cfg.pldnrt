@@ -161,16 +161,18 @@ for bits in 64 32 ; do
                 "console=tty0 console=ttyS0,115200n8 earlyprintk=serial,ttyS0,115200"
 done
 
-other_menuentry \
+if [ "$grub_platform" = "efi" ] ; then
+    other_menuentry \
+            "EFI Shell" \
+            no chainloader "($efi_part)/EFI/SHELL${efi_suffix}.EFI"
+else
+    other_menuentry \
             "Memtest86" \
             yes linux16 boot/memtest86
 
-other_menuentry \
+    other_menuentry \
             "Memtest86+" \
             yes linux16 boot/memtest86_p
-
-other_menuentry \
-            "EFI Shell" \
-            no chainloader "($efi_part)/EFI/SHELL${efi_suffix}.EFI"
+fi
 
 # vi: et sw=4 sts=4
