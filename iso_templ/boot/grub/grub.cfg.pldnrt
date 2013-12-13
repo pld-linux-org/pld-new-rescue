@@ -3,26 +3,9 @@ echo "starting grub.cfg"
 
 sleep -i 2
 
-if [ "$grub_platform" = "efi" ] ; then
-    echo "setting up EFI graphical console"
-    sleep -i 2
-    set gfxmode=auto
-    set gfxpayload=keep
-    insmod efi_gop
-    insmod efi_uga
-    insmod font
-
-    if loadfont ${prefix}/font.pf2 ; then
-        insmod gfxterm
-        set gfxmode=auto
-        set gfxpayload=keep
-        terminal_output gfxterm
-    fi
-else
-    echo "setting up console"
-    terminal_input console
-    terminal_output console
-fi
+echo "setting up console"
+terminal_input console
+terminal_output console
 
 sleep -i 2
 
@@ -64,6 +47,26 @@ function have_file {
 }
 
 #
+# Set up the frame-buffer for Linus
+#
+function setup_efi_fb {
+    echo "setting up EFI graphical console"
+    sleep -i 2
+    set gfxmode=auto
+    set gfxpayload=keep
+    insmod efi_gop
+    insmod efi_uga
+    insmod font
+
+    if loadfont ${prefix}/font.pf2 ; then
+        insmod gfxterm
+        set gfxmode=auto
+        set gfxpayload=keep
+        terminal_output gfxterm
+    fi
+}
+
+#
 # To have simple code in the menu entries
 # which can be easily edited by the user
 #
@@ -101,11 +104,18 @@ function pldnr_menuentry {
     modules="$4"
     options="$5"
 
+    if [ "$grub_platform" = "efi" ] ; then
+        setup_efi_fb="setup_efi_fb
+"
+    else
+        setup_efi_fb=""
+    fi
+
     if [ "$net_ok" = "no" -a "$netboot" = "yes" ] ; then
         return 1
     elif have_file pld-nr-$bits/vmlinuz ; then
 
-        menuentry "$title" --source "preload_modules=\"$modules\"
+        menuentry "$title" --source "${setup_efi_fb}preload_modules=\"$modules\"
 load_pldnr pld-nr-$bits $options
 "
     else
