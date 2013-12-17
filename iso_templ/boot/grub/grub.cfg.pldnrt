@@ -60,8 +60,6 @@ function setup_efi_fb {
 
     if loadfont ${prefix}/font.pf2 ; then
         insmod gfxterm
-        set gfxmode=auto
-        set gfxpayload=keep
         terminal_output gfxterm
     fi
 }
