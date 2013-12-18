@@ -2,19 +2,28 @@
 
 # Utility script to prepare images for testing in VirtualBox
 
-[ -e /tmp/boot.vdi ] && rm -f /tmp/boot.vdi
+if [ -e ../pld-nr-32.iso ] ; then
+	[ -e /tmp/boot.vdi ] && rm -f /tmp/boot.vdi
+	VBoxManage convertfromraw \
+		../pld-nr-32.iso /tmp/boot.vdi \
+		--format VDI \
+		--uuid "38ab3e27-302b-445b-ab04-5a35a5120147"
 
-VBoxManage convertfromraw \
-	../pld-nr-32.iso /tmp/boot.vdi \
-	--format VDI \
-	--uuid "38ab3e27-302b-445b-ab04-5a35a5120147"
+	# to preven I/O errors due to searching for further iso9660 sessions
+	VBoxManage modifyhd /tmp/boot.vdi --resize 1024
+fi
 
-# to preven I/O errors due to searching for further iso9660 sessions
-VBoxManage modifyhd /tmp/boot.vdi --resize 1024
+if [ -e ../pld-nr-64.iso ] ; then
+	[ -e /tmp/boot64.vdi ] && rm -f /tmp/boot64.vdi
+	VBoxManage convertfromraw \
+		../pld-nr-64.iso /tmp/boot64.vdi \
+		--format VDI \
+		--uuid "dcfc92e0-6806-11e3-8dc3-089e01f6de0f"
 
-chown root:vbox /tmp/boot.vdi
+	# to preven I/O errors due to searching for further iso9660 sessions
+	VBoxManage modifyhd /tmp/boot.vdi --resize 1024
+fi
+
+chown root:vbox /tmp/boot*.vdi
 #chmod ug+rw /tmp/boot.vdi
-chmod a+rw /tmp/boot.vdi
-
-cp ../pld-nr-*.iso /tmp
-chmod a+r /tmp/pld-nr-*.iso
+chmod a+rw /tmp/boot*.vdi
