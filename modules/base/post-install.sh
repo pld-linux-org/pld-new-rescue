@@ -1,10 +1,12 @@
 
 ###########################################################
-# Make udev use the provided blkid
-# the built-in does not work properly for our image
+# Make sure the by-uuid symlink made by udev
+# does not point to the 'Gap1/Gap2' partitions
+# made by xorriso
 
-sed -i -es'@IMPORT{builtin}="blkid"@IMPORT{program}="/sbin/blkid -o udev $devnode"@' \
-	root/lib/udev/rules.d/*.rules
+cat > root/lib/udev/rules.d/70-pldnr-gap-partitions.rules << EOF
+ENV{ID_PART_ENTRY_NAME}=="Gap[0-9]", OPTIONS+="link_priority=-100"
+EOF
 
 ###########################################################
 # set up the root password

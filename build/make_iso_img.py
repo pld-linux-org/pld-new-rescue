@@ -79,11 +79,23 @@ def patch_image_mbr(config, image):
                                     :GRUB_BOOT_MACHINE_KERNEL_SECTOR+8])[0]
         logger.debug("Current kernel sector: {:0x}".format(cur_kernel_sector))
 
+        logger.debug("Looking for GRUB core image start...")
+        for i in (1, 4, 8):
+            image_f.seek((start_sector + i) * 512)
+            data = image_f.read(2)
+            if data == b"RV":
+                logger.debug("  found at offset {} sectors".format(i))
+                core_offset = i
+                break
+        else:
+            logger.debug("  not found. Assumming 1 sector offser")
+            core_offset = 1
+
         logger.info("Patching GRUBs MBR")
 
         # set the address of the kernel
         buf[GRUB_BOOT_MACHINE_KERNEL_SECTOR:GRUB_BOOT_MACHINE_KERNEL_SECTOR+8
-                ] = struct.pack("q", start_sector + 1)
+                ] = struct.pack("q", start_sector + core_offset)
         image_f.seek(0)
         image_f.write(buf)
 
@@ -91,12 +103,13 @@ def patch_image_mbr(config, image):
         buf[GRUB_BOOT_MACHINE_DRIVE_CHECK:GRUB_BOOT_MACHINE_DRIVE_CHECK + 2
                 ] = b"\x90\x90"
         
-        image_f.seek((start_sector + 1) * 512)
+        image_f.seek((start_sector + core_offset) * 512)
         image_f.readinto(buf)
 
         buf[GRUB_BLOCK_LIST:GRUB_BLOCK_LIST+10] = struct.pack("qh",
-                                                start_sector + 2, sectors - 2)
-        image_f.seek((start_sector + 1) * 512)
+                                                start_sector + core_offset + 1,
+                                                sectors - core_offset - 1)
+        image_f.seek((start_sector + core_offset) * 512)
         image_f.write(buf)
 
 def write_netenv_file(netenv_fn, net_files):

@@ -175,6 +175,11 @@ class Config(object):
         else:
             self.grub_linuxefi = "linux"
             self.grub_initrdefi = "initrd"
+        if all(os.path.exists("/lib/grub/{0}/progress.mod".format(p))
+                                            for p in self.grub_platforms):
+            self.grub_progress_mod = "progress"
+        else:
+            self.grub_progress_mod = ""
 
         self.memtest86 = self._config.getboolean("memtest86", fallback=False)
         self.memtest86_plus = self._config.getboolean("memtest86+",
@@ -393,6 +398,7 @@ class Config(object):
         result["extra_path"] = self.extra_path
         result["grub_linuxefi"] = self.grub_linuxefi
         result["grub_initrdefi"] = self.grub_initrdefi
+        result["grub_progress_mod"] = self.grub_progress_mod
         return result
 
     def substitute_bytes(self, data):

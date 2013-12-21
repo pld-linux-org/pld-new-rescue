@@ -68,6 +68,7 @@ clean:
 	-$(SUDO) rm -rf --one-file-system root
 	-rm -rf *.lst *.full-lst gen_init_cpio.list *.exclude
 	-rm -rf *.cpi *.sqf *.img
+	-rm -rf netboot.pxe net_*.efi
 	-rm -rf poldek.conf grub*.cfg
 	-rm -f font.pf2
 	-rm -f make.vars make.deps
