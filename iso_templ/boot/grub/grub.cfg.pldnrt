@@ -94,8 +94,6 @@ function load_pldnr {
 
 function pldnr_menuentry {
 
-    echo "pldnr_menuentry $*"
-
     title="$1"
     net_ok="$2"
     bits="$3"
