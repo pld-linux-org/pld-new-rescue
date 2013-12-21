@@ -168,6 +168,12 @@ class Config(object):
         else:
             self.net_grub_images = []
 
+        if all(os.path.exists("/lib/grub/{0}/progress.mod".format(p))
+                                            for p in self.grub_platforms):
+            self.grub_progress_mod = "progress"
+        else:
+            self.grub_progress_mod = ""
+
         self.memtest86 = self._config.getboolean("memtest86", fallback=False)
         self.memtest86_plus = self._config.getboolean("memtest86+",
                                                     fallback=False)
@@ -380,6 +386,7 @@ class Config(object):
         for k, v in self.defaults.items():
             result["default_" + k] = v
         result["extra_path"] = self.extra_path
+        result["grub_progress_mod"] = self.grub_progress_mod
         return result
 
     def substitute_bytes(self, data):

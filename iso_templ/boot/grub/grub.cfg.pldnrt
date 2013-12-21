@@ -73,6 +73,10 @@ function load_pldnr {
     boot_prefix=$1
     shift
 
+    if [ -n "@grub_progress_mod@" ] ; then
+        insmod @grub_progress_mod@
+    fi
+
     echo "loading ${pldnr_prefix}/${boot_prefix}/vmlinuz..."
     linux "${pldnr_prefix}/${boot_prefix}/vmlinuz" "$@"
 
@@ -127,17 +131,21 @@ function other_menuentry {
     file="$4"
     options="$5"
 
+    if [ -n "@grub_progress_mod@" ] ; then
+        pstart="insmod @grub_progress_mod@
+"
+    fi
+
     if [ "$net_ok" = "no" -a "$netboot" = "yes" ] ; then
         return 1
     elif have_file "$file" ; then
-        menuentry "$title" --source "$loader ${pldnr_prefix}/$file $options"
+        menuentry "$title" --source "$pstart$loader ${pldnr_prefix}/$file $options"
     elif [ -e "$file" ] ; then
-        menuentry "$title" --source "$loader $file $options"
+        menuentry "$title" --source "$pstart$loader $file $options"
     else
         return 1
     fi
 }
-
 
 for bits in 64 32 ; do
     pldnr_menuentry \
