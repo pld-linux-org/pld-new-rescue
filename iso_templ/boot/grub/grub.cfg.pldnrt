@@ -111,6 +111,10 @@ function pldnr_menuentry {
         setup_efi_fb=""
     fi
 
+    if [ "$netboot" = "yes" ] ; then
+        options="$options pldnr.nomedia"
+    fi
+
     if [ "$net_ok" = "no" -a "$netboot" = "yes" ] ; then
         return 1
     elif have_file pld-nr-$bits/vmlinuz ; then
