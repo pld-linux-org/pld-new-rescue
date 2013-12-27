@@ -49,8 +49,8 @@ class Partition(object):
         name += "\x00" * (36 - len(name))
         name = name.encode("UTF-16LE")
         return struct.pack("<16s16sQQQ72s",
-                           self.type_uuid.bytes,
-                           self.part_uuid.bytes,
+                           self.type_uuid.bytes_le,
+                           self.part_uuid.bytes_le,
                            self.first_lba,
                            self.last_lba,
                            self.flags,
@@ -59,8 +59,8 @@ class Partition(object):
     def from_bytes(cls, data):
         (type_uuid, part_uuid, first_lba, last_lba, flags, name
             ) = struct.unpack("<16s16sQQQ72s", data)
-        type_uuid = uuid.UUID(bytes=type_uuid)
-        part_uuid = uuid.UUID(bytes=part_uuid)
+        type_uuid = uuid.UUID(bytes_le=type_uuid)
+        part_uuid = uuid.UUID(bytes_le=part_uuid)
         name = name.decode("UTF-16LE").split("\x00")[0]
         return cls(type_uuid, part_uuid, first_lba, last_lba, flags, name)
 
@@ -156,7 +156,7 @@ class GPT(object):
                                                     .format(self.reserved2))
             if self.revision == (1, 0):
                 self.something_wrong = True
-        self.disk_uuid = uuid.UUID(bytes=disk_uuid)
+        self.disk_uuid = uuid.UUID(bytes_le=disk_uuid)
         crc = self.compute_header_crc(self.header, self.header_size)
         if crc != self.header_crc:
             logger.warning("Bad GPT header CRC")
@@ -290,7 +290,7 @@ class GPT(object):
                              self.backup_lba,
                              self.first_usable_lba,
                              self.last_usable_lba,
-                             self.disk_uuid.bytes,
+                             self.disk_uuid.bytes_le,
                              self.part_array_start,
                              self.part_array_size,
                              self.part_entry_size,
