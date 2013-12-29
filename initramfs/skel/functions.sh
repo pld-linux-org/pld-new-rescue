@@ -56,14 +56,33 @@ umount_media() {
 
 mount_aufs() {
 
+    mkdir -p /root/.rw/etc/systemd/system
+
+    echo "" > /fstab-add
+    echo "# PLD NR aufs filesystems (auto-generated)" >> /fstab-add
+
     for dir in boot usr sbin lib lib64 etc bin opt root var ; do
         mkdir -p /root/.rw/$dir /root/$dir
         if [ -d /$dir -a "$dir" != "root" ] ; then
-            mount -t aufs -o dirs=/root/.rw/$dir=rw:/$dir=ro none /root/$dir
+            options="dirs=/root/.rw/$dir=rw:/$dir=ro"
         else
-            mount -t aufs -o dirs=/root/.rw/$dir=rw none /root/$dir
+            options="dirs=/root/.rw/$dir=rw"
         fi
+        mount -t aufs -o $options none /root/$dir
+        echo "none /$dir aufs $options 0 0" >> /fstab-add
+        cat > /root/.rw/etc/systemd/system/${dir}.mount <<EOF
+[Unit]
+Description=/$dir mount
+DefaultDependencies=false
+
+[Mount]
+What=none
+Where=/$dir
+Type=aufs
+Options=$options
+EOF
     done
+    echo "" >> /fstab-add
 }
 
 load_module() {
