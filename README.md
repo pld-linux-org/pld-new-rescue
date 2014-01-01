@@ -16,7 +16,7 @@ List of packages included in image should be available with the binary releases.
 ### About this version
 
 This is the 'master' branch of the PLD New Rescue, based on a frozen
-'Th 2012' snapshot of PLD Linux. It is quite old but guaranteed not to change,
+'Th 2013' snapshot of PLD Linux. It may be old but is guaranteed not to change,
 so if the code builds now it should build next month or year too (provided the
 build environment doesn't change to much and the same 'extra packages' are
 provided).
@@ -178,7 +178,7 @@ Currently the extra packages needed are:
     util-linux-2.24-1
 
 These provide features that are required by this image, but not available in
-the PLD Linux 'Th 2012' snapshot, which is used as a base for this build (to
+the PLD Linux 'Th 2013' snapshot, which is used as a base for this build (to
 provide reproducible results).
 
 When the preparations are done calling 'make' in the main directory of the
