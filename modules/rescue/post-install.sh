@@ -1,5 +1,20 @@
 
 ###########################################################
+# Disable default rc-scripts network config
+# wicd does much better job here
+
+cat > root/etc/sysconfig/interfaces/ifcfg-eth0 << EOF
+DEVICE=eth0
+
+# do not configure this interface via PLD rc-scripts
+# the wicd network manager does much better job
+# for temporary connections
+ONBOOT=no
+
+BOOTPROTO=dhcp
+EOF
+
+###########################################################
 # set up the systemd
 
 # disable services
