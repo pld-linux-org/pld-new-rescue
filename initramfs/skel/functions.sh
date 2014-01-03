@@ -26,7 +26,7 @@ mount_media() {
     fi
 
     for i in 1 2 3 4 5 6 7 8 9 10; do
-        if /sbin/blkid -U "$cd_vol_id" ; then
+        if /sbin/blkid -U "$cd_vol_id" >/dev/null ; then
             break
         fi
         echo "Waiting for the boot media to appear..."
@@ -39,7 +39,6 @@ mount_media() {
     mkdir -p /root/media/pld-nr
     if /bin/mount -t iso9660 -outf8 UUID="$cd_vol_id" /root/media/pld-nr 2>/dev/null ; then
         echo "PLD New Rescue medium found"
-        ls -l /root/media/pld-nr
     fi
 }
 
