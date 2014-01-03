@@ -135,6 +135,8 @@ Kernel command-line options
 
 * pldnr.font=<name>... – font (default: from build.conf)
 
+* pldnr.sshpw=yes – enable SSH password authentication
+
 Building and customizations
 ---------------------------
 

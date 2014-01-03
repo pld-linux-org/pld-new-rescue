@@ -9,4 +9,12 @@ if [ -e /media/pld-nr/authorized_keys ] ; then
     chmod 644 /root/root/.ssh/authorized_keys
 fi
 
+# enable password authentication forr SSH
+
+if [ "$c_pldnr_sshpw" = "yes" ] ; then
+
+    sed -i -e's/^PermitRootLogin.*/PermitRootLogin yes/;s/^PasswordAuthentication.*/PasswordAuthentication yes/;s/^ChallengeResponseAuthentication.*/ChallengeResponseAuthentication yes/' \
+        /root/etc/ssh/sshd_config
+fi
+
 # vi: ft=sh et sw=4 sts=4
