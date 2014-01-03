@@ -1,0 +1,31 @@
+#!/bin/sh -x
+
+mkdir -p /run/udhcpc
+
+case "$1" in
+  deconfig)
+    ip addr flush dev $interface
+    ip link set $interface up
+    rm -f $CFG
+    ;;
+  bound)
+    # save config info for $interface:
+    set > $CFG
+    # configure interface and routes:
+    ip addr flush dev $interface
+    ip addr add ${ip}/${mask} dev $interface
+    [ -n "$router" ] && ip route add default via ${router%% *} dev $interface
+    > /etc/resolv.conf
+    [ -n "$domain" ] && echo search $domain > /etc/resolv.conf
+    for i in $dns ; do
+      echo nameserver $i >> /etc/resolv.conf
+    done
+    for i in  $ntpsrv ; do
+      echo $i >> /run/udhcpc/ntp_servers
+    done
+    ;;
+  renew)
+    ;;
+esac
+
+exit 0

@@ -60,3 +60,6 @@ slink /bin/tr busybox 0755 0 0
 * /lib/modules/*/kernel/drivers/usb/host/uhci*
 * /lib/modules/*/kernel/drivers/usb/host/xhci*
 * /lib/modules/*/kernel/drivers/usb/storage/usb-storage.*
+
+# FIXME: should go to separate cpio archive
+* /lib/modules/*/kernel/drivers/net/ethernet/intel/e1000

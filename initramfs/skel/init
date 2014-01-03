@@ -74,6 +74,10 @@ if [ ! -x "/root/$c_init" ] ; then
     /bin/sh
 fi
 
+if [ -n "$c_ip" -a "$c_ip" != "off" -a "$c_ip" != "none" ] ; then
+    setup_network
+fi
+
 umount_media
 
 udevadm control --exit

@@ -137,6 +137,11 @@ Kernel command-line options
 
 * pldnr.sshpw=yes – enable SSH password authentication
 
+* ip=<client-ip>:<server-ip>:<gw-ip>:<netmask>:<hostname>:<device>:<autoconf>:<dns0-ip>:<dns1-ip>
+  ip=off/none/on/any/dhcp – how to configure early network (by default use DHCP, but only when needed)
+
+* pldnr.netdev=<device> – network device name or MAC-address for early network
+
 Building and customizations
 ---------------------------
 
