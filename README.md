@@ -119,6 +119,10 @@ Here is a sample config file for ISC DHCP daemon for booting PLDNR:
       }
     }
 
+If the DHCP server has support for 'ignore-client-uids on;' configuration flag
+it may be a good idea to add it to the config file to prevent the system from
+switching IP addresses during boot.
+
 Kernel command-line options
 ---------------------------
 
