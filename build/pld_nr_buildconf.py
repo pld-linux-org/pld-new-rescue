@@ -121,6 +121,8 @@ class Config(object):
         self.module_sqf_files = [m + ".sqf" for m in self.modules]
         self.module_lst_files = [m + ".lst" for m in self.modules]
         
+        self.initramfs_files = ["_init.cpi"]
+
         self.compression = self._config.get("compression", fallback="xz")
         self.compress_cmd = [self.compression]
         if self.compression == "xz":
@@ -139,6 +141,10 @@ class Config(object):
         self.efi = self._config.getboolean("efi", fallback=False)
         self.bios = self._config.getboolean("bios", fallback=True)
         self.net_boot = self._config.getboolean("net_boot", fallback=False)
+        
+        self.early_net = self._config.getboolean("early_net", fallback=False)
+        if self.early_net:
+            self.initramfs_files += ["_net.cpi"]
 
         self.efi_arch = self._config.get("efi_arch")
         if not self.efi_arch:
@@ -506,6 +512,7 @@ class Config(object):
         lines.append("ARCH={0}".format(self.arch))
         lines.append("BITS={0}".format(self.bits))
         lines.append("MODULES={0}".format(" ".join(self.modules)))
+        lines.append("INITRAMFS_FILES={0}".format(" ".join(self.initramfs_files)))
         lines.append("MODULE_FILES={0}".format(" ".join(self.module_files)))
         lines.append("MODULE_SQF_FILES={0}".format(
                                             " ".join(self.module_sqf_files)))

@@ -237,11 +237,16 @@ For further customization one can also:
 
   * Edit files under `initramfs`:
 
-    - `initramfs/files.list` lists special files and directories to be made in
-      the initramfs and files which should be moved there from the base
-      module
-    - `initramfs/skel` directory contains additional files to be included in
-      the initramfs, including the main `init` script.
+    - `initramfs/init.files` lists special files and directories to be made in
+      the basic initramfs and files which should be moved there from the base
+      module.
+    - `initramfs/init.skel` directory contains additional files to be included in
+      the basic initramfs, including the main `init` script.
+    - `initramfs/net.files` lists special files and directories to be made in
+      the early network initramfs add-on (_net.cpi) and files which should be
+      moved there from the base module.
+    - `initramfs/net.skel` directory contains additional files to be included in
+      the  early network initramfs add-on (_net.cpi).
 
   * Add or replace RPM files in the `extra_packages/` subdirectories. These
     are used only when pulled through a module 'pset' files (directly or

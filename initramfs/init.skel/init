@@ -91,6 +91,8 @@ rm -f /.rcd/modules/* 2>/dev/null
 cat /fstab-add >> /root/etc/fstab
 rm /fstab-add
 
+finish_network
+
 cd /root
 mount --move . /
 exec chroot . "$c_init"

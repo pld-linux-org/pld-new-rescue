@@ -177,39 +177,56 @@ def main():
     log_parser = pld_nr_buildconf.get_logging_args_parser()
     parser = argparse.ArgumentParser(description="Make initramfs",
                                      parents=[log_parser])
+    parser.add_argument("--out-list", metavar="FILE",
+                        help="Save initramfs contents list to FILE")
+    parser.add_argument("--substract-contents", metavar=("INFILE", "OUTFILE"),
+                        nargs=2,
+                        help="Read file list from INFILE, exclude contents"
+                              " of this initramfs module and write to OUTFILE"),
+    parser.add_argument("--exclude", metavar="FILE",
+                        help="Do not include any files listed in FILE")
+    parser.add_argument("name", metavar="NAME",
+                        help="Name of the initramfs module."
+                            " _NAME.cpi and _NAME.lst files will be written.")
+    args = parser.parse_args()
     args = parser.parse_args()
     pld_nr_buildconf.setup_logging(args)
     
     config = pld_nr_buildconf.Config.get_config()
 
-    skel_dir = os.path.abspath("../initramfs/skel")
+    skel_dir = os.path.abspath("../initramfs/{}.skel".format(args.name))
     root_dir = os.path.abspath("root")
     modules_dir = os.path.abspath("../modules")
     built_skel_dir = os.path.abspath("initramfs")
-    init_cpio_fn = os.path.abspath("init.cpi")
-    files_list_fn = os.path.abspath("../initramfs/files.list")
-    gic_list_fn = os.path.abspath("gen_init_cpio.list")
-    init_lst_fn = os.path.abspath("init.lst")
-    base_lst_fn = os.path.abspath("base.lst")
-    base_full_lst_fn = os.path.abspath("base.full-lst")
+    out_cpio_fn = os.path.abspath("_{}.cpi".format(args.name))
+    files_list_fn = os.path.abspath("../initramfs/{}.files".format(args.name))
+    gic_list_fn = os.path.abspath("_{}.gen_init_cpio.list".format(args.name))
+    out_lst_fn = os.path.abspath("_{0}.lst".format(args.name))
+    if args.substract_contents:
+        base_full_lst_fn = os.path.abspath(args.substract_contents[0])
+        base_lst_fn = os.path.abspath(args.substract_contents[1])
+    else:
+        base_full_lst_fn = None
+        base_lst_fn = None
 
     os.chdir(root_dir)
 
     extra_files = []
-    logger.debug("Looking for module scripts")
-    for module in config.modules:
-        module_init_fn = os.path.join(modules_dir, module, "init.sh")
-        logger.debug("  {}".format(module_init_fn))
-        if os.path.exists(module_init_fn):
-            logger.debug("    got it")
-            extra_files.append("file /.rcd/modules/{}.init {} 0644 0 0"
-                                            .format(module, module_init_fn))
+    if args.name == "init":
+        logger.debug("Looking for module scripts")
+        for module in config.modules:
+            module_init_fn = os.path.join(modules_dir, module, "init.sh")
+            logger.debug("  {}".format(module_init_fn))
+            if os.path.exists(module_init_fn):
+                logger.debug("    got it")
+                extra_files.append("file /.rcd/modules/{}.init {} 0644 0 0"
+                                                .format(module, module_init_fn))
 
     logger.debug("Completing file list")
     files, globs = process_files_list(config, files_list_fn, gic_list_fn,
                                                         root_dir, extra_files)
     subprocess.check_call(["gen_init_cpio", gic_list_fn],
-                          stdout=open(init_cpio_fn, "wb"))
+                          stdout=open(out_cpio_fn, "wb"))
 
     paths = expand_globs(config, globs)
     files += paths
@@ -218,7 +235,7 @@ def main():
 
     paths.sort()
 
-    cpio_append(init_cpio_fn, paths)
+    cpio_append(out_cpio_fn, paths)
 
     if os.path.exists(built_skel_dir):
         shutil.rmtree(built_skel_dir)
@@ -237,28 +254,32 @@ def main():
                 built_paths.append(path)
         if os.path.exists("init"):
             os.chmod("init", 0o755)
-        cpio_append(init_cpio_fn, built_paths)
+        cpio_append(out_cpio_fn, built_paths)
     finally:
         os.chdir(root_dir)
         shutil.rmtree(built_skel_dir)
 
-    with open(init_lst_fn, "wt") as init_lst:
+    with open(out_lst_fn, "wt") as init_lst:
         for path in paths:
             print(path, file=init_lst)
 
-    base_all_paths = set(l.rstrip() for l in
-                                open(base_full_lst_fn, "rt").readlines())
-    base_paths = set(base_all_paths) - set(paths)
+    os.chdir(os.path.dirname(out_lst_fn))
+    cpio_append(out_cpio_fn, [os.path.basename(out_lst_fn)])
 
-    with open(base_lst_fn, "wt") as base_lst:
-        for path in base_paths:
-            print(path, file=base_lst)
+    if args.substract_contents:
+        base_all_paths = set(l.rstrip() for l in
+                                    open(base_full_lst_fn, "rt").readlines())
+        base_paths = set(base_all_paths) - set(paths)
 
-    logger.debug("compressing {0!r}".format(init_cpio_fn))
-    subprocess.check_call(config.compress_cmd + ["-f", init_cpio_fn])
-    compressed_fn = init_cpio_fn + config.compressed_ext
-    logger.debug("renaming {0!r} to {1!r}".format(compressed_fn, init_cpio_fn))
-    os.rename(compressed_fn, init_cpio_fn)
+        with open(base_lst_fn, "wt") as base_lst:
+            for path in base_paths:
+                print(path, file=base_lst)
+
+    logger.debug("compressing {0!r}".format(out_cpio_fn))
+    subprocess.check_call(config.compress_cmd + ["-f", out_cpio_fn])
+    compressed_fn = out_cpio_fn + config.compressed_ext
+    logger.debug("renaming {0!r} to {1!r}".format(compressed_fn, out_cpio_fn))
+    os.rename(compressed_fn, out_cpio_fn)
 
 if __name__ == "__main__":
     try:

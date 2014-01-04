@@ -84,21 +84,23 @@ function load_pldnr {
         linux "${pldnr_prefix}/${boot_prefix}/vmlinuz" "$@"
     fi
 
-    initrds=""
+    initrds="${pldnr_prefix}/${boot_prefix}/_init.cpi"
+
+    if [ "$early_net" = "yes" ] ; then
+        initrds="$initrds ${pldnr_prefix}/${boot_prefix}/_net.cpi"
+    fi
+
     for module in $preload_modules ; do
-        if [ "$module" = "init" ] ; then
-            continue
-        fi
         if have_file "${boot_prefix}/${module}.cpi" ; then
             initrds="$initrds ${pldnr_prefix}/${boot_prefix}/${module}.cpi"
         fi
     done
 
-    echo "loading ${pldnr_prefix}/${boot_prefix}/init.cpi $initrds..."
+    echo "loading $initrds..."
     if [ "$grub_platform" = "efi" ] ; then
-        @grub_initrdefi@ "${pldnr_prefix}/${boot_prefix}/init.cpi" $initrds
+        @grub_initrdefi@ $initrds
     else
-        initrd "${pldnr_prefix}/${boot_prefix}/init.cpi" $initrds
+        initrd $initrds
     fi
 
     echo "booting..."
@@ -123,12 +125,24 @@ function pldnr_menuentry {
         options="$options pldnr.nomedia"
     fi
 
+    if have_file pld-nr-$bits/_net.cpi ; then
+        if [ "$netboot" = "yes" ] ; then
+            _early_net="early_net=yes
+"
+        else
+            _early_net="early_net=no
+"
+        fi
+    else
+        _early_net=""
+    fi
+
     if [ "$net_ok" = "no" -a "$netboot" = "yes" ] ; then
         return 1
     elif have_file pld-nr-$bits/vmlinuz ; then
 
         menuentry "$title" --source "${setup_efi_fb}preload_modules=\"$modules\"
-load_pldnr pld-nr-$bits $options
+${_early_net}load_pldnr pld-nr-$bits $options
 "
     else
         return 1

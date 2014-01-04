@@ -1,0 +1,5 @@
+* /lib/modules/*/kernel/drivers/net/ethernet/*
+* /lib/firmware/rtl_nic/*
+* /lib/firmware/e100/*
+* /lib/firmware/tigon/*
+* /lib/firmware/3com/*
