@@ -260,7 +260,7 @@ def main():
         shutil.rmtree(built_skel_dir)
 
     with open(out_lst_fn, "wt") as init_lst:
-        for path in paths:
+        for path in sorted(set(paths) | set(files) | set(built_paths)):
             print(path, file=init_lst)
 
     os.chdir(os.path.dirname(out_lst_fn))

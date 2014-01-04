@@ -91,7 +91,14 @@ rm -f /.rcd/modules/* 2>/dev/null
 cat /fstab-add >> /root/etc/fstab
 rm /fstab-add
 
+# free some initramfs memory
 finish_network
+rm /_init.lst
+rm /functions.sh
+rm /variables.sh
+rm /init
+
+/bin/sh  # FIXME
 
 cd /root
 mount --move . /

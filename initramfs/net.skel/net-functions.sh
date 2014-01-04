@@ -96,4 +96,13 @@ setup_network () {
     fi
 }
 
+finish_network () {
+
+    # these files are included in squashfs, remove them from the rootfs
+    cd /
+    xargs rm -f < /_net.lst 2>/dev/null
+    tac _net.lst | xargs rmdir --ignore-fail-on-non-empty 2>/dev/null
+    rm /_net.lst
+}
+
 # vi: ft=sh sw=4 sts=4 et
