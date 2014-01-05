@@ -19,6 +19,13 @@ case "$1" in
     for i in  $ntpsrv ; do
       echo $i >> /run/udhcpc/ntp_servers
     done
+    if [ -n "$tftp" -a "$tftp" != "bad" ] ; then
+	echo "$tftp"  > /run/udhcpc/server_addr
+    elif [ -n "$siaddr" ] ; then
+	echo "$siaddr"  > /run/udhcpc/server_addr
+    else
+	rm -f /run/udhcpc/server_addr 2>/dev/null || :
+    fi
     ;;
 esac
 

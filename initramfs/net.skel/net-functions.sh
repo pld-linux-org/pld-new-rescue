@@ -2,12 +2,13 @@
 setup_ip () {
     # set up network using the Linux kernel 'ip' parameter (split into function arguments)
 
-    # server_ip is global!
+    # server_addr is global!
     local client_ip gw_ip netmask hostname device autoconf dns1 dns2
 
+    server_addr=""
     eval "$(echo "$1" | awk -F: '{ print " \
 client_ip="$1"\
-server_ip="$2"\
+server_addr="$2"\
 gw_ip="$3"\
 netmask="$4"\
 hostname="$5"\
@@ -46,7 +47,10 @@ dns2="$9 }')"
 
     if [ "$autoconf" = "on" -o "$autoconf" = "any" -o "$autoconf" = "dhcp" -o -z "$client_ip" ] ; then
         chmod a+x /udhcpc.script
-        udhcpc --quit --now --script /udhcpc.script "$device"
+        udhcpc --quit --now --script /udhcpc.script -O tftp "$device"
+        if [ -z "$server_addr" -a -e /run/udhcpc/server_addr ] ; then
+            server_addr=$(cat /run/udhcpc/server_addr)
+        fi
     fi
 
     if [ -n "$client_ip" ] ; then
@@ -80,6 +84,7 @@ setup_network () {
             return 1
         fi
     fi
+    setup_network_done=yes
 
     if [ -z "$c_ip" ] ; then
         c_ip="::::::on::"
@@ -104,5 +109,111 @@ finish_network () {
     tac _net.lst | xargs rmdir --ignore-fail-on-non-empty 2>/dev/null
     rm /_net.lst
 }
+
+fetch_tftp_url () {
+    local url="$1"
+    local dest="$2"
+
+    local host_path host path
+
+    url="${url#tftp:}"
+    local host_path="${url#//}"
+    if [ "$host_path" != "$url" ] ; then
+        # host provided
+        host="${host_path%%/*}"
+        path="${host_path#*/}"
+    else
+        host=""
+        path="$url"
+    fi
+    if [ -z "$host" ] ; then
+        if [ -z "$server_addr" ] ; then
+            echo "Cannot fetch 'tftp:$url' – no server provided"
+            return 1
+        fi
+        # take the one from ip= command line parameter
+        # or from the DHCP response
+        host="$server_addr"
+    fi
+    if [ -n "$host" -a -n "$path" ] ; then
+        if tftp -l "$dest" -r "$path" -g "$host" ; then
+            return 0
+        else
+            return 1
+        fi
+    else
+        return 1
+    fi
+}
+
+fetch_other_url () {
+    local url="$1"
+    local dest="$2"
+
+    local tmp host_path host path
+
+    tmp="${url#*:}"
+    local host_path="${tmp#//}"
+    if [ "$host_path" != "$tmp" ] ; then
+        # host provided
+        host="${host_path%%/*}"
+        path="${host_path#*/}"
+    else
+        host=""
+        path="$tmp"
+    fi
+    if [ -z "$host" ] ; then
+        if [ -z "$server_addr" ] ; then
+            echo "Cannot fetch '$url' – no server provided"
+            return 1
+        fi
+        # set host to $server_addr
+        url="${url%%:*}://$server_addr/${path#/}"
+    fi
+    if wget -O "$dest" "$url" ; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+fetch_url () {
+    local url="$1"
+    local dest="$2"
+
+    if [ "${url#tftp:}" != "$url" ] ; then
+        if setup_network ; then
+            fetch_tftp_url "$url" "$dest"
+            return $?
+        else
+            echo "Cannot fetch '$url' – network not available" >&2
+            return 1
+        fi
+    fi
+
+    local tmp="${url%%/*}"
+    if [ "${tmp#*:}" != "$tmp" -a "${tmp%%:*}" != "file" ] ; then
+        # something:../something
+        if setup_network ; then
+            fetch_other_url "$url" "$dest"
+            return $?
+        else
+            echo "Cannot fetch '$url' – network not available" >&2
+            return 1
+        fi
+    fi
+
+    url="${url#file:}"
+    url="${url#//}"
+
+    if [ -e "/root/$url" ] ; then
+        cat "/root/$url" > "$dest"
+        return $?
+    else
+        echo "Cannnot find '$url'" >&2
+        return $?
+    fi
+}
+
 
 # vi: ft=sh sw=4 sts=4 et

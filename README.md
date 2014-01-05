@@ -84,6 +84,10 @@ root directory and mount PLD NR image at, or copy its contents to, the
 
 Start the TFTP server to listen on the right network interface.
 
+The `/boot/pld-nr-net.env` may be edited (preferably with the `grub-editenv`
+utility) to customize PLD NR boot. It may be especially useful to set the `pldnr_option`
+variable there, to add custom options (like `pldnr.keys=` to the kernel command line).
+
 ### DHCP server configuration
 
 The DHCP server must provide IP address, TFTP server address and boot image
@@ -107,8 +111,6 @@ Here is a sample config file for ISC DHCP daemon for booting PLDNR:
     
       class "pxeclients" {
         match if substring (option vendor-class-identifier, 0, 9) = "PXEClient";
-        next-server 192.168.10.1;
-        option tftp-server-name "192.168.10.1";
         if option arch = 00:06 {
           filename "/pld-nr/boot/net_ia32.efi";
         } else if option arch = 00:07 {
@@ -117,6 +119,10 @@ Here is a sample config file for ISC DHCP daemon for booting PLDNR:
           filename "/pld-nr/boot/netboot.pxe";
         }
       }
+      # not in the 'class "pxeclients"' so initramfs DHCP client 
+      # will get that too
+      option tftp-server-name "192.168.10.1";
+      next-server 192.168.10.1;
     }
 
 If the DHCP server has support for 'ignore-client-uids on;' configuration flag
@@ -145,6 +151,11 @@ Kernel command-line options
   ip=off/none/on/any/dhcp – how to configure early network (by default use DHCP, but only when needed)
 
 * pldnr.netdev=<device> – network device name or MAC-address for early network
+
+* pldnr.keys=<url> – URL (tftp:, http: or ftp:) where to load SSH
+  `authorized_keys` for the root user. Host name may be omitted in the URL – the server
+  address obtained through DHCP (`tftpp-server-name` option or `next-server`) or from the `ip=`
+  kernel option will be used then.
 
 Building and customizations
 ---------------------------

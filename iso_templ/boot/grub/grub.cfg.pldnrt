@@ -129,6 +129,10 @@ function pldnr_menuentry {
         options="$options pldnr.netdev=$net_pxe_mac"
     fi
 
+    if [ -n "$pldnr_options" ] ; then
+        options="$options $pldnr_options"
+    fi
+
     if have_file pld-nr-$bits/_net.cpi ; then
         if [ "$netboot" = "yes" ] ; then
             _early_net="early_net=yes
