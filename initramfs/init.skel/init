@@ -98,8 +98,6 @@ rm /functions.sh
 rm /variables.sh
 rm /init
 
-/bin/sh  # FIXME
-
 cd /root
 mount --move . /
 exec chroot . "$c_init"
