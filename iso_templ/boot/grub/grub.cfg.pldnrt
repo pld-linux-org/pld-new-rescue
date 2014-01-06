@@ -22,7 +22,7 @@ fi
 
 sleep -i 2
 
-timout=15
+timeout=15
 default=0
 
 echo "building menu"
