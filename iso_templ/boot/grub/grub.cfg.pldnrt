@@ -121,12 +121,16 @@ function pldnr_menuentry {
         setup_efi_fb=""
     fi
 
-    if [ "$netboot" = "yes" ] ; then
+    if [ "$netboot" = "yes" -a "$net_ok" = "yes" ] ; then
         options="$options pldnr.nomedia"
     fi
 
     if [ -n "$net_pxe_mac" ] ; then
         options="$options pldnr.netdev=$net_pxe_mac"
+    fi
+
+    if [ -n "$pldnr_iscsi" -a "$net_ok" = "iscsi" ] ; then
+        options="$options pldnr.iscsi=$pldnr_iscsi"
     fi
 
     if [ -n "$pldnr_options" ] ; then
@@ -146,6 +150,8 @@ function pldnr_menuentry {
     fi
 
     if [ "$net_ok" = "no" -a "$netboot" = "yes" ] ; then
+        return 1
+    elif [ "$net_ok" = "iscsi" -a "$netboot" = "yes" -a -z "$pldnr_iscsi" ] ; then
         return 1
     elif have_file pld-nr-$bits/vmlinuz ; then
 
@@ -184,7 +190,7 @@ function other_menuentry {
 for bits in 64 32 ; do
     pldnr_menuentry \
                 "PLD New Rescue $bits (minimum RAM)" \
-                no $bits ""
+                iscsi $bits ""
 
     pldnr_menuentry \
                 "PLD New Rescue $bits (all in RAM)" \
@@ -192,7 +198,7 @@ for bits in 64 32 ; do
 
     pldnr_menuentry \
                 "PLD New Rescue $bits (serial console, minimum RAM)" \
-                no $bits "" \
+                iscsi $bits "" \
                 "console=tty0 console=ttyS0,115200n8 earlyprintk=serial,ttyS0,115200"
 
     pldnr_menuentry \

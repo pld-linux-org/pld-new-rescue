@@ -25,6 +25,8 @@ mount_media() {
         return 0
     fi
 
+    start_network_disks
+
     for i in 1 2 3 4 5 6 7 8 9 10; do
         if /sbin/blkid -U "$cd_vol_id" >/dev/null ; then
             break
@@ -128,6 +130,11 @@ setup_network () {
 }
 
 finish_network() {
+
+    return 0
+}
+
+start_network_disks () {
 
     return 0
 }

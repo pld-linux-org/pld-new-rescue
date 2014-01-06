@@ -110,7 +110,8 @@ Here is a sample config file for ISC DHCP daemon for booting PLDNR:
       option routers 192.168.10.1;
     
       class "pxeclients" {
-        match if substring (option vendor-class-identifier, 0, 9) = "PXEClient";
+        match if substring (option vendor-class-identifier, 0, 9) = "PXEClient"
+             or substring (option vendor-class-identifier, 0, 14) = "pld-new-rescue";
         if option arch = 00:06 {
           filename "/pld-nr/boot/net_ia32.efi";
         } else if option arch = 00:07 {
@@ -118,16 +119,38 @@ Here is a sample config file for ISC DHCP daemon for booting PLDNR:
         } else {
           filename "/pld-nr/boot/netboot.pxe";
         }
+        option tftp-server-name "192.168.10.1";
+        next-server 192.168.10.1;
       }
-      # not in the 'class "pxeclients"' so initramfs DHCP client 
-      # will get that too
-      option tftp-server-name "192.168.10.1";
-      next-server 192.168.10.1;
     }
 
 If the DHCP server has support for 'ignore-client-uids on;' configuration flag
 it may be a good idea to add it to the config file to prevent the system from
 switching IP addresses during boot.
+
+### iSCSI boot
+
+Normally only the 'All in RAM' boot options are available when booting via PXE,
+as the boot medium is not available on the remote machine, but it may be made
+available via iSCSI.
+
+To enable the 'Minimum RAM' boot options and boot PLD NR from iSCSI one needs
+to set the iSCSI target parameters in the `pld-nr-net.env` file on the TFTP
+root directory.
+
+The `pldnr_iscsi` variable should be set to:
+`[<host>[:<port>]/]<target_name>[=<initiator_name>]`
+
+Only the `<target_name>` is mandatory, the other parameters defaults are:
+
+* `<host>` – the boot server address (provided with the `tftp-server-name`
+  DHCP option or through the `ip=` kernel parameter)
+
+* `<port>` – 3260
+
+* `<initiator_name>` – automatically generated initiator name:
+  "`iqn.2014-01.net.jajcus.pld-nr:boot:`" followed with the MAC address
+  of the boot interface (lower-case digits, no delimiters)
 
 Kernel command-line options
 ---------------------------
@@ -156,6 +179,10 @@ Kernel command-line options
   `authorized_keys` for the root user. Host name may be omitted in the URL – the server
   address obtained through DHCP (`tftpp-server-name` option or `next-server`) or from the `ip=`
   kernel option will be used then.
+
+* `pldnr.iscsi=[<host>[:<port>]/]<target_name>[=<initiator_name>]` – iSCSI
+  connection settings. This should be set through the '`pldnr_iscsi`' variable
+  in the `pld-nr-net.env` file.
 
 Building and customizations
 ---------------------------
