@@ -46,8 +46,12 @@ dns2="$9 }')"
     fi
 
     if [ "$autoconf" = "on" -o "$autoconf" = "any" -o "$autoconf" = "dhcp" -o -z "$client_ip" ] ; then
-        chmod a+x /udhcpc.script
-        udhcpc --quit --now --script /udhcpc.script -O tftp "$device"
+        mkdir -p /run/udhcpc
+        cp /udhcpc.script /run/udhcpc/script
+        chmod a+x /run/udhcpc/script
+        cd /run/udhcpc
+        udhcpc --now --pidfile /run/udhcpc/pid --script /run/udhcpc/script -O tftp --vendorclass "pld-new-rescue:$version" "$device"
+        cd /
         if [ -z "$server_addr" -a -e /run/udhcpc/server_addr ] ; then
             server_addr=$(cat /run/udhcpc/server_addr)
         fi
@@ -84,7 +88,9 @@ setup_network () {
             return 1
         fi
     fi
+
     setup_network_done=yes
+    keep_network="no"
 
     if [ -z "$c_ip" ] ; then
         c_ip="::::::on::"
@@ -102,6 +108,29 @@ setup_network () {
 }
 
 finish_network () {
+
+    if [ "$keep_network" = "yes" ] ; then
+        # keep network configuration running in case we use network resources
+        [ -s /etc/resolv.conf ] && cp /etc/resolv.conf /root/etc/resolv.conf
+
+        # disable wicd default wired profile
+        # so it won't touch the connection
+        cat > /root/etc/wicd/wired-settings.conf  <<EOF
+[wired-default]
+default = False
+lastused = False
+EOF
+    else
+        if [ -e /run/udhcpc/pid ] ; then
+            # release the lease and clean up
+            kill -USR2 $(cat /run/udhcpc/pid)
+            usleep 500000
+            kill $(cat /run/udhcpc/pid)
+            ip link set $(cat /run/udhcpc/interface) down
+            rm -rf /run/udhcpc
+        fi
+    fi
+    rm -f /udhcpc.script
 
     # these files are included in squashfs, remove them from the rootfs
     cd /

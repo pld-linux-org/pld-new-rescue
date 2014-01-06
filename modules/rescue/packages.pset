@@ -10,7 +10,7 @@ tftpd-hpa-standalone
 python
 python-modules
 
-# per user's request
+# network management for wired and wireless
 wicd
 wicd-client-cli
 wicd-client-curses

@@ -14,6 +14,25 @@ ONBOOT=no
 BOOTPROTO=dhcp
 EOF
 
+cp root/etc/wicd/dhclient.conf.template{.default,}
+echo "send vendor-class-identifier \"pld-new-rescue:$pldnr_version\";" >> root/etc/wicd/dhclient.conf.template
+
+cat > root/etc/wicd/manager-settings.conf <<EOF
+[Settings]
+auto_reconnect = True
+wired_connect_mode = 0
+dhcp_client = 1
+prefer_wired = True
+EOF
+
+# make the default wired profile active
+# so it automatically connects on boot
+cat > root/etc/wicd/wired-settings.conf  <<EOF
+[wired-default]
+default = True
+lastused = True
+EOF
+
 ###########################################################
 # set up the systemd
 

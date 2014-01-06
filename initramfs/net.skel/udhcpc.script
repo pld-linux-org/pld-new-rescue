@@ -1,6 +1,13 @@
-#!/bin/sh -x
+#!/bin/busybox sh
 
-mkdir -p /run/udhcpc
+#
+# Note this script is started from initramfs, but may be still running
+# when the final system is running. And it temporarily disables network
+# which may disable the main filesystems. Busybox should be always available,
+# though.
+#
+
+[ -n "$interface" ] && echo $interface > /run/udhcpc/interface
 
 case "$1" in
   deconfig)
@@ -11,7 +18,7 @@ case "$1" in
     ip addr flush dev $interface
     ip addr add ${ip}/${mask} dev $interface
     [ -n "$router" ] && ip route add default via ${router%% *} dev $interface
-    > /etc/resolv.conf
+    echo "# Written by early boot udhcpcd" > /etc/resolv.conf
     [ -n "$domain" ] && echo search $domain > /etc/resolv.conf
     for i in $dns ; do
       echo nameserver $i >> /etc/resolv.conf
