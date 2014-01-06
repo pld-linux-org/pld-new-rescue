@@ -132,27 +132,27 @@ switching IP addresses during boot.
 Kernel command-line options
 ---------------------------
 
-* init=<path> – init binary (default: /sbin/init)
+* `init=<path>` – init binary (default: `/sbin/init`)
 
-* pldnr.debug – enable initramfs debugging
+* `pldnr.debug` – enable initramfs debugging
 
-* pldnr.nomedia – do not mount the boot media in initramfs ('minimum RAM' boot
+* `pldnr.nomedia` – do not mount the boot media in initramfs ('minimum RAM' boot
   mode won't work)
 
-* pldnr.modules=<module>,<module>... – PLD NR modules to load (order matters)
+* `pldnr.modules=<module>,<module>...` – PLD NR modules to load (order matters)
 
-* pldnr.keymap=<name> – keymap (default: from build.conf)
+* `pldnr.keymap=<name>` – keymap (default: from build.conf)
 
-* pldnr.font=<name>... – font (default: from build.conf)
+* `pldnr.font=<name>` – font (default: from build.conf)
 
-* pldnr.sshpw=yes – enable SSH password authentication
+* `pldnr.sshpw=yes` – enable SSH password authentication
 
-* ip=<client-ip>:<server-ip>:<gw-ip>:<netmask>:<hostname>:<device>:<autoconf>:<dns0-ip>:<dns1-ip>
+* `ip=<client-ip>:<server-ip>:<gw-ip>:<netmask>:<hostname>:<device>:<autoconf>:<dns0-ip>:<dns1-ip>`
   ip=off/none/on/any/dhcp – how to configure early network (by default use DHCP, but only when needed)
 
-* pldnr.netdev=<device> – network device name or MAC-address for early network
+* `pldnr.netdev=<device>` – network device name or MAC-address for early network
 
-* pldnr.keys=<url> – URL (tftp:, http: or ftp:) where to load SSH
+* `pldnr.keys=<url>` – URL (tftp:, http: or ftp:) where to load SSH
   `authorized_keys` for the root user. Host name may be omitted in the URL – the server
   address obtained through DHCP (`tftpp-server-name` option or `next-server`) or from the `ip=`
   kernel option will be used then.
