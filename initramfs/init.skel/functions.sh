@@ -68,7 +68,7 @@ mount_aufs() {
             options="dirs=/root/.rw/$dir=rw"
         fi
         mount -t aufs -o $options none /root/$dir
-        echo "none /$dir aufs $options 0 0" >> /fstab-add
+        echo "none /$dir aufs rw 0 0" >> /fstab-add
         cat > /root/.rw/etc/systemd/system/${dir}.mount <<EOF
 [Unit]
 Description=/$dir mount
