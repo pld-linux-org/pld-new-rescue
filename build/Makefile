@@ -77,6 +77,7 @@ clean:
 	-rm -rf poldek.conf grub*.cfg
 	-rm -f font.pf2
 	-rm -f make.vars make.deps
+	-rm -f pld-nr-net.env uuids
 	-rmdir efi_mnt
 
 make.vars uuids: ../build.conf ./pld_nr_buildconf.py /usr/bin/python3
