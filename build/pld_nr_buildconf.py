@@ -38,6 +38,9 @@ NET_IMAGES = {
         }
 
 def _get_default_arch():
+    result = os.environ.get("ARCH")
+    if result:
+        return result
     try:
         result = subprocess.check_output(["rpm", "--eval", "%{_arch}"])
         result = result.decode("us-ascii").strip()

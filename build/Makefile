@@ -1,4 +1,6 @@
 
+export ARCH=
+
 include make.vars
 
 .PHONY: image

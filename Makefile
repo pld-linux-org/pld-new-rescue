@@ -1,4 +1,6 @@
 
+ARCH=
+
 .PHONY: cd usb bindist clean
 
 all: image
