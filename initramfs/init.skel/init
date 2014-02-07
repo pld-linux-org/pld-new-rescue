@@ -78,6 +78,17 @@ if [ ! -x "/root/$c_init" ] ; then
     /bin/sh
 fi
 
+if [ -e "/custom" -a -d "/custom" ]; then
+    cd /custom
+    find * | cpio -p /root
+    cd /
+    rm -rf /custom
+fi
+
+for file in /custom*.sh; do 
+    /bin/sh $file
+done
+
 umount_media
 
 udevadm control --exit
@@ -97,6 +108,9 @@ rm /_init.lst
 rm /functions.sh
 rm /variables.sh
 rm /init
+for file in /custom*.sh; do 
+    rm $file
+done
 
 cd /root
 mount --move . /
