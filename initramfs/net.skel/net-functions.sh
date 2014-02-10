@@ -51,6 +51,7 @@ dns2="$9 }')"
     find_boot_netdev
 
     if [ -n "$hostname" ] ; then
+        echo "$hostname" > /etc/hostname
         hostname "$hostname"
     fi
 
@@ -59,7 +60,7 @@ dns2="$9 }')"
         cp /udhcpc.script /run/udhcpc/script
         chmod a+x /run/udhcpc/script
         cd /run/udhcpc
-        udhcpc --now --pidfile /run/udhcpc/pid --script /run/udhcpc/script -O tftp --vendorclass "pld-new-rescue:$version" "$network_device"
+        udhcpc --now --pidfile /run/udhcpc/pid --script /run/udhcpc/script -O tftp -O hostname --vendorclass "pld-new-rescue:$version" "$network_device"
         cd /
         if [ -z "$server_addr" -a -e /run/udhcpc/server_addr ] ; then
             server_addr=$(cat /run/udhcpc/server_addr)
@@ -121,6 +122,7 @@ finish_network () {
     if [ "$keep_network" = "yes" ] ; then
         # keep network configuration running in case we use network resources
         [ -s /etc/resolv.conf ] && cp /etc/resolv.conf /root/etc/resolv.conf
+        [ -s /etc/hostname ] && cp /etc/hostname /root/etc/hostname
 
         # disable wicd default wired profile
         # so it won't touch the connection

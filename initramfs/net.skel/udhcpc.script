@@ -33,6 +33,10 @@ case "$1" in
     else
 	rm -f /run/udhcpc/server_addr 2>/dev/null || :
     fi
+    if [ -n "$hostname" ]; then
+      hostname "$hostname"
+      echo "$hostname" > /etc/hostname
+    fi
     ;;
 esac
 
