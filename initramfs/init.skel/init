@@ -55,6 +55,10 @@ mount_media
 
 mount_aufs
 
+if [ -n "$c_ip" -a "$c_ip" != "off" -a "$c_ip" != "none" ] ; then
+    setup_network
+fi
+
 for module in $modules ; do
     load_module "$module"
 done
@@ -72,10 +76,6 @@ if [ ! -x "/root/$c_init" ] ; then
     echo "Something went wrong, init binary ($c_init) not found under /root"
     echo "Kernel will panic, so dropping to shell"
     /bin/sh
-fi
-
-if [ -n "$c_ip" -a "$c_ip" != "off" -a "$c_ip" != "none" ] ; then
-    setup_network
 fi
 
 umount_media
