@@ -1,4 +1,31 @@
 
+# Find the network device to be used by any other networking code
+# Store the device name in $network_device global variable
+# Do nothing if $network_device is already set
+find_boot_netdev () {
+    if [ -n "$network_device" ] ; then
+        return 0
+    fi
+    if [ -n "$c_pldnr_netdev" ] ; then
+        if [ -e "/sys/class/net/$c_pldnr_netdev" ] ; then
+            network_device="$c_pldnr_netdev"
+        else
+            local mac="$(echo "$c_pldnr_netdev" | tr "[[:upper:]]" "[[:lower:]]")"
+            network_device="$(ip -o l | awk -F": " "/ether $mac / { print \$2 }")"
+            if [ -z "$network_device" ] ; then
+                echo "Network device '$mac' not found" >&2
+                return 1
+            fi
+        fi
+    elif [ -e "/sys/class/net/eth0" ] ; then
+        network_device="eth0"
+    else
+        echo "Network device not found" >&2
+        return 1
+    fi
+}
+
+
 setup_ip () {
     # set up network using the Linux kernel 'ip' parameter (split into function arguments)
 
@@ -21,25 +48,7 @@ dns2="$9 }')"
         return 1
     fi
 
-    if [ -z "$network_device" ] ; then
-        if [ -n "$c_pldnr_netdev" ] ; then
-            if [ -e "/sys/class/net/$c_pldnr_netdev" ] ; then
-                network_device="$c_pldnr_netdev"
-            else
-                local mac="$(echo "$c_pldnr_netdev" | tr "[[:upper:]]" "[[:lower:]]")"
-                network_device="$(ip -o l | awk -F": " "/ether $mac / { print \$2 }")"
-                if [ -z "$network_device" ] ; then
-                    echo "Network device '$mac' not found"
-                    return 1
-                fi
-            fi
-        elif [ -e "/sys/class/net/eth0" ] ; then
-            network_device="eth0"
-        else
-            echo "Network device not found"
-            return 1
-        fi
-    fi
+    find_boot_netdev
 
     if [ -n "$hostname" ] ; then
         hostname "$hostname"

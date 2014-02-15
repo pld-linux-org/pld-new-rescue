@@ -139,6 +139,11 @@ start_network_disks () {
     return 0
 }
 
+find_boot_netdev () {
+    # cannot be done if network drivers are not available
+    return 1
+}
+
 if [ -e /net-functions.sh ] ; then
     # provided by the _net.cpi file
     . /net-functions.sh
