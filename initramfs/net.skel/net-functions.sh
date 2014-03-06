@@ -60,6 +60,14 @@ dns2="$9 }')"
         cp /udhcpc.script /run/udhcpc/script
         chmod a+x /run/udhcpc/script
         cd /run/udhcpc
+        # udhcpc is too dumb to wait for interface to become operational before
+        # it sends dhcp requests; we try to get it up first (for max 10 seconds)
+        ip link set "$network_device" up
+        for i in $(seq 20) ; do
+            sleep 0.5
+            nocarrier=$(ip link show "$network_device"|grep -i no.carrier)
+            [ -z "$nocarrier" ] && break
+        done
         udhcpc --now --pidfile /run/udhcpc/pid --script /run/udhcpc/script -O tftp -O hostname --vendorclass "pld-new-rescue:$version" -i "$network_device"
         cd /
         if [ -z "$server_addr" -a -e /run/udhcpc/server_addr ] ; then
