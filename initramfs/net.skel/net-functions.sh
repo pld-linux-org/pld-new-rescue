@@ -119,10 +119,12 @@ setup_network () {
 
 finish_network () {
 
+    # Make sure final system boots with the proper hostname already set
+    [ -s /etc/hostname ] && cp /etc/hostname /root/etc/hostname
+
     if [ "$keep_network" = "yes" ] ; then
         # keep network configuration running in case we use network resources
         [ -s /etc/resolv.conf ] && cp /etc/resolv.conf /root/etc/resolv.conf
-        [ -s /etc/hostname ] && cp /etc/hostname /root/etc/hostname
 
         # disable wicd default wired profile
         # so it won't touch the connection
