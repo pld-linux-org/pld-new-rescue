@@ -184,6 +184,8 @@ Kernel command-line options
   connection settings. This should be set through the '`pldnr_iscsi`' variable
   in the `pld-nr-net.env` file.
 
+* `pldnr.newifnames` – enable udev's predictable network interface names
+
 Limited customization
 ---------------------
 

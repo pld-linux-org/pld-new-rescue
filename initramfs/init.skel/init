@@ -36,6 +36,11 @@ for dir in tmp run ; do
 	mount --bind /root/$dir /$dir
 done
 
+if [ "$c_pldnr_newifnames" = "yes" ] ; then
+    rm -f /etc/udev/rules.d/80-net-setup-link.rules # udev>=209
+    rm -f /etc/udev/rules.d/80-net-name-slot.rules # udev<=208
+fi
+
 modprobe loop
 modprobe usb-storage
 
@@ -111,6 +116,11 @@ rm /init
 for file in /custom*.sh; do 
     rm $file
 done
+
+if [ "$c_pldnr_newifnames" = "yes" ] ; then
+    rm -f /root/etc/udev/rules.d/80-net-setup-link.rules # udev>=209
+    rm -f /root/etc/udev/rules.d/80-net-name-slot.rules # udev<=208
+fi
 
 cd /root
 mount --move . /
