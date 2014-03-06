@@ -60,7 +60,7 @@ dns2="$9 }')"
         cp /udhcpc.script /run/udhcpc/script
         chmod a+x /run/udhcpc/script
         cd /run/udhcpc
-        udhcpc --now --pidfile /run/udhcpc/pid --script /run/udhcpc/script -O tftp -O hostname --vendorclass "pld-new-rescue:$version" "$network_device"
+        udhcpc --now --pidfile /run/udhcpc/pid --script /run/udhcpc/script -O tftp -O hostname --vendorclass "pld-new-rescue:$version" -i "$network_device"
         cd /
         if [ -z "$server_addr" -a -e /run/udhcpc/server_addr ] ; then
             server_addr=$(cat /run/udhcpc/server_addr)
