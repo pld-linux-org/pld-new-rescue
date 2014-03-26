@@ -53,3 +53,6 @@ for service in \
 	fi
 done
 
+###########################################################
+# disable telnetd
+rm -f root/etc/sysconfig/rc-inetd/telnetd
