@@ -17,6 +17,8 @@ find_boot_netdev () {
                 return 1
             fi
         fi
+    elif [ "$(echo /sys/class/net/en*)" != '/sys/class/net/en*' ] ; then
+        network_device="$(basename $(ls -d /sys/class/net/en*|sort|head -n 1))"
     elif [ -e "/sys/class/net/eth0" ] ; then
         network_device="eth0"
     else
