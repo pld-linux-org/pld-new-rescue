@@ -126,7 +126,11 @@ function pldnr_menuentry {
     fi
 
     if [ -n "$net_pxe_mac" ] ; then
+        # BIOS
         options="$options pldnr.netdev=$net_pxe_mac"
+    elif [ -n "$net_default_mac" ] ; then
+        # UEFI
+        options="$options pldnr.netdev=$net_default_mac"
     fi
 
     if [ -n "$pldnr_iscsi" -a "$net_ok" = "iscsi" ] ; then
