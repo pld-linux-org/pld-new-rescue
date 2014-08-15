@@ -56,3 +56,13 @@ done
 ###########################################################
 # disable telnetd
 rm -f root/etc/sysconfig/rc-inetd/telnetd
+
+###########################################################
+# disable useless cron jobs
+
+for crontab in logcheck scdp uucp ; do
+	sed -i -e's/^/#/' root/etc/cron.d/$crontab
+done
+chmod 0 root/etc/cron.daily/rdate
+chmod 0 root/etc/cron.daily/man-db.cron
+chmod 0 root/etc/cron.weekly/chkrootkit-check
