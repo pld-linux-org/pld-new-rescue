@@ -78,3 +78,9 @@ EOF
 # config dhclient vendor class identifier
 
 echo "send vendor-class-identifier \"pld-new-rescue:$pldnr_version\";" >> root/etc/dhclient.conf
+
+###########################################
+# stop crond from trying to send mail
+# let it use syslog instead
+
+echo 'CROND_ARGS="-m off -s"' >> root/etc/sysconfig/cron
