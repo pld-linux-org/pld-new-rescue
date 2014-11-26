@@ -38,6 +38,9 @@ NET_IMAGES = {
         }
 
 def _get_default_arch():
+    result = os.environ.get("ARCH")
+    if result:
+        return result
     try:
         result = subprocess.check_output(["rpm", "--eval", "%{_arch}"])
         result = result.decode("us-ascii").strip()
@@ -121,6 +124,8 @@ class Config(object):
         self.module_sqf_files = [m + ".sqf" for m in self.modules]
         self.module_lst_files = [m + ".lst" for m in self.modules]
         
+        self.initramfs_files = ["_init.cpi"]
+
         self.compression = self._config.get("compression", fallback="xz")
         self.compress_cmd = [self.compression]
         if self.compression == "xz":
@@ -139,6 +144,10 @@ class Config(object):
         self.efi = self._config.getboolean("efi", fallback=False)
         self.bios = self._config.getboolean("bios", fallback=True)
         self.net_boot = self._config.getboolean("net_boot", fallback=False)
+        
+        self.early_net = self._config.getboolean("early_net", fallback=False)
+        if self.early_net:
+            self.initramfs_files += ["_net.cpi"]
 
         self.efi_arch = self._config.get("efi_arch")
         if not self.efi_arch:
@@ -180,6 +189,13 @@ class Config(object):
             self.grub_progress_mod = "progress"
         else:
             self.grub_progress_mod = ""
+        if all(os.path.exists("/lib/grub/{0}/linuxefi.mod".format(p))
+                    for p in self.grub_platforms if p.endswith("-efi")):
+            self.grub_linuxefi = "linuxefi"
+            self.grub_initrdefi = "initrdefi"
+        else:
+            self.grub_linuxefi = "linux"
+            self.grub_initrdefi = "initrd"
 
         self.memtest86 = self._config.getboolean("memtest86", fallback=False)
         self.memtest86_plus = self._config.getboolean("memtest86+",
@@ -399,6 +415,8 @@ class Config(object):
         result["grub_linuxefi"] = self.grub_linuxefi
         result["grub_initrdefi"] = self.grub_initrdefi
         result["grub_progress_mod"] = self.grub_progress_mod
+        result["grub_linuxefi"] = self.grub_linuxefi
+        result["grub_initrdefi"] = self.grub_initrdefi
         return result
 
     def substitute_bytes(self, data):
@@ -506,6 +524,7 @@ class Config(object):
         lines.append("ARCH={0}".format(self.arch))
         lines.append("BITS={0}".format(self.bits))
         lines.append("MODULES={0}".format(" ".join(self.modules)))
+        lines.append("INITRAMFS_FILES={0}".format(" ".join(self.initramfs_files)))
         lines.append("MODULE_FILES={0}".format(" ".join(self.module_files)))
         lines.append("MODULE_SQF_FILES={0}".format(
                                             " ".join(self.module_sqf_files)))

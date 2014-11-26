@@ -36,6 +36,11 @@ for dir in tmp run ; do
 	mount --bind /root/$dir /$dir
 done
 
+if [ "$c_pldnr_newifnames" = "yes" ] ; then
+    rm -f /etc/udev/rules.d/80-net-setup-link.rules # udev>=209
+    rm -f /etc/udev/rules.d/80-net-name-slot.rules # udev<=208
+fi
+
 modprobe loop
 modprobe usb-storage
 
@@ -54,6 +59,10 @@ modprobe aufs
 mount_media
 
 mount_aufs
+
+if [ -n "$c_ip" -a "$c_ip" != "off" -a "$c_ip" != "none" ] ; then
+    setup_network
+fi
 
 for module in $modules ; do
     load_module "$module"
@@ -74,6 +83,17 @@ if [ ! -x "/root/$c_init" ] ; then
     /bin/sh
 fi
 
+if [ -e "/custom" -a -d "/custom" ]; then
+    cd /custom
+    find * | cpio -p /root
+    cd /
+    rm -rf /custom
+fi
+
+for file in /custom*.sh; do 
+    /bin/sh $file
+done
+
 umount_media
 
 udevadm control --exit
@@ -86,6 +106,21 @@ rm -f /.rcd/modules/* 2>/dev/null
 
 cat /fstab-add >> /root/etc/fstab
 rm /fstab-add
+
+# free some initramfs memory
+finish_network
+rm /_init.lst
+rm /functions.sh
+rm /variables.sh
+rm /init
+for file in /custom*.sh; do 
+    rm $file
+done
+
+if [ "$c_pldnr_newifnames" = "yes" ] ; then
+    rm -f /root/etc/udev/rules.d/80-net-setup-link.rules # udev>=209
+    rm -f /root/etc/udev/rules.d/80-net-name-slot.rules # udev<=208
+fi
 
 cd /root
 mount --move . /

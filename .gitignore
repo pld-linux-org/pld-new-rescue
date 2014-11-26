@@ -18,8 +18,8 @@
 /build/*.full-lst
 /build/*.exclude
 /build/*.pf2
+/build/*.gen_init_cpio.list
 /build/cache/
-/build/gen_init_cpio.list
 /build/grub_early.cfg
 /build/grub_early_iso.cfg
 /build/log

@@ -200,8 +200,9 @@ def main():
                 dst_path = "/boot/grub" + path[len("/lib/grub"):]
                 command.append("{}={}".format(dst_path, path))
         pld_nr_prefix = "pld-nr-{}".format(config.bits)
-        command.append("/{}/init.cpi=init.cpi".format(pld_nr_prefix))
-        net_files.append("{}/init.cpi".format(pld_nr_prefix))
+        for name in config.initramfs_files:
+            command.append("/{0}/{1}={1}".format(pld_nr_prefix, name))
+            net_files.append("{}/{}".format(pld_nr_prefix, name))
         for mod in config.modules:
             command.append("/{0}/{1}.cpi={1}.cpi".format(pld_nr_prefix, mod))
             net_files.append("{}/{}.cpi".format(pld_nr_prefix, mod))

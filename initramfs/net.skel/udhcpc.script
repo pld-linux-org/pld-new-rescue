@@ -1,0 +1,43 @@
+#!/bin/busybox sh
+
+#
+# Note this script is started from initramfs, but may be still running
+# when the final system is running. And it temporarily disables network
+# which may disable the main filesystems. Busybox should be always available,
+# though.
+#
+
+[ -n "$interface" ] && echo $interface > /run/udhcpc/interface
+
+case "$1" in
+  deconfig)
+    ip addr flush dev $interface
+    ip link set $interface up
+    ;;
+  bound|renew)
+    ip addr flush dev $interface
+    ip addr add ${ip}/${mask} dev $interface
+    [ -n "$router" ] && ip route add default via ${router%% *} dev $interface
+    echo "# Written by early boot udhcpcd" > /etc/resolv.conf
+    [ -n "$domain" ] && echo search $domain > /etc/resolv.conf
+    for i in $dns ; do
+      echo nameserver $i >> /etc/resolv.conf
+    done
+    for i in  $ntpsrv ; do
+      echo $i >> /run/udhcpc/ntp_servers
+    done
+    if [ -n "$tftp" -a "$tftp" != "bad" ] ; then
+	echo "$tftp"  > /run/udhcpc/server_addr
+    elif [ -n "$siaddr" ] ; then
+	echo "$siaddr"  > /run/udhcpc/server_addr
+    else
+	rm -f /run/udhcpc/server_addr 2>/dev/null || :
+    fi
+    if [ -n "$hostname" ]; then
+      hostname "$hostname"
+      echo "$hostname" > /etc/hostname
+    fi
+    ;;
+esac
+
+exit 0

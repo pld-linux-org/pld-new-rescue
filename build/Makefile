@@ -1,4 +1,6 @@
 
+export ARCH=
+
 include make.vars
 
 .PHONY: image
@@ -10,7 +12,7 @@ image:	../pld-nr-$(BITS).iso
 
 ifeq ($(MAKE_VARS_INCLUDED),yes)
 
-../pld-nr-$(BITS).iso: uuids init.cpi $(MODULE_FILES) efi.img $(PC_GRUB_IMAGES) $(NET_GRUB_IMAGES) $(FONT_FILE) ../iso_templ/* ../iso_templ/*/* ../iso_templ/*/*/*
+../pld-nr-$(BITS).iso: uuids $(INITRAMFS_FILES) $(MODULE_FILES) efi.img $(PC_GRUB_IMAGES) $(NET_GRUB_IMAGES) $(FONT_FILE) ../iso_templ/* ../iso_templ/*/* ../iso_templ/*/*/*
 	./make_iso_img.py $@
 	./fix_gpt.py --write $@
 
@@ -38,8 +40,11 @@ font.pf2: /usr/share/fonts/TTF/DejaVuSansMono.ttf
 grub-%.img: uuids /lib/grub/%
 	./make_grub_img.py $* $@
 
-init.cpi base.lst: uuids base.full-lst ../initramfs/files.list ../initramfs/skel/*
-	./make_initramfs.py
+_init.cpi base.lst _init.lst: uuids base.full-lst ../initramfs/init.files ../initramfs/init.skel/*
+	./make_initramfs.py --substract-contents base.full-lst base.lst init
+
+_net.cpi _net.lst: _init.lst ../initramfs/net.files ../initramfs/net.skel/*
+	./make_initramfs.py --exclude=_init.lst net
 
 %.cpi: %.sqf
 	echo $< | cpio -o -H newc -F $@
@@ -57,21 +62,22 @@ bindist: cd usb
 	mkdir -p ../dist
 	ln -f ../pld-nr-$(BITS).iso ../dist/pld-new-rescue-$(VERSION)-$(BITS)bit.iso
 	ln -f ../pld-nr-$(BITS).packages ../dist/pld-new-rescue-$(VERSION)-$(BITS)bit-packages.txt
-	if [ "$$(echo extra_packages/th-current/$(ARCH)/*.rpm)" != "extra_packages/th-current/$(ARCH)/*.rpm" ] ; then \
+	if [ "$$(echo extra_packages/$(ARCH)/*.rpm)" != "extra_packages/$(ARCH)/*.rpm" ] ; then \
 		cd .. && \
-		tar cvf dist/pld-new-rescue-$(VERSION)-$(ARCH)-extra_packages.tar extra_packages/th-current/$(ARCH)/*.rpm ; \
+		tar cvf dist/pld-new-rescue-$(VERSION)-$(ARCH)-extra_packages.tar extra_packages/master/$(ARCH)/*.rpm ; \
 	fi
 endif
 
 clean:
 	-if $(SUDO) mountpoint -q efi_mnt ; then $(SUDO) umount efi_mnt ; fi
 	-$(SUDO) rm -rf --one-file-system root
-	-rm -rf *.lst *.full-lst gen_init_cpio.list *.exclude
+	-rm -rf *.lst *.full-lst *gen_init_cpio.list *.exclude
 	-rm -rf *.cpi *.sqf *.img
 	-rm -rf netboot.pxe net_*.efi
 	-rm -rf poldek.conf grub*.cfg
 	-rm -f font.pf2
 	-rm -f make.vars make.deps
+	-rm -f pld-nr-net.env uuids
 	-rmdir efi_mnt
 
 make.vars uuids: ../build.conf ./pld_nr_buildconf.py /usr/bin/python3

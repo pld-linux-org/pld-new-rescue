@@ -22,7 +22,7 @@ fi
 
 sleep -i 2
 
-timout=15
+timeout=15
 default=0
 
 echo "building menu"
@@ -84,21 +84,23 @@ function load_pldnr {
         linux "${pldnr_prefix}/${boot_prefix}/vmlinuz" "$@"
     fi
 
-    initrds=""
+    initrds="${pldnr_prefix}/${boot_prefix}/_init.cpi"
+
+    if [ "$early_net" = "yes" ] ; then
+        initrds="$initrds ${pldnr_prefix}/${boot_prefix}/_net.cpi"
+    fi
+
     for module in $preload_modules ; do
-        if [ "$module" = "init" ] ; then
-            continue
-        fi
         if have_file "${boot_prefix}/${module}.cpi" ; then
             initrds="$initrds ${pldnr_prefix}/${boot_prefix}/${module}.cpi"
         fi
     done
 
-    echo "loading ${pldnr_prefix}/${boot_prefix}/init.cpi $initrds..."
+    echo "loading $initrds..."
     if [ "$grub_platform" = "efi" ] ; then
-        @grub_initrdefi@ "${pldnr_prefix}/${boot_prefix}/init.cpi" $initrds
+        @grub_initrdefi@ $initrds
     else
-        initrd "${pldnr_prefix}/${boot_prefix}/init.cpi" $initrds
+        initrd $initrds
     fi
 
     echo "booting..."
@@ -119,16 +121,42 @@ function pldnr_menuentry {
         setup_efi_fb=""
     fi
 
-    if [ "$netboot" = "yes" ] ; then
+    if [ "$netboot" = "yes" -a "$net_ok" = "yes" ] ; then
         options="$options pldnr.nomedia"
+    fi
+
+    if [ -n "$net_pxe_mac" ] ; then
+        options="$options pldnr.netdev=$net_pxe_mac"
+    fi
+
+    if [ -n "$pldnr_iscsi" -a "$net_ok" = "iscsi" ] ; then
+        options="$options pldnr.iscsi=$pldnr_iscsi"
+    fi
+
+    if [ -n "$pldnr_options" ] ; then
+        options="$options $pldnr_options"
+    fi
+
+    if have_file pld-nr-$bits/_net.cpi ; then
+        if [ "$netboot" = "yes" ] ; then
+            _early_net="early_net=yes
+"
+        else
+            _early_net="early_net=no
+"
+        fi
+    else
+        _early_net=""
     fi
 
     if [ "$net_ok" = "no" -a "$netboot" = "yes" ] ; then
         return 1
+    elif [ "$net_ok" = "iscsi" -a "$netboot" = "yes" -a -z "$pldnr_iscsi" ] ; then
+        return 1
     elif have_file pld-nr-$bits/vmlinuz ; then
 
         menuentry "$title" --source "${setup_efi_fb}preload_modules=\"$modules\"
-load_pldnr pld-nr-$bits $options
+${_early_net}load_pldnr pld-nr-$bits $options
 "
     else
         return 1
@@ -162,7 +190,7 @@ function other_menuentry {
 for bits in 64 32 ; do
     pldnr_menuentry \
                 "PLD New Rescue $bits (minimum RAM)" \
-                no $bits ""
+                iscsi $bits ""
 
     pldnr_menuentry \
                 "PLD New Rescue $bits (all in RAM)" \
@@ -170,7 +198,7 @@ for bits in 64 32 ; do
 
     pldnr_menuentry \
                 "PLD New Rescue $bits (serial console, minimum RAM)" \
-                no $bits "" \
+                iscsi $bits "" \
                 "console=tty0 console=ttyS0,115200n8 earlyprintk=serial,ttyS0,115200"
 
     pldnr_menuentry \

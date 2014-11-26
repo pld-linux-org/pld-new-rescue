@@ -25,8 +25,10 @@ mount_media() {
         return 0
     fi
 
+    start_network_disks
+
     for i in 1 2 3 4 5 6 7 8 9 10; do
-        if /sbin/blkid -U "$cd_vol_id" ; then
+        if /sbin/blkid -U "$cd_vol_id" >/dev/null ; then
             break
         fi
         echo "Waiting for the boot media to appear..."
@@ -39,7 +41,6 @@ mount_media() {
     mkdir -p /root/media/pld-nr
     if /bin/mount -t iso9660 -outf8 UUID="$cd_vol_id" /root/media/pld-nr 2>/dev/null ; then
         echo "PLD New Rescue medium found"
-        ls -l /root/media/pld-nr
     fi
 }
 
@@ -69,7 +70,7 @@ mount_aufs() {
             options="dirs=/root/.rw/$dir=rw"
         fi
         mount -t aufs -o $options none /root/$dir
-        echo "none /$dir aufs $options 0 0" >> /fstab-add
+        echo "none /$dir aufs rw 0 0" >> /fstab-add
         cat > /root/.rw/etc/systemd/system/${dir}.mount <<EOF
 [Unit]
 Description=/$dir mount
@@ -118,5 +119,34 @@ load_module() {
         . /.rcd/modules/${module}.init
     fi
 }
+
+setup_network () {
+    # dummy setup_network() function 
+    # used when the early network (_net.cpi) is not loaded
+
+    setup_network_done=yes
+    network_configured=no
+    return 1
+}
+
+finish_network() {
+
+    return 0
+}
+
+start_network_disks () {
+
+    return 0
+}
+
+find_boot_netdev () {
+    # cannot be done if network drivers are not available
+    return 1
+}
+
+if [ -e /net-functions.sh ] ; then
+    # provided by the _net.cpi file
+    . /net-functions.sh
+fi
 
 # vi: ft=sh sw=4 sts=4 et

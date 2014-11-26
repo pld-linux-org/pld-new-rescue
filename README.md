@@ -83,6 +83,10 @@ root directory and mount PLD NR image at, or copy its contents to, the
 
 Start the TFTP server to listen on the right network interface.
 
+The `/boot/pld-nr-net.env` may be edited (preferably with the `grub-editenv`
+utility) to customize PLD NR boot. It may be especially useful to set the `pldnr_option`
+variable there, to add custom options (like `pldnr.keys=` to the kernel command line).
+
 ### DHCP server configuration
 
 The DHCP server must provide IP address, TFTP server address and boot image
@@ -105,9 +109,8 @@ Here is a sample config file for ISC DHCP daemon for booting PLDNR:
       option routers 192.168.10.1;
     
       class "pxeclients" {
-        match if substring (option vendor-class-identifier, 0, 9) = "PXEClient";
-        next-server 192.168.10.1;
-        option tftp-server-name "192.168.10.1";
+        match if substring (option vendor-class-identifier, 0, 9) = "PXEClient"
+             or substring (option vendor-class-identifier, 0, 14) = "pld-new-rescue";
         if option arch = 00:06 {
           filename "/pld-nr/boot/net_ia32.efi";
         } else if option arch = 00:07 {
@@ -115,27 +118,118 @@ Here is a sample config file for ISC DHCP daemon for booting PLDNR:
         } else {
           filename "/pld-nr/boot/netboot.pxe";
         }
+        option tftp-server-name "192.168.10.1";
+        next-server 192.168.10.1;
       }
     }
+
+If the DHCP server has support for 'ignore-client-uids on;' configuration flag
+it may be a good idea to add it to the config file to prevent the system from
+switching IP addresses during boot.
+
+### iSCSI boot
+
+Normally only the 'All in RAM' boot options are available when booting via PXE,
+as the boot medium is not available on the remote machine, but it may be made
+available via iSCSI.
+
+To enable the 'Minimum RAM' boot options and boot PLD NR from iSCSI one needs
+to set the iSCSI target parameters in the `pld-nr-net.env` file on the TFTP
+root directory.
+
+The `pldnr_iscsi` variable should be set to:
+`[<host>[:<port>]/]<target_name>[=<initiator_name>]`
+
+Only the `<target_name>` is mandatory, the other parameters defaults are:
+
+* `<host>` – the boot server address (provided with the `tftp-server-name`
+  DHCP option or through the `ip=` kernel parameter)
+
+* `<port>` – 3260
+
+* `<initiator_name>` – automatically generated initiator name:
+  "`iqn.2014-01.net.jajcus.pld-nr:boot:`" followed with the MAC address
+  of the boot interface (lower-case digits, no delimiters)
 
 Kernel command-line options
 ---------------------------
 
-* init=<path> – init binary (default: /sbin/init)
+* `init=<path>` – init binary (default: `/sbin/init`)
 
-* pldnr.debug – enable initramfs debugging
+* `pldnr.debug` – enable initramfs debugging
 
-* pldnr.nomedia – do not mount the boot media in initramfs ('minimum RAM' boot
+* `pldnr.nomedia` – do not mount the boot media in initramfs ('minimum RAM' boot
   mode won't work)
 
-* pldnr.modules=<module>,<module>... – PLD NR modules to load (order matters)
+* `pldnr.modules=<module>,<module>...` – PLD NR modules to load (order matters)
 
-* pldnr.keymap=<name> – keymap (default: from build.conf)
+* `pldnr.keymap=<name>` – keymap (default: from build.conf)
 
-* pldnr.font=<name>... – font (default: from build.conf)
+* `pldnr.font=<name>` – font (default: from build.conf)
 
-Building and customizations
----------------------------
+* `pldnr.sshpw=yes` – enable SSH password authentication
+
+* `ip=<client-ip>:<server-ip>:<gw-ip>:<netmask>:<hostname>:<device>:<autoconf>:<dns0-ip>:<dns1-ip>`
+  ip=off/none/on/any/dhcp – how to configure early network (by default use DHCP, but only when needed)
+
+* `pldnr.netdev=<device>` – network device name or MAC-address for early network
+
+* `pldnr.keys=<url>` – URL (tftp:, http: or ftp:) where to load SSH
+  `authorized_keys` for the root user. Host name may be omitted in the URL – the server
+  address obtained through DHCP (`tftpp-server-name` option or `next-server`) or from the `ip=`
+  kernel option will be used then.
+
+* `pldnr.iscsi=[<host>[:<port>]/]<target_name>[=<initiator_name>]` – iSCSI
+  connection settings. This should be set through the '`pldnr_iscsi`' variable
+  in the `pld-nr-net.env` file.
+
+* `pldnr.newifnames` – enable udev's predictable network interface names
+
+Limited customization
+---------------------
+
+It's possible to add/overwrite files and provide custom shell scripts to be executed before the
+initramfs boot scripts give up control to systemd. This way you can apply changes to a rescuecd
+environment without having to rebuild the whole image.
+
+The initramfs boot script checks for the existence of a /custom directory and copies its
+contents to the final system's / directory (which is mounted as /root while initramfs is in
+control). Afterwards any /custom*.sh shell scripts are executed.
+
+Both the /custom directory and /custom*.sh shell script(s) can by provided by creating at least
+one custom cpio archive and modifying the proper boot configs. An example is better than a long
+description, so below is how a custom cpio archive (called 'custom.cpi') looks like in a 64 bit
+PXE boot environment. This sample module overrides /etc/issue and runs a single custom.sh
+script (which could've also been named custom1.sh if there were more than one).
+
+[root@dev2 pld-nr-64]# ls
+_init.cpi  _net.cpi  base.cpi  basic.cpi  custom.cpi  rescue.cpi  vmlinuz
+[root@dev2 pld-nr-64]# cpio -i -t <custom.cpi 
+custom.sh
+custom
+custom/etc
+custom/etc/issue
+
+A few things to keep in mind regarding this mechanism:
+1. If you want to add some software, it's probably a better idea to make a whole custom build
+   of the rescuecd. It's not that hard and will probably be much more easily maintainable.
+2. If you want to provide ssh authorized_keys, the pldnr.keys kernel command-line option is
+   likely a better idea.
+3. Overriding whole config files to modify a single parameter is likely overkill and might
+   lead to issues in the future. It's probably better to write a short sed script that modifies
+   just that one parameter and put that in a /custom*.sh script.
+4. If you need full control of the file copy procedure, instead of providing a /custom
+   directory (and letting rescuecd do the copying for you), you can add for example a /customX
+   directory and take care of copying its contents to /root from inside your /custom*.sh script.
+
+### PXE boot
+
+You need to add the new module (cpio file) both to pld-nr-net.env (use `grub-editenv`) and
+grub.conf (search for 'base basic rescue', that's where the modules are defined). If you don't
+do both, your module will not be detected properly.
+
+Rebuilding and full customization
+---------------------------------
 
 Check-out code from https://github.com/Jajcus/pld-new-rescue (versions on different
 branches and tags may provide different features or base on different PLD Linux versions).
@@ -177,7 +271,7 @@ Currently the extra packages needed are:
     util-linux-2.24-1
 
 These provide features that are required by this image, but not available in
-the PLD Linux 'Th 2012' snapshot, which is used as a base for this build (to
+the PLD Linux 'Th 2013' snapshot, which is used as a base for this build (to
 provide reproducible results).
 
 When the preparations are done calling 'make' in the main directory of the
@@ -225,11 +319,16 @@ For further customization one can also:
 
   * Edit files under `initramfs`:
 
-    - `initramfs/files.list` lists special files and directories to be made in
-      the initramfs and files which should be moved there from the base
-      module
-    - `initramfs/skel` directory contains additional files to be included in
-      the initramfs, including the main `init` script.
+    - `initramfs/init.files` lists special files and directories to be made in
+      the basic initramfs and files which should be moved there from the base
+      module.
+    - `initramfs/init.skel` directory contains additional files to be included in
+      the basic initramfs, including the main `init` script.
+    - `initramfs/net.files` lists special files and directories to be made in
+      the early network initramfs add-on (_net.cpi) and files which should be
+      moved there from the base module.
+    - `initramfs/net.skel` directory contains additional files to be included in
+      the  early network initramfs add-on (_net.cpi).
 
   * Add or replace RPM files in the `extra_packages/` subdirectories. These
     are used only when pulled through a module 'pset' files (directly or

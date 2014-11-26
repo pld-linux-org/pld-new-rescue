@@ -5,7 +5,7 @@ bash
 bzip2
 cpio
 cryptsetup
-dhcpcd
+dhcp-client
 e2fsprogs
 gzip
 iproute2
@@ -40,3 +40,4 @@ wget
 which
 xz
 zip
+cronie
