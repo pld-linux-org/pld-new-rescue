@@ -9,8 +9,7 @@ kernel
 busybox
 losetup
 
-# force new util-linux for blkid with ISO UUID support
-util-linux 2.24
+util-linux
 
 # this will be removed shortly after
 localedb-src
