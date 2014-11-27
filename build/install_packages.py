@@ -186,9 +186,9 @@ def main():
             script_fn = "../modules/{0}/pre-install.sh".format(module)
             if os.path.exists(script_fn):
                 config.run_script(script_fn, sudo=True)
-            pset_fn = "../modules/{0}/conds_workaround.pset".format(module)
+            pset_fn = "../modules/{0}/deps_workaround.pset".format(module)
             if os.path.exists(pset_fn):
-                logger.debug("Installing conds_workaround packages for {0}"
+                logger.debug("Installing deps_workaround packages for {0}"
                                     .format(module))
                 installer.poldek("--install", "--pset", pset_fn,
                             "--nofollow", "--nodeps", "--pmopt", "noscripts")

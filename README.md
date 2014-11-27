@@ -303,7 +303,7 @@ For further customization one can also:
 
     - `packages.pset`: list of packages to install in addition to the packages
       installed by previous modules.
-    - `conds_workaround.pset`: similar to `packages.pset` but installed before
+    - `deps_workaround.pset`: similar to `packages.pset` but installed before
       `packages.pset` and with `--nodeps --nofollow` options. Used to
       work-around broken dependencies in PLD package repositories.
     - `post-install.sh`: script which will be run after the packages are
