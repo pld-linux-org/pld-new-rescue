@@ -74,3 +74,16 @@ chroot root /usr/bin/localedb-gen
 
 rpm --root "$absolute_root" -e localedb-src
 
+
+###########################################################
+# workaround for slow shutdown
+
+cat >>root/lib/systemd/system/user@.service <<'EOF'
+# Apply same work around for user session killing
+# (currently problem is that the kill issued by systemd --user is itself killed
+# by systemd (PID1) before it can work which can lead to slow shutdowns
+# http://thread.gmane.org/gmane.comp.sysutils.systemd.devel/16363
+ExecStop=/bin/kill -TERM ${MAINPID}
+KillSignal=SIGCONT
+TimeoutStopSec=15
+EOF
