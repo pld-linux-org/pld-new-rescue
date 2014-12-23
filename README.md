@@ -15,12 +15,11 @@ List of packages included in image should be available with the binary releases.
 
 ### About this version
 
-This is the 'th-current' branch of the PLD New Rescue, based on most current
-PLD Linux Th packages. Due to the dynamic nature of PLD Th and its package
-repositories, what builds and works today may fail to build or work tomorrow.
-But the software is more up to date.
+This is the 'th-2014' branch of the PLD New Rescue, based on the 'Th 2014'
+PLD Linux snapshot. It is intended to be stable, but does not contain the
+newest PLD packages.
 
-For reproducible results use code from the 'master' branch.
+For newest packages use code from the 'th-current' branch.
 
 Goals
 -----
@@ -238,40 +237,12 @@ Edit the `build.conf` file according to your needs. Please note that only the de
 settings were properly tested. So, keeping the defaults is a good idea.
 
 Put extra RPM packages needed to build this release (which are not available in
-the source PLD repository) in the `extra_packages/$arch` directory. The
+the source PLD repository) in the `extra_packages/th-2014/$arch` directory. The
 packages needed should be available in a tar archive released with the latest
 PLD NR binary release.
 
-Currently the extra packages needed are:
-
-    SysVinit-tools-2.88-15
-    coreutils-8.20-2
-    db5.2-5.2.42.0-2
-    db5.2-sql-5.2.42.0-2
-    fsck-2.24-1
-    glibc-2.18-3
-    glibc-libcrypt-2.18-3
-    glibc-misc-2.18-3
-    iconv-2.18-3
-    ldconfig-2.18-3
-    libblkid-2.24-1
-    libgomp-4.8.2-1
-    libmount-2.24-1
-    libsemanage-2.1.6-2
-    libuuid-2.24-1
-    localedb-src-2.18-3
-    mount-2.24-1
-    poldek-0.30.0-3
-    poldek-libs-0.30.0-3
-    rpm-5.4.13-6
-    rpm-base-5.4.13-6
-    rpm-lib-5.4.13-6
-    rpm-utils-5.4.13-6
-    ustr-1.0.4-2
-    util-linux-2.24-1
-
 These provide features that are required by this image, but not available in
-the PLD Linux 'Th 2013' snapshot, which is used as a base for this build (to
+the PLD Linux 'Th 2014' snapshot, which is used as a base for this build (to
 provide reproducible results).
 
 When the preparations are done calling 'make' in the main directory of the
