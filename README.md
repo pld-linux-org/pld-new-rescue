@@ -242,37 +242,9 @@ the source PLD repository) in the `extra_packages/$arch` directory. The
 packages needed should be available in a tar archive released with the latest
 PLD NR binary release.
 
-Currently the extra packages needed are:
-
-    SysVinit-tools-2.88-15
-    coreutils-8.20-2
-    db5.2-5.2.42.0-2
-    db5.2-sql-5.2.42.0-2
-    fsck-2.24-1
-    glibc-2.18-3
-    glibc-libcrypt-2.18-3
-    glibc-misc-2.18-3
-    iconv-2.18-3
-    ldconfig-2.18-3
-    libblkid-2.24-1
-    libgomp-4.8.2-1
-    libmount-2.24-1
-    libsemanage-2.1.6-2
-    libuuid-2.24-1
-    localedb-src-2.18-3
-    mount-2.24-1
-    poldek-0.30.0-3
-    poldek-libs-0.30.0-3
-    rpm-5.4.13-6
-    rpm-base-5.4.13-6
-    rpm-lib-5.4.13-6
-    rpm-utils-5.4.13-6
-    ustr-1.0.4-2
-    util-linux-2.24-1
-
 These provide features that are required by this image, but not available in
-the PLD Linux 'Th 2013' snapshot, which is used as a base for this build (to
-provide reproducible results).
+the source repository used as a base for this build (to provide reproducible
+results).
 
 When the preparations are done calling 'make' in the main directory of the
 distribution should start the build.
