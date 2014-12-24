@@ -305,3 +305,6 @@ xfsprogs
 zfs-fuse
 #ziptool
 #zsync
+
+# from users' wishilst :)
+debootstrap
