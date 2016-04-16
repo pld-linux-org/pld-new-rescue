@@ -117,7 +117,7 @@ class PackageInstaller(object):
         if total and os.path.isdir(self.dst_dir):
             if self.config.c_sudo:
                 subprocess.call(self.config.c_sudo + [
-                                        "rm", "-rf", self.dst_dir])
+                            "rm", "-rf", "--one-file-system", self.dst_dir])
             else:
                 shutil.rmtree(self.dst_dir)
 
