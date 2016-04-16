@@ -15,7 +15,7 @@ List of packages included in image should be available with the binary releases.
 
 ### About this version
 
-This is the 'th-2014' branch of the PLD New Rescue, based on the 'Th 2014'
+This is the 'th-2015' branch of the PLD New Rescue, based on the 'Th 2015'
 PLD Linux snapshot. It is intended to be stable, but does not contain the
 newest PLD packages.
 
@@ -237,12 +237,12 @@ Edit the `build.conf` file according to your needs. Please note that only the de
 settings were properly tested. So, keeping the defaults is a good idea.
 
 Put extra RPM packages needed to build this release (which are not available in
-the source PLD repository) in the `extra_packages/th-2014/$arch` directory. The
+the source PLD repository) in the `extra_packages/th-2015/$arch` directory. The
 packages needed should be available in a tar archive released with the latest
 PLD NR binary release.
 
 These provide features that are required by this image, but not available in
-the PLD Linux 'Th 2014' snapshot, which is used as a base for this build (to
+the PLD Linux 'Th 2015' snapshot, which is used as a base for this build (to
 provide reproducible results).
 
 When the preparations are done calling 'make' in the main directory of the
