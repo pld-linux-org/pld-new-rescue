@@ -46,23 +46,20 @@ class PackageInstaller(object):
         except subprocess.CalledProcessError as err:
             if not ignore_errors:
                 raise
+
+    def mount(self, options, mountpoint):
+        mountpoint = os.path.join(self.dst_dir, mountpoint.lstrip("/"))
+        if not os.path.isdir(mountpoint):
+            subprocess.check_call(self.config.c_sudo
+                                  + ["mkdir", "-p", mountpoint])
+        subprocess.check_call(self.config.c_sudo
+                + ["mount"] + options + [mountpoint])
+
     def setup_chroot(self):
-        dev_dir = os.path.join(self.dst_dir, "dev")
-        subprocess.check_call(self.config.c_sudo + [
-                                        "mount", "--bind", "/dev", dev_dir])
-        dev_pts_dir = os.path.join(dev_dir, "pts")
-        if not os.path.isdir(dev_pts_dir):
-            os.makedirs(dev_pts_dir)
-        subprocess.check_call(self.config.c_sudo + [
-                                    "mount", "-t", "devpts", 
-                                    "-o", "gid=5,mode=620",
-                                    "none", dev_pts_dir])
-        proc_dir = os.path.join(self.dst_dir, "proc")
-        subprocess.check_call(self.config.c_sudo + [
-                                "mount", "-t", "proc", "none", proc_dir])
-        sys_dir = os.path.join(self.dst_dir, "sys")
-        subprocess.check_call(self.config.c_sudo + [
-                                "mount", "-t", "sysfs", "none", sys_dir])
+        self.mount(["--bind", "/dev"], "dev")
+        self.mount(["-t", "devpts", "-o", "gid=5,mode=620", "none"], "dev/pts")
+        self.mount(["-t", "proc", "none"], "proc")
+        self.mount(["-t", "sysfs", "none"], "sys")
 
     def get_file_list(self):
         result = []
