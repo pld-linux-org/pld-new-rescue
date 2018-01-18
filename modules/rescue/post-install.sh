@@ -40,12 +40,17 @@ EOF
 for service in \
 		arpwatch blkmapd dhcp-relay dhcpd dhcpd6 dnsmasq \
 		gssd httptunnel idmapd ipmievd iscsi-devices mdadm \
+		mdmonitor cronjob-mdadm mdmon@ mdadm-last-resort@ mdadm-grow-continue@ \
 		nfsd nfsd-exportfs nfsd-mountd nfslock nut-driver nut-monitor \
 		nut-server p0f pure-ftpd racoon rdate rpcbind rstatd rusersd \
 		rwhod smartd snmpd svcgssd tftpd-hpa tinyproxy ups upsmon \
 		vtund zfs-fuse \
 	; do
 	chroot root /bin/systemctl disable ${service}.service || :
+	# static services can only be masked
+	if [ "$(chroot root /bin/systemctl is-enabled ${service}.service 2> /dev/null)" = "static" ]; then
+		chroot root /bin/systemctl mask ${service}.service || :
+	fi
 
 	# systemctl sometimes fails to properly chkconfig off
 	if [ -e root/etc/rc.d/init.d/"$service" ] ; then
