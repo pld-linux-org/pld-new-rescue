@@ -87,3 +87,11 @@ ExecStop=/bin/kill -TERM ${MAINPID}
 KillSignal=SIGCONT
 TimeoutStopSec=15
 EOF
+
+###########################################################
+# add the third serial port to securetty
+
+cat >> root/etc/securetty <<'EOF'
+tts/2
+ttyS2
+EOF
