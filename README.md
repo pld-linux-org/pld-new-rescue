@@ -15,12 +15,12 @@ List of packages included in image should be available with the binary releases.
 
 ### About this version
 
-This is the 'th-current' branch of the PLD New Rescue, based on most current
+This is the 'th-2016' branch of the PLD New Rescue, based on most current
 PLD Linux Th packages. Due to the dynamic nature of PLD Th and its package
 repositories, what builds and works today may fail to build or work tomorrow.
 But the software is more up to date.
 
-For reproducible results use code from the 'master' branch.
+For newest packages use code from the 'th-current' branch.
 
 Goals
 -----
@@ -238,7 +238,7 @@ Edit the `build.conf` file according to your needs. Please note that only the de
 settings were properly tested. So, keeping the defaults is a good idea.
 
 Put extra RPM packages needed to build this release (which are not available in
-the source PLD repository) in the `extra_packages/$arch` directory. The
+the source PLD repository) in the `extra_packages/th-2016/$arch` directory. The
 packages needed should be available in a tar archive released with the latest
 PLD NR binary release.
 
