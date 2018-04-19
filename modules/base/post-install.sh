@@ -23,10 +23,12 @@ fi
 ln -sf /lib/systemd/system/multi-user.target root/etc/systemd/system/default.target
 
 # disable tty1 clearing
-rm root/etc/systemd/system/getty.target.wants/getty@tty1.service
-sed -e 's/TTYVTDisallocate=yes/TTYVTDisallocate=no/' \
-	root/lib/systemd/system/getty@.service \
-	> root/etc/systemd/system/getty.target.wants/getty@tty1.service
+mkdir root/etc/systemd/system/getty@tty1.service.d/
+cat > root/etc/systemd/system/getty@tty1.service.d/noclear.conf << EOF
+[Service]
+TTYVTDisallocate=no
+
+EOF
 
 # enable services
 for service in network ; do
