@@ -185,6 +185,8 @@ Kernel command-line options
 
 * `pldnr.newifnames` – enable udev's predictable network interface names
 
+* `pldnr.autologin=yes` – enable autologin to root user on tty1
+
 Limited customization
 ---------------------
 

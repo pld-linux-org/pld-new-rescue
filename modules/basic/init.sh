@@ -25,4 +25,13 @@ if [ "$c_pldnr_sshpw" = "yes" ] ; then
         /root/etc/ssh/sshd_config
 fi
 
+# enable autologin on tty1
+
+if [ "$c_pldnr_autologin" = "yes" ] ; then
+
+    cat >> /root/etc/systemd/system/getty@tty1.service.d/noclear.conf << EOF
+ExecStart=
+ExecStart=-/sbin/agetty --autologin root --noclear %I '$TERM'
+EOF
+fi
 # vi: ft=sh et sw=4 sts=4
