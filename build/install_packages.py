@@ -38,11 +38,13 @@ class PackageInstaller(object):
                                     ["rpm", "--initdb", "--root", self.dst_dir])
     def poldek(self, *args, ignore_errors=False):
         try:
-            subprocess.check_call(self.config.c_sudo + 
-                                ["poldek", "--root", self.dst_dir,
+            cmd = self.config.c_sudo \
+                                + ["poldek", "--root", self.dst_dir,
                                 "--conf", "poldek.conf",
-                                "--cachedir", self.cache_dir]
-                                + self.langs_opts + list(args))
+                                "--cachedir", self.cache_dir, ] \
+                                + self.langs_opts + list(args)
+            logger.debug("Running: {0}".format(cmd))
+            subprocess.check_call(cmd)
         except subprocess.CalledProcessError as err:
             if not ignore_errors:
                 raise
