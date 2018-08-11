@@ -41,7 +41,8 @@ class PackageInstaller(object):
             cmd = self.config.c_sudo \
                                 + ["poldek", "--root", self.dst_dir,
                                 "--conf", "poldek.conf",
-                                "--cachedir", self.cache_dir, ] \
+                                "--cachedir", self.cache_dir,
+                                "-O", "rpmdef=_netsharedpath ''" ] \
                                 + self.langs_opts + list(args)
             logger.debug("Running: {0}".format(cmd))
             subprocess.check_call(cmd)
