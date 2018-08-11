@@ -1,5 +1,9 @@
 
 ###########################################################
+# Keep sane permissions for newly created files
+umask 022
+
+###########################################################
 # Make sure the by-uuid symlink made by udev
 # does not point to the 'Gap1/Gap2' partitions
 # made by xorriso
