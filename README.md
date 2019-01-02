@@ -20,7 +20,7 @@ PLD Linux Th packages. Due to the dynamic nature of PLD Th and its package
 repositories, what builds and works today may fail to build or work tomorrow.
 But the software is more up to date.
 
-For reproducible results use code from the 'master' branch.
+For reproducible results use code from one of the snapshot branches (like 'th-2018').
 
 Goals
 -----
