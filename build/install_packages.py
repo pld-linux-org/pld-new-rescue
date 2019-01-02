@@ -75,6 +75,7 @@ class PackageInstaller(object):
             paths = subprocess.check_output(
                                         self.config.c_sudo + [
                                             "find", ".",
+                                            "-ignore_readdir_race",
                                             "-path", "./dev",
                                             "-o", "-path", "./proc",
                                             "-o", "-path", "./sys",
