@@ -101,3 +101,11 @@ cat >> root/etc/securetty <<'EOF'
 tts/2
 ttyS2
 EOF
+
+###########################################################
+# decrease console log level
+# so the console is not spammed with audit messages
+
+cat >> root/etc/sysctl.d/pldnr_printk.conf <<'EOF'
+kernel.printk = 4	4	1	7
+EOF
