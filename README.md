@@ -15,12 +15,9 @@ List of packages included in image should be available with the binary releases.
 
 ### About this version
 
-This is the 'th-current' branch of the PLD New Rescue, based on most current
-PLD Linux Th packages. Due to the dynamic nature of PLD Th and its package
-repositories, what builds and works today may fail to build or work tomorrow.
-But the software is more up to date.
-
-For reproducible results use code from the 'master' branch.
+This is the 'th-2018' branch of the PLD New Rescue, based on based on the 'Th
+2018' PLD Linux snapshot. It is intended to be stable, but does not contain the
+newest PLD packages.
 
 Goals
 -----
@@ -240,13 +237,13 @@ Edit the `build.conf` file according to your needs. Please note that only the de
 settings were properly tested. So, keeping the defaults is a good idea.
 
 Put extra RPM packages needed to build this release (which are not available in
-the source PLD repository) in the `extra_packages/$arch` directory. The
+the source PLD repository) in the `extra_packages/th-2018/$arch` directory. The
 packages needed should be available in a tar archive released with the latest
 PLD NR binary release.
 
 These provide features that are required by this image, but not available in
-the source repository used as a base for this build (to provide reproducible
-results).
+the PLD Linux 'Th 2018' snapshot, used as a base for this build (to provide
+reproducible results).
 
 When the preparations are done calling 'make' in the main directory of the
 distribution should start the build.
