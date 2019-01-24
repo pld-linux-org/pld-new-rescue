@@ -189,22 +189,23 @@ function other_menuentry {
 
 for bits in 64 32 ; do
     pldnr_menuentry \
+                "PLD New Rescue $bits (all in RAM)" \
+                yes $bits "base basic rescue"
+
+    pldnr_menuentry \
                 "PLD New Rescue $bits (minimum RAM)" \
                 iscsi $bits ""
 
     pldnr_menuentry \
-                "PLD New Rescue $bits (all in RAM)" \
-                yes $bits "base basic rescue"
+                "PLD New Rescue $bits (serial console, all in RAM)" \
+                yes $bits "base basic rescue" \
+                "console=tty0 console=ttyS0,115200n8 earlyprintk=serial,ttyS0,115200"
 
     pldnr_menuentry \
                 "PLD New Rescue $bits (serial console, minimum RAM)" \
                 iscsi $bits "" \
                 "console=tty0 console=ttyS0,115200n8 earlyprintk=serial,ttyS0,115200"
 
-    pldnr_menuentry \
-                "PLD New Rescue $bits (serial console, all in RAM)" \
-                yes $bits "base basic rescue" \
-                "console=tty0 console=ttyS0,115200n8 earlyprintk=serial,ttyS0,115200"
 done
 
 if [ "$grub_platform" = "efi" ] ; then
