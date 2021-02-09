@@ -3,6 +3,7 @@
 import argparse
 import sys
 import os
+import pathlib
 import subprocess
 import shutil
 import re
@@ -110,15 +111,25 @@ def find_deps(config, files, all_files, root_dir):
             if err.errno == errno.ENOENT:
                 continue
             raise
-        if not stat.S_ISREG(path_stat.st_mode):
-            continue
-        match = KERNEL_MOD_RE.match(path)
-        if match:
-            deps = find_kernel_mod_deps(match.group(1), match.group(2))
-        elif (stat.S_IMODE(path_stat.st_mode) & 0o111):
-            deps = find_executable_deps(config, path, root_dir, config.bits)
+        # symlink found. resolve target and convert to relative
+        if stat.S_ISLNK(path_stat.st_mode):
+            path_resolved = pathlib.Path(path).resolve(strict=True)
+            if str(path_resolved).startswith(root_dir):
+                new_path = path_resolved.relative_to(root_dir)
+                deps = [ str(new_path).lstrip('/') ]
+                logger.debug("find_deps(): found ({0!r}) as symlink to {1!r}".format(path, str(new_path)))
+            else:
+                continue
+        elif stat.S_ISREG(path_stat.st_mode):
+            match = KERNEL_MOD_RE.match(path)
+            if match:
+                deps = find_kernel_mod_deps(match.group(1), match.group(2))
+            elif (stat.S_IMODE(path_stat.st_mode) & (stat.S_IXOTH|stat.S_IXGRP|stat.S_IXUSR)):
+                deps = find_executable_deps(config, path, root_dir, config.bits)
+            else:
+                continue
         else:
-            continue
+                continue
         logger.debug("deps={0!r}".format(deps))
         for dep_path in deps:
             if dep_path not in present:
