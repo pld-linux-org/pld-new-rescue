@@ -566,7 +566,7 @@ class Config(object):
         for m in self.modules:
             lines.append("{0}.cpi: {0}.sqf".format(m))
             lines.append(".INTERMEDIATE: {0}.sqf".format(m))
-            lines.append("{0}.sqf: root/var/lib/rpm/Packages\n".format(m))
+            lines.append("{0}.sqf: root/bin/rpm\n".format(m))
         lines.append(".SECONDARY: base.full-lst")
         return "\n".join(lines)
 
