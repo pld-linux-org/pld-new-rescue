@@ -68,7 +68,12 @@ def find_executable_deps(config, path, root_dir, bits):
                         "chroot", root_dir, ld_linux, "--list", "/" + path])
     except subprocess.CalledProcessError as err:
         logger.error(err)
-        return []
+        if err.returncode == -11:
+            # Aborted by signal 11 (SIGSEGV) which can happen when ld_linux is called
+            # for static binaries. That's ok for us.
+            return []
+        # All other (unknown) reasons are treated as failure
+        raise
 
     result = [ld_linux.lstrip("/")]
     target = os.readlink(ld_linux.lstrip("/"))
