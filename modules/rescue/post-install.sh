@@ -58,6 +58,14 @@ for service in \
 	fi
 done
 
+if [ -f root/etc/mdadm.conf ]; then
+cat >> root/etc/mdadm.conf  <<EOF
+
+# prevent mdadm from auto assembling arrays and potentially damaging these
+AUTO -all
+EOF
+fi
+
 ###########################################################
 # disable telnetd
 rm -f root/etc/sysconfig/rc-inetd/telnetd
