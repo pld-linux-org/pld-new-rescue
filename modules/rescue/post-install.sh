@@ -39,7 +39,7 @@ EOF
 # disable services
 for service in \
 		arpwatch blkmapd dhcp-relay dhcpd dhcpd6 dnsmasq \
-		gssd httptunnel idmapd ipmievd iscsi-devices mdadm \
+		gssd httptunnel idmapd ipmievd iscsi iscsid mdadm \
 		mdmonitor cronjob-mdadm mdmon@ mdadm-last-resort@ mdadm-grow-continue@ \
 		nfsd nfsd-exportfs nfsd-mountd nfslock nut-driver nut-monitor \
 		nut-server p0f pure-ftpd racoon rdate rpcbind rstatd rusersd \
@@ -57,6 +57,14 @@ for service in \
 		chroot root chkconfig --level=12345 "$service" off || :
 	fi
 done
+
+if [ -f root/etc/mdadm.conf ]; then
+cat >> root/etc/mdadm.conf  <<EOF
+
+# prevent mdadm from auto assembling arrays and potentially damaging these
+AUTO -all
+EOF
+fi
 
 ###########################################################
 # disable telnetd

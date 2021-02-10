@@ -2,7 +2,11 @@
 PLD New Rescue
 ==============
 
-https://github.com/Jajcus/pld-new-rescue
+https://github.com/arekm/pld-new-rescue
+
+**Hopefully maintained version of Jajcus pld-new-rescue**
+
+See https://github.com/Jajcus/pld-new-rescue
 
 Bootable disk image with 'live' [PLD Linux](http://www.pld-linux.org/) system
 aimed especially for system rescue and maintenance.
@@ -127,6 +131,20 @@ If the DHCP server has support for 'ignore-client-uids on;' configuration flag
 it may be a good idea to add it to the config file to prevent the system from
 switching IP addresses during boot.
 
+### PXE boot with pxelinux
+
+Extract iso image contents into tftp area of your [pxelinux setup](https://wiki.syslinux.org/wiki/index.php?title=PXELINUX).
+
+pxelinux.cfg/default example entry:
+
+```
+label PLD New Rescue
+  MENU LABEL PLD New Rescue
+  kernel pld-nr-64/vmlinuz
+  append initrd=pld-nr-64/rescue.cpi,pld-nr-64/base.cpi root=/dev/ram0
+  append initrd=pld-nr-64/_init.cpi,pld-nr-64/_net.cpi,pld-nr-64/base.cpi,pld-nr-64/basic.cpi,pld-nr-64/rescue.cpi root=/dev/ram0 console=tty0 console=ttyS1,115200n81
+```
+
 ### iSCSI boot
 
 Normally only the 'All in RAM' boot options are available when booting via PXE,
@@ -224,7 +242,7 @@ A few things to keep in mind regarding this mechanism:
    directory (and letting rescuecd do the copying for you), you can add for example a /customX
    directory and take care of copying its contents to /root from inside your /custom*.sh script.
 
-### PXE boot
+### PXE boot customization
 
 You need to add the new module (cpio file) both to pld-nr-net.env (use `grub-editenv`) and
 grub.conf (search for 'base basic rescue', that's where the modules are defined). If you don't

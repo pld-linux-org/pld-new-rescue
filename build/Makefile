@@ -79,6 +79,7 @@ clean:
 	-rm -f make.vars make.deps
 	-rm -f pld-nr-net.env uuids
 	-rmdir efi_mnt
+	-$(SUDO) rm -rf cache __pycache__
 
 make.vars uuids: ../build.conf ./pld_nr_buildconf.py /usr/bin/python3
 	./pld_nr_buildconf.py --verify --gen-uuids --make-vars > make.vars

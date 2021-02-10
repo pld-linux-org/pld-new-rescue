@@ -22,6 +22,7 @@ fi
 
 ###########################################################
 # set up the systemd
+chroot root /bin/systemctl preset-all
 
 # default unit
 ln -sf /lib/systemd/system/multi-user.target root/etc/systemd/system/default.target
