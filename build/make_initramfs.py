@@ -81,7 +81,7 @@ def find_executable_deps(config, path, root_dir, bits):
 
     # pre glibc 2.34
     if os.path.islink(ld_linux_s):
-        target = os.readlink(ld_linux.lstrip("/"))
+        target = os.readlink(ld_linux_s)
         target = os.path.join("/" + lib, target)
         result.append(os.path.abspath(target).lstrip("/"))
 
