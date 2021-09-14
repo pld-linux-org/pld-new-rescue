@@ -76,10 +76,15 @@ def find_executable_deps(config, path, root_dir, bits):
         # All other (unknown) reasons are treated as failure
         raise
 
-    result = [ld_linux.lstrip("/")]
-    target = os.readlink(ld_linux.lstrip("/"))
-    target = os.path.join("/" + lib, target)
-    result.append(os.path.abspath(target).lstrip("/"))
+    ld_linux_s = ld_linux.lstrip("/")
+    result = [ld_linux_s]
+
+    # pre glibc 2.34
+    if os.path.islink(ld_linux_s):
+        target = os.readlink(ld_linux.lstrip("/"))
+        target = os.path.join("/" + lib, target)
+        result.append(os.path.abspath(target).lstrip("/"))
+
     for line in output.decode("utf-8").split("\n"):
         match = LD_LIST_RE.match(line)
         if match:
