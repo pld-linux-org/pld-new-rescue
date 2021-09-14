@@ -173,6 +173,8 @@ def main():
         prev_files = set()
         installer.poldek("--install", "filesystem")
         installer.setup_chroot()
+        # packages needed early, before main rpm transaction
+        installer.poldek("--install", "mksh")
         package_modules = {}
         for module in config.modules:
             if module == "base":
