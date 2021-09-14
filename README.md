@@ -2,11 +2,7 @@
 PLD New Rescue
 ==============
 
-https://github.com/arekm/pld-new-rescue
-
-**Hopefully maintained version of Jajcus pld-new-rescue**
-
-See https://github.com/Jajcus/pld-new-rescue
+https://github.com/pld-linux-org/pld-new-rescue
 
 Bootable disk image with 'live' [PLD Linux](http://www.pld-linux.org/) system
 aimed especially for system rescue and maintenance.
