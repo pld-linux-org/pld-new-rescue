@@ -60,3 +60,4 @@ slink /bin/tr busybox 0755 0 0
 * /lib/modules/*/kernel/drivers/usb/host/uhci*
 * /lib/modules/*/kernel/drivers/usb/host/xhci*
 * /lib/modules/*/kernel/drivers/usb/storage/usb-storage.*
+* /lib/modules/*/kernel/drivers/scsi/hv_storvsc.*
