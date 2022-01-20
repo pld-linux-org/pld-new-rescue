@@ -256,6 +256,7 @@ star
 statserial
 strace
 stress
+stress-ng
 stunnel
 sysfsutils
 syslinux
