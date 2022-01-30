@@ -207,6 +207,7 @@ proxytunnel
 prtunnel
 pump
 pure-ftpd
+qemu-guest-agent
 quota
 rc
 rdate
