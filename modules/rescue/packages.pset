@@ -128,7 +128,7 @@ lzip
 lzo
 lzop
 mailx
-man
+man-db
 #man-config
 man-pages
 #mbuffer
