@@ -1,4 +1,5 @@
 * /lib/modules/*/kernel/drivers/net/ethernet/*
+* /lib/modules/*/kernel/drivers/net/virtio_net.*
 * /lib/firmware/rtl_nic/*
 * /lib/firmware/e100/*
 * /lib/firmware/tigon/*
