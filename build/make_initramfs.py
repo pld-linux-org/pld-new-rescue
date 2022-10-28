@@ -85,10 +85,13 @@ def find_executable_deps(config, path, root_dir, bits):
         target = os.path.join("/" + lib, target)
         result.append(os.path.abspath(target).lstrip("/"))
 
+    ignore_deps = [ "linux-vdso.so.1" ]
     for line in output.decode("utf-8").split("\n"):
         match = LD_LIST_RE.match(line)
         if match:
             lib_path = match.group(1).lstrip("/")
+            if lib_path in ignore_deps:
+                continue
             result.append(lib_path)
             if os.path.islink(lib_path):
                 target = os.readlink(lib_path)
