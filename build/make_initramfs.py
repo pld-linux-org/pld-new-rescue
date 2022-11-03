@@ -85,7 +85,7 @@ def find_executable_deps(config, path, root_dir, bits):
         target = os.path.join("/" + lib, target)
         result.append(os.path.abspath(target).lstrip("/"))
 
-    ignore_deps = [ "linux-vdso.so.1" ]
+    ignore_deps = [ "linux-gate.so.1", "linux-vdso.so.1" ]
     for line in output.decode("utf-8").split("\n"):
         match = LD_LIST_RE.match(line)
         if match:
