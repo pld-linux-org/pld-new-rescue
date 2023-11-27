@@ -22,6 +22,12 @@ if [ -n "$c_pldnr_modules" ] ; then
     modules="$(echo "$c_pldnr_modules" | tr "," " ")"
 fi
 
+# make some writable room on initramfs
+root_size=$(grep "^rootfs" /etc/mtab | sed -e 's#.*size=\([0-9]\+\)k.*#\1#')
+if [ -n "$root_size" ]; then
+    mount / -o remount,size=$(( $root_size + 16384 ))k
+fi
+
 mkdir -p /root
 mount -t tmpfs none /root
 
