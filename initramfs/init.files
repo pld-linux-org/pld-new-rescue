@@ -27,6 +27,7 @@ slink /bin/echo busybox 0755 0 0
 slink /bin/mkdir busybox 0755 0 0
 slink /bin/losetup busybox 0755 0 0
 slink /bin/tr busybox 0755 0 0
+slink /etc/mtab /proc/self/mounts 0644 0 0
 #file /bin/busybox /bin/busybox.static 0755 0 0
 
 # files to be copied from the rootfs (with dependencies)
