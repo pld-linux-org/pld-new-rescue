@@ -155,7 +155,7 @@ nbtscan
 nc
 ncdu
 ncompress
-ncps
+#ncps
 #nepim
 net-snmp 
 net-snmp-utils
