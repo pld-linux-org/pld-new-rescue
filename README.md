@@ -137,9 +137,22 @@ pxelinux.cfg/default example entry:
 label PLD New Rescue
   MENU LABEL PLD New Rescue
   kernel pld-nr-64/vmlinuz
-  append initrd=pld-nr-64/rescue.cpi,pld-nr-64/base.cpi root=/dev/ram0
-  append initrd=pld-nr-64/_init.cpi,pld-nr-64/_net.cpi,pld-nr-64/base.cpi,pld-nr-64/basic.cpi,pld-nr-64/rescue.cpi root=/dev/ram0 console=tty0 console=ttyS1,115200n81
+  initrd pld-nr-64/_init.cpi,pld-nr-64/_net.cpi,pld-nr-64/base.cpi,pld-nr-64/basic.cpi,pld-nr-64/rescue.cpi root=/dev/ram0 console=tty0 console=ttyS1,115200n81
+  append root=/dev/ram0 console=tty0 console=ttyS1,115200n81
 ```
+
+### PXE boot with iPXE
+
+````
+  echo Booting PLD New Rescue
+  kernel pld-nr-64/vmlinuz root=/dev/ram0 console=tty0 console=ttyS0,115200n81 initrd=initrd.magic
+  initrd pld-nr-64/_init.cpi
+  initrd pld-nr-64/_net.cpi
+  initrd pld-nr-64/base.cpi
+  initrd pld-nr-64/basic.cpi
+  initrd pld-nr-64/rescue.cpi
+  boot
+````
 
 ### iSCSI boot
 
