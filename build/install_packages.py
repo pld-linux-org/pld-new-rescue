@@ -76,11 +76,13 @@ class PackageInstaller(object):
                                         self.config.c_sudo + [
                                             "find", ".",
                                             "-ignore_readdir_race",
+                                            "(",
                                             "-path", "./dev",
                                             "-o", "-path", "./proc",
                                             "-o", "-path", "./sys",
                                             "-o", "-path", "./tmp",
                                             "-o", "-path", "./var/tmp",
+                                            ")",
                                             "-prune", "-o", "-print0"])
             for path in paths.split(b"\000"):
                 path = path[2:] # strip "./"
