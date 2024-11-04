@@ -75,6 +75,7 @@ def main():
     except:
         if os.path.exists(squashfs_fn):
             os.unlink(squashfs_fn)
+        raise
 
 if __name__ == "__main__":
     try:
