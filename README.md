@@ -231,6 +231,7 @@ description, so below is how a custom cpio archive (called 'custom.cpi') looks l
 PXE boot environment. This sample module overrides /etc/issue and runs a single custom.sh
 script (which could've also been named custom1.sh if there were more than one).
 
+```
 [root@dev2 pld-nr-64]# ls
 _init.cpi  _net.cpi  base.cpi  basic.cpi  custom.cpi  rescue.cpi  vmlinuz
 [root@dev2 pld-nr-64]# cpio -i -t <custom.cpi 
@@ -238,6 +239,7 @@ custom.sh
 custom
 custom/etc
 custom/etc/issue
+```
 
 A few things to keep in mind regarding this mechanism:
 1. If you want to add some software, it's probably a better idea to make a whole custom build
@@ -260,7 +262,7 @@ do both, your module will not be detected properly.
 Rebuilding and full customization
 ---------------------------------
 
-Check-out code from https://github.com/Jajcus/pld-new-rescue (versions on different
+Check-out code from https://github.com/pld-linux-org/pld-new-rescue (versions on different
 branches and tags may provide different features or base on different PLD Linux versions).
 
 Edit the `build.conf` file according to your needs. Please note that only the default
