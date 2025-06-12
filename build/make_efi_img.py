@@ -15,7 +15,7 @@ import pld_nr_buildconf
 
 logger = logging.getLogger("make_efi_img")
 
-DU_OUTPUT_RE = re.compile("^(\d+)\s+total", re.MULTILINE)
+DU_OUTPUT_RE = re.compile(r"^(\d+)\s+total", re.MULTILINE)
 
 def main():
     log_parser = pld_nr_buildconf.get_logging_args_parser()

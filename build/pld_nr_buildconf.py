@@ -20,11 +20,11 @@ from collections import OrderedDict
 
 logger = logging.getLogger("pld_nr_buildconf")
 
-X86_RE = re.compile("^(i[3-6]86|ia32)$")
-X86_64_RE = re.compile("^(x86_64|amd64)$")
+X86_RE = re.compile(r"^(i[3-6]86|ia32)$")
+X86_64_RE = re.compile(r"^(x86_64|amd64)$")
 
-HOSTNAME_RE = re.compile("^[a-z0-9][a-z0-9-]{0,63}$")
-LOCALE_RE = re.compile("^[a-z]+_[A-Z]+$")
+HOSTNAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
+LOCALE_RE = re.compile(r"^[a-z]+_[A-Z]+$")
 
 GRUB_VERSION_RE = re.compile(r"\(GRUB\)\s+2\.\d+")
 RPM_VERSION_RE = re.compile(r"\(RPM\)\s+5.\d+(.\d+)*")
@@ -429,7 +429,7 @@ class Config(object):
                 return config_vars[key].encode("utf-8")
             except (KeyError, ValueError, UnicodeError):
                 return match.group(0)
-        SUB_RE = re.compile(b"@(\w+)@")
+        SUB_RE = re.compile(br"@(\w+)@")
         data = SUB_RE.sub(repl, data)
         return data
     

@@ -17,10 +17,10 @@ import pld_nr_buildconf
 
 logger = logging.getLogger("make_initramfs")
 
-KERNEL_MOD_RE = re.compile("^lib/modules/([^/]*)/(.*\.ko(?:\.[gx]z)?)$")
+KERNEL_MOD_RE = re.compile(r"^lib/modules/([^/]*)/(.*\.ko(?:\.[gx]z)?)$")
 
 #   libc.so.6 => /lib/libc.so.6 (0xb7544000)
-LD_LIST_RE = re.compile("^\s*\S+\s*=>\s*(\S+)\s*\(.*")
+LD_LIST_RE = re.compile(r"^\s*\S+\s*=>\s*(\S+)\s*\(.*")
 
 modules_dep = {}
 
