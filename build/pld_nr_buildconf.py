@@ -24,7 +24,7 @@ X86_RE = re.compile(r"^(i[3-6]86|ia32)$")
 X86_64_RE = re.compile(r"^(x86_64|amd64)$")
 
 HOSTNAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
-LOCALE_RE = re.compile(r"^[a-z]+_[A-Z]+$")
+LOCALE_RE = re.compile(r"^([a-z]+_[A-Z]+|C)$")
 
 GRUB_VERSION_RE = re.compile(r"\(GRUB\)\s+2\.\d+")
 RPM_VERSION_RE = re.compile(r"\(RPM\)\s+5.\d+(.\d+)*")
