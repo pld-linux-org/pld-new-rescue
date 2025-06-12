@@ -63,10 +63,13 @@ def main():
 
     try:
         logger.debug("Calling mksquashfs")
-        subprocess.check_call(config.c_sudo + [
+        mkfs = config.c_sudo + [
                                 "mksquashfs", "root/", squashfs_fn,
                                 "-comp", config.compression,
-                                "-ef", exclude_fn])
+                                "-ef", exclude_fn]
+        if config.compression == "xz":
+            mkfs += ["-Xbcj", "x86", "-b", "1M"]
+        subprocess.check_call(mkfs)
         if os.getuid() != 0:
             subprocess.check_call(config.c_sudo + [
                                 "chown", "{}:{}".format(os.getuid(),
