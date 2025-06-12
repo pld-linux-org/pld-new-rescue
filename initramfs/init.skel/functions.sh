@@ -31,11 +31,11 @@ mount_media() {
         if /sbin/blkid -U "$cd_vol_id" >/dev/null ; then
             break
         fi
-        echo "Waiting for the boot media to appear..."
+        echo "Waiting for the PLD New Rescue medium to appear..."
         sleep 1
     done
 
-    echo "Attempting to mount the boot file system"
+    echo "Attempting to mount the PLD New Rescue medium file system"
     modprobe isofs
     modprobe nls_utf8
     mkdir -p /root/media/pld-nr
@@ -48,9 +48,9 @@ umount_media() {
 
     if mountpoint -q /root/media/pld-nr ; then
         if umount /root/media/pld-nr 2>/dev/null ; then
-            echo "Boot medium unmounted"
+            echo "PLD New Rescue medium unmounted"
         else
-            echo "Boot medium in use, keeping it mounted"
+            echo "PLD New Rescue medium in use, keeping it mounted"
         fi
     fi
 }
