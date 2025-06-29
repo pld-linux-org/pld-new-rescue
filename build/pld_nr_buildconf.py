@@ -109,7 +109,7 @@ class Config(object):
         self.build_dir = build_dir
 
         if os.path.isdir("../.git"):
-            version = subprocess.check_output(["git", "describe", "--dirty"])
+            version = subprocess.check_output(["git", "describe", "--always", "--dirty", "--exclude='*'"])
             self.version = version.decode("utf-8").strip()
         else:
             self.version = self._config.get("version", fallback="unknown")
