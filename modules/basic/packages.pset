@@ -15,6 +15,7 @@ less
 linux-firmware
 linux-firmware-atheros
 linux-firmware-broadcom
+linux-firmware-intel
 linux-firmware-realtek
 login
 open

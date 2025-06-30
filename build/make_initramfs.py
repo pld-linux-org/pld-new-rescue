@@ -179,7 +179,11 @@ def expand_globs(config, globs):
     search_paths = []
     for pattern in globs:
         pattern = os.path.abspath("/" + pattern).lstrip("/")
-        search_paths += glob(pattern)
+        matches = glob(pattern)
+        if not matches:
+            raise ValueError("Specified glob doesn't match any file or directory: {0!r}"
+                                                            .format(pattern))
+        search_paths += matches
     paths = subprocess.check_output(config.c_sudo + [
                                     "find"] + search_paths + ["-print"])
     paths = [p.decode("utf-8") for p in paths.split(b"\n") if p]

@@ -48,9 +48,8 @@ slink /etc/mtab /proc/self/mounts 0644 0 0
 * /lib/modules/*/kernel/drivers/cdrom
 * /lib/modules/*/kernel/drivers/scsi/sd_mod*
 * /lib/modules/*/kernel/drivers/scsi/sr_mod*
-* /lib/modules/*/kernel/drivers/ide
 * /lib/modules/*/kernel/drivers/block/loop.ko*
-* /lib/modules/*/kernel/fs/autofs4
+* /lib/modules/*/kernel/fs/autofs
 * /lib/modules/*/kernel/fs/isofs
 * /lib/modules/*/kernel/fs/squashfs
 * /lib/modules/*/kernel/fs/aufs
