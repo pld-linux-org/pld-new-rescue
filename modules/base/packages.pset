@@ -6,6 +6,7 @@ basesystem
 systemd-init
 udev
 kernel
+kernel-drm
 busybox
 losetup
 

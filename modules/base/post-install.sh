@@ -110,3 +110,9 @@ EOF
 cat >> root/etc/sysctl.d/pldnr_printk.conf <<'EOF'
 kernel.printk = 4	4	1	7
 EOF
+
+###########################################################
+# blacklist drm modules (only some are allowed early, in initrd)
+cat >> root/etc/modprobe.d/blacklist-drm.conf << 'EOF'
+install drm /bin/false
+EOF
