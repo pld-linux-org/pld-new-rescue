@@ -1,0 +1,125 @@
+name: Build Rescue Assets
+
+on:
+  push:
+    branches:
+      - th-current
+  schedule:
+    - cron: '0 0 1 * *'
+
+jobs:
+  build-64bit:
+    name: Build 64-bit assets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      LANG: C.UTF-8
+      IMAGE: registry.gitlab.com/pld-linux/pld:latest
+      ISO: pld-nr-64.iso
+      PKGS: pld-nr-64.packages
+      COMMON_COMMANDS: |
+        export LANG=C.UTF-8
+        poldek --upa
+        poldek -uvg binutils coreutils cpio dosfstools efi-shell-x64 findutils fonts-TTF-DejaVu git-core glibc-localedb-all grub2 grub2-mkfont grub2-platform-efi grub2-platform-pc kernel-tools losetup make memtest86+ mount mtools python3 python3-crypt-r python3-modules rpm squashfs util-linux xorriso xz
+        git config --global --add safe.directory /work
+      ARCH_COMMANDS: |
+        make
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set date and short commit id
+        id: taginfo
+        run: |
+          DATE=$(date +'%Y%m%d')
+          SHORTID=$(git rev-parse --short=7 HEAD)
+          echo "date=$DATE" >> $GITHUB_OUTPUT
+          echo "shortid=$SHORTID" >> $GITHUB_OUTPUT
+
+      - name: Write build commands to a script
+        run: |
+          cat > build-commands.sh <<EOF
+          set -e
+          $COMMON_COMMANDS
+          $ARCH_COMMANDS
+          EOF
+          chmod +x build-commands.sh
+
+      - name: Build in container
+        run: |
+          docker run --rm --privileged -u 0 -v "$PWD:/work" -w /work $IMAGE sh -c "./build-commands.sh"
+
+      - name: Rename assets
+        run: |
+          date="${{ steps.taginfo.outputs.date }}"
+          shortid="${{ steps.taginfo.outputs.shortid }}"
+          mv "$ISO" "pld-nr-64-${date}-${shortid}.iso"
+          mv "$PKGS" "pld-nr-64-${date}-${shortid}.packages.txt"
+
+      - name: Upload assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: pld-nr-64-${{ steps.taginfo.outputs.date }}-${{ steps.taginfo.outputs.shortid }}
+          path: |
+            pld-nr-64-${{ steps.taginfo.outputs.date }}-${{ steps.taginfo.outputs.shortid }}.iso
+            pld-nr-64-${{ steps.taginfo.outputs.date }}-${{ steps.taginfo.outputs.shortid }}.packages.txt
+          retention-days: ${{ github.event_name == 'schedule' && 365 || 30 }}
+
+  build-32bit:
+    name: Build 32-bit assets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      LANG: C.UTF-8
+      IMAGE: registry.gitlab.com/pld-linux/pld/i686:latest
+      ISO: pld-nr-32.iso
+      PKGS: pld-nr-32.packages
+      COMMON_COMMANDS: |
+        export LANG=C.UTF-8
+        poldek --upa
+        poldek -uvg binutils coreutils cpio dosfstools efi-shell-ia32 findutils fonts-TTF-DejaVu git-core glibc-localedb-all grub2 grub2-mkfont grub2-platform-efi grub2-platform-pc kernel-tools losetup make memtest86+ mount mtools python3 python3-crypt-r python3-modules rpm squashfs util-linux xorriso xz
+        git config --global --add safe.directory /work
+      ARCH_COMMANDS: |
+        make ARCH=i686
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set date and short commit id
+        id: taginfo
+        run: |
+          DATE=$(date +'%Y%m%d')
+          SHORTID=$(git rev-parse --short=7 HEAD)
+          echo "date=$DATE" >> $GITHUB_OUTPUT
+          echo "shortid=$SHORTID" >> $GITHUB_OUTPUT
+
+      - name: Write build commands to a script
+        run: |
+          cat > build-commands.sh <<EOF
+          set -e
+          $COMMON_COMMANDS
+          $ARCH_COMMANDS
+          EOF
+          chmod +x build-commands.sh
+
+      - name: Build in container
+        run: |
+          docker run --rm --privileged -u 0 -v "$PWD:/work" -w /work $IMAGE sh -c "./build-commands.sh"
+
+      - name: Rename assets
+        run: |
+          date="${{ steps.taginfo.outputs.date }}"
+          shortid="${{ steps.taginfo.outputs.shortid }}"
+          mv "$ISO" "pld-nr-32-${date}-${shortid}.iso"
+          mv "$PKGS" "pld-nr-32-${date}-${shortid}.packages.txt"
+
+      - name: Upload assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: pld-nr-32-${{ steps.taginfo.outputs.date }}-${{ steps.taginfo.outputs.shortid }}
+          path: |
+            pld-nr-32-${{ steps.taginfo.outputs.date }}-${{ steps.taginfo.outputs.shortid }}.iso
+            pld-nr-32-${{ steps.taginfo.outputs.date }}-${{ steps.taginfo.outputs.shortid }}.packages.txt
+          retention-days: ${{ github.event_name == 'schedule' && 365 || 7 }}
