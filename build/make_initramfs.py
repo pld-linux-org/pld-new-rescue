@@ -116,18 +116,11 @@ def find_deps(config, files, all_files, root_dir):
         try:
             path_stat = os.stat(path, follow_symlinks=False)
         except OSError as err:
-            if err.errno == errno.ENOENT:
-                continue
             raise
-        # symlink found. resolve target and convert to relative
         if stat.S_ISLNK(path_stat.st_mode):
-            path_resolved = pathlib.Path(path).resolve(strict=True)
-            if str(path_resolved).startswith(root_dir):
-                new_path = path_resolved.relative_to(root_dir)
-                deps = [ str(new_path).lstrip('/') ]
-                logger.debug("find_deps(): found ({0!r}) as symlink to {1!r}".format(path, str(new_path)))
-            else:
-                continue
+            new_path = expand_symlinks(config, root_dir, path)
+            deps = [ str(new_path).lstrip('/') ]
+            logger.info("find_deps(): found ({0!r}) as symlink to {1!r}".format(path, str(new_path)))
         elif stat.S_ISREG(path_stat.st_mode):
             match = KERNEL_MOD_RE.match(path)
             if match:
@@ -174,6 +167,12 @@ def process_files_list(config, file_list_fn, gic_list_fn, root_dir,
             for rule in extra_files:
                     cpio_list.write(rule + "\n")
     return files, globs
+
+def expand_symlinks(config, root_dir, path):
+    output = subprocess.check_output(config.c_sudo + [
+                        "chroot", root_dir, "/usr/bin/realpath", "-e", path
+                        ], stderr=subprocess.DEVNULL)
+    return output.decode('utf-8').strip()
 
 def expand_globs(config, globs):
     search_paths = []

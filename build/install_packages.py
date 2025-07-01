@@ -5,6 +5,7 @@ import sys
 import os
 import subprocess
 import shutil
+import stat
 import logging
 
 import pld_nr_buildconf
@@ -28,6 +29,23 @@ class PackageInstaller(object):
                                             .format(":".join(langs))]
         else:
             self.langs_opts = []
+
+    def init_minimal_dev(self):
+        dev_dir = os.path.join(self.dst_dir, "dev")
+        os.makedirs(dev_dir, exist_ok=True)
+
+        devices = [
+            ("null",    "666", "c", 1, 3),
+            ("zero",    "666", "c", 1, 5),
+            ("full",    "666", "c", 1, 7),
+            ("random",  "666", "c", 1, 8),
+            ("urandom", "666", "c", 1, 9),
+            ("console", "600", "c", 5, 1),
+        ]
+
+        for name, mode, dev_type, maj, minr in devices:
+            path = os.path.join(dev_dir, name)
+            subprocess.check_call(self.config.c_sudo + ["/bin/mknod", "-m", mode, path, dev_type, str(maj), str(minr)])
 
     def init_rpm_db(self):
         if not os.path.isdir(self.dst_dir):
@@ -170,6 +188,7 @@ def main():
 
     installer = PackageInstaller(config)
     try:
+        installer.init_minimal_dev()
         installer.init_rpm_db()
         installer.poldek("--upa", ignore_errors=True)
         prev_files = set()
