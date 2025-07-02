@@ -120,7 +120,7 @@ def find_deps(config, files, all_files, root_dir):
         if stat.S_ISLNK(path_stat.st_mode):
             new_path = expand_symlinks(config, root_dir, path)
             deps = [ str(new_path).lstrip('/') ]
-            logger.info("find_deps(): found ({0!r}) as symlink to {1!r}".format(path, str(new_path)))
+            logger.debug("find_deps(): found ({0!r}) as symlink to {1!r}".format(path, str(new_path)))
         elif stat.S_ISREG(path_stat.st_mode):
             match = KERNEL_MOD_RE.match(path)
             if match:
