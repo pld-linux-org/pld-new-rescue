@@ -3,12 +3,15 @@
 . /variables.sh
 . /functions.sh
 
-echo "PLD New Rescue $version (built $build_time) booting"
+pldnr_banner="PLD New Rescue $version (built $build_time) booting"
+echo "$pldnr_banner"
 
 export PATH=/sbin:/bin:/usr/sbin:/usr/bin
 
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
+
+echo "$pldnr_banner" > /dev/kmsg
 
 c_init=/sbin/init
 
@@ -64,6 +67,7 @@ mv *.sqf /.rcd/modules 2>/dev/null
 mkdir -p /root/dev /root/proc /root/sys
 mount -t devtmpfs none /root/dev
 mount --bind /root/dev /dev
+echo "$pldnr_banner" > /dev/kmsg
 
 for dir in tmp run ; do
         mkdir -p /root/$dir
