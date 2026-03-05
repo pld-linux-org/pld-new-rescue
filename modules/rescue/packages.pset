@@ -11,9 +11,7 @@ python
 python-modules
 
 # network management for wired and wireless
-wicd
-wicd-client-cli
-wicd-client-curses
+NetworkManager
 
 # some packages from the old PLD Rescue CD
 arpwatch

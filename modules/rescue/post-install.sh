@@ -1,36 +1,15 @@
 
 ###########################################################
-# Disable default rc-scripts network config
-# wicd does much better job here
+# NetworkManager replaces rc-scripts network management
+chroot root /bin/systemctl disable network.service || :
+chroot root /bin/systemctl enable NetworkManager.service || :
 
-cat > root/etc/sysconfig/interfaces/ifcfg-eth0 << EOF
-DEVICE=eth0
-
-# do not configure this interface via PLD rc-scripts
-# the wicd network manager does much better job
-# for temporary connections
-ONBOOT=no
-
-BOOTPROTO=dhcp
-EOF
-
-cp root/etc/wicd/dhclient.conf.template{.default,}
-echo "send vendor-class-identifier \"pld-new-rescue:$pldnr_version\";" >> root/etc/wicd/dhclient.conf.template
-
-cat > root/etc/wicd/manager-settings.conf <<EOF
-[Settings]
-auto_reconnect = True
-wired_connect_mode = 0
-dhcp_client = 1
-prefer_wired = True
-EOF
-
-# make the default wired profile active
-# so it automatically connects on boot
-cat > root/etc/wicd/wired-settings.conf  <<EOF
-[wired-default]
-default = True
-lastused = True
+# DHCP vendor class identifier for network identification
+mkdir -p root/etc/NetworkManager/conf.d
+cat > root/etc/NetworkManager/conf.d/pld-nr.conf <<EOF
+[connection-pld-nr-defaults]
+match-device=type:ethernet
+ipv4.dhcp-vendor-class-identifier=pld-new-rescue:$pldnr_version
 EOF
 
 ###########################################################

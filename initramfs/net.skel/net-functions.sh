@@ -142,16 +142,17 @@ finish_network () {
         # keep network configuration running in case we use network resources
         [ -s /etc/resolv.conf ] && cp /etc/resolv.conf /root/etc/resolv.conf
 
-        # disable wicd default wired profile
-        # so it won't touch the connection
-        cat > /root/etc/wicd/wired-settings.conf  <<EOF
-[wired-default]
-default = False
-lastused = False
+        # tell NetworkManager not to touch the boot network interface
+        if [ -n "$network_device" ] ; then
+            mkdir -p /root/etc/NetworkManager/conf.d
+            cat > /root/etc/NetworkManager/conf.d/boot-iface.conf <<EOF
+[keyfile]
+unmanaged-devices=interface-name:$network_device
 EOF
+        fi
     else
         if [ -e /run/udhcpc/pid ] ; then
-            # release the lease and clean up
+            # release the lease and clean up before NetworkManager takes over
             kill -USR2 $(cat /run/udhcpc/pid)
             usleep 500000
             kill $(cat /run/udhcpc/pid)
