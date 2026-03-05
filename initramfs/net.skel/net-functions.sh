@@ -87,7 +87,7 @@ setup_ip () {
        ip addr add "$client_ip/$PREFIX" dev "$network_device"
     fi
     if [ -n "$gw_ip" ] ; then
-       ip route add dev "$netdev" default via "$gw_ip"   # onlink not supported by busybox :(
+       ip route add dev "$network_device" default via "$gw_ip"   # onlink not supported by busybox :(
     fi
     if [ -n "$dns1" ] ; then
        echo "server $dns1" >> /etc/resolv.conf
