@@ -122,15 +122,15 @@ class PackageInstaller(object):
 
     def get_installed_pkg_info(self):
         cmd = self.config.c_sudo + ["rpm", "--root", self.dst_dir, "-qa",
-            "--queryformat", "%{name}\t%{version}-%{release}\t%{summary}\n"]
+            "--queryformat", "%{name}\t%{version}-%{release}\t%{size}\t%{summary}\n"]
         result = []
         rpm_p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         for line in rpm_p.stdout:
             line = line.decode("utf-8").strip()
             if not line:
                 continue
-            pkg, version, summary = line.split("\t", 2)
-            result.append((pkg, version, summary))
+            pkg, version, size, summary = line.split("\t", 3)
+            result.append((pkg, version, int(size), summary))
         return result
 
     def cleanup(self, total=False):
@@ -149,28 +149,40 @@ class PackageInstaller(object):
             else:
                 shutil.rmtree(self.dst_dir)
 
+def format_size(size):
+    if size >= 1024 * 1024:
+        return "{:.1f}M".format(size / (1024 * 1024))
+    elif size >= 1024:
+        return "{:.0f}K".format(size / 1024)
+    else:
+        return "{}B".format(size)
+
 def write_package_list(filename, installer, modules, package_modules):
     packages_info = installer.get_installed_pkg_info()
     name_width = max(len(p[0]) for p in packages_info)
     ver_width = max(len(p[1]) for p in packages_info)
-    sum_width = max(len(p[2]) for p in packages_info)
+    size_width = max(len(format_size(p[2])) for p in packages_info)
+    sum_width = max(len(p[3]) for p in packages_info)
     module_width = max(len(m) for m in modules)
     with open(filename, "wt") as pkg_lst_file:
-        print("{:<{}} {:<{}} {:<{}} {}"
+        print("{:<{}} {:<{}} {:>{}} {:<{}} {}"
                     .format("name", name_width,
                             "version", ver_width,
+                            "size", size_width,
                             "module", module_width,
                             "summary"), file=pkg_lst_file)
-        print("{} {} {} {}"
+        print("{} {} {} {} {}"
                     .format("-" * name_width,
                             "-" * ver_width,
+                            "-" * size_width,
                             "-" * module_width,
                             "-" * sum_width), file=pkg_lst_file)
-        for pkg_name, pkg_ver, pkg_sum in sorted(packages_info):
+        for pkg_name, pkg_ver, pkg_size, pkg_sum in sorted(packages_info):
             module = package_modules.get(pkg_name)
-            print("{:<{}} {:<{}} {:<{}} {}"
+            print("{:<{}} {:<{}} {:>{}} {:<{}} {}"
                         .format(pkg_name, name_width,
                                 pkg_ver, ver_width,
+                                format_size(pkg_size), size_width,
                                 module, module_width,
                                 pkg_sum), file=pkg_lst_file)
 
