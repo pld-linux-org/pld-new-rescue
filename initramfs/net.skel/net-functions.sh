@@ -17,11 +17,18 @@ find_boot_netdev () {
                 return 1
             fi
         fi
-    elif [ -e "/sys/class/net/eth0" ] ; then
-        network_device="eth0"
     else
-        echo "Network device not found" >&2
-        return 1
+        # Try first available ethernet device (type 1 = ARPHRD_ETHER)
+        for dev_type in /sys/class/net/*/type; do
+            [ -f "$dev_type" ] && [ "$(cat $dev_type)" = "1" ] && {
+                network_device="$(basename ${dev_type%/type})"
+                break
+            }
+        done
+        if [ -z "$network_device" ] ; then
+            echo "Network device not found" >&2
+            return 1
+        fi
     fi
 }
 
