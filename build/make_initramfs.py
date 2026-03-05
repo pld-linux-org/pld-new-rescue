@@ -154,8 +154,9 @@ def process_files_list(config, file_list_fn, gic_list_fn, root_dir,
                 if not line or line.startswith("#"):
                     continue
                 parts = line.split()
-                if parts[0] == "*" and len(parts) == 2:
-                    globs.append(parts[1].replace("@lib@", lib))
+                if parts[0] in ("*", "?") and len(parts) == 2:
+                    globs.append((parts[1].replace("@lib@", lib),
+                                  parts[0]))
                 elif len(parts) >= 5:
                     parts[2] = parts[2].replace("@root@", root_dir).replace(
                                                             "@lib@", lib)
@@ -176,10 +177,13 @@ def expand_symlinks(config, root_dir, path):
 
 def expand_globs(config, globs):
     search_paths = []
-    for pattern in globs:
+    for pattern, glob_type in globs:
         pattern = os.path.abspath("/" + pattern).lstrip("/")
         matches = glob(pattern)
         if not matches:
+            if glob_type == "?":
+                logger.debug("Optional glob matched nothing, skipping: %r", pattern)
+                continue
             raise ValueError("Specified glob doesn't match any file or directory: {0!r}"
                                                             .format(pattern))
         search_paths += matches

@@ -7,5 +7,5 @@
 * /lib/firmware/bnx2/*
 
 * /lib/modules/*/kernel/drivers/scsi/iscsi_tcp.*
-* /lib/modules/*/kernel/crypto/crc32c_generic.*
+? /lib/modules/*/kernel/crypto/crc32c_generic.*
 * /sbin/iscsistart
