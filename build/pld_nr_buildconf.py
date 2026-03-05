@@ -15,7 +15,7 @@ import tempfile
 import shlex
 
 from hashlib import md5
-from datetime import datetime
+from datetime import datetime, timezone
 from collections import OrderedDict
 
 logger = logging.getLogger("pld_nr_buildconf")
@@ -113,6 +113,8 @@ class Config(object):
             self.version = version.decode("utf-8").strip()
         else:
             self.version = self._config.get("version", fallback="unknown")
+
+        self.build_time = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
         self.arch = self._config.get("arch")
         if not self.arch:
@@ -400,6 +402,7 @@ class Config(object):
             result["efi_arch"] = ""
         result["grub_platforms"] = ",".join(self.grub_platforms)
         result["version"] = self.version
+        result["build_time"] = self.build_time
         result["hashed_root_password"] = self.hashed_root_password
         result["memtest86"] = "yes" if self.memtest86 else "no"
         result["memtest86+"] = "yes" if self.memtest86_plus else "no"

@@ -1,5 +1,6 @@
 
 version="@version@"
+build_time="@build_time@"
 modules="$(echo "@modules@" | tr ',' ' ')"
 uuid="@uuid@"
 cd_vol_id="@cd_vol_id@"

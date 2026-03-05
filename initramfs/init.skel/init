@@ -3,7 +3,7 @@
 . /variables.sh
 . /functions.sh
 
-echo "PLD New Rescue booting"
+echo "PLD New Rescue $version (built $build_time) booting"
 
 export PATH=/sbin:/bin:/usr/sbin:/usr/bin
 
