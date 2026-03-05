@@ -33,16 +33,17 @@ setup_ip () {
     local client_ip gw_ip netmask hostname autoconf dns1 dns2
 
     server_addr=""
-    eval "$(echo "$1" | awk -F: '{ print " \
-client_ip="$1"\
-server_addr="$2"\
-gw_ip="$3"\
-netmask="$4"\
-hostname="$5"\
-network_device="$6"\
-autoconf="$7"\
-dns1="$8"\
-dns2="$9 }')"
+    eval "$(echo "$1" | awk -F: '{
+	print "client_ip="$1
+	print "server_addr="$2
+	print "gw_ip="$3
+	print "netmask="$4
+	print "hostname="$5
+	print "network_device="$6
+	print "autoconf="$7
+	print "dns1="$8
+	print "dns2="$9
+}')"
 
     if [ -z "$client_ip" -a "(" "$autoconf" = "off" -o "$autoconf" = "none" ")" ] ; then
         return 1
