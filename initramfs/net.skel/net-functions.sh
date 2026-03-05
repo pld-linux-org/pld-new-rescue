@@ -188,9 +188,12 @@ fetch_tftp_url () {
         host="$server_addr"
     fi
     if [ -n "$host" -a -n "$path" ] ; then
-        if tftp -l "$dest" -r "$path" -g "$host" ; then
+        echo "Fetching tftp://$host/$path"
+        if tftp -v -l "$dest" -r "$path" -g "$host" ; then
+            echo "Fetched tftp://$host/$path"
             return 0
         else
+            echo "Failed to fetch tftp://$host/$path"
             return 1
         fi
     else
@@ -222,9 +225,12 @@ fetch_other_url () {
         # set host to $server_addr
         url="${url%%:*}://$server_addr/${path#/}"
     fi
+    echo "Fetching $url"
     if wget -O "$dest" "$url" ; then
+        echo "Fetched $url"
         return 0
     else
+        echo "Failed to fetch $url"
         return 1
     fi
 }
