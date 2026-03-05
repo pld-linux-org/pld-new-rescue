@@ -22,11 +22,39 @@ if [ -n "$c_pldnr_modules" ] ; then
     modules="$(echo "$c_pldnr_modules" | tr "," " ")"
 fi
 
-# make some writable room on initramfs
-root_size=$(grep "^rootfs.*size=" /etc/mtab | sed -e 's#.*size=\([0-9]\+\)k.*#\1#')
-if [ -n "$root_size" ]; then
-    mount / -o remount,size=$(( $root_size + 16384 ))k
+# Handle systems where kernel couldn't fully extract initrd due to
+# limited initial RAM (e.g. Proxmox memory hotplug puts most RAM
+# behind ACPI hotplug, invisible during kernel's initramfs extraction).
+# Detect partial extraction (some .sqf present, others missing),
+# online memory, resize rootfs, and let load_module fetch modules from
+# media or network later.
+sqf_found=""
+sqf_missing=""
+for module in $modules; do
+    if [ -e "${module}.sqf" ]; then
+        sqf_found="yes"
+    else
+        sqf_missing="$sqf_missing $module"
+    fi
+done
+
+if [ -n "$sqf_found" -a -n "$sqf_missing" ]; then
+    echo "Missing modules:$sqf_missing (will try to re-fetch from media or network)"
+
+    # Online all hotplug memory blocks
+    for mem_state in /sys/devices/system/memory/memory*/state; do
+        [ -f "$mem_state" ] && echo online > "$mem_state" 2>/dev/null
+    done
+
+    # Remove any .sqf files that may have been partially written
+    # (truncated due to ENOSPC) so load_module falls back to
+    # fetching complete copies from media or network
+    rm -f /*.sqf 2>/dev/null
 fi
+
+# Allow rootfs to use up to 75% of currently visible RAM
+mem_kb=$(awk '/MemTotal:/ {print $2}' /proc/meminfo)
+mount -o remount,size=$((mem_kb * 75 / 100))k /
 
 mkdir -p /root
 mount -t tmpfs none /root

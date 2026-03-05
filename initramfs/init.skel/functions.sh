@@ -86,6 +86,15 @@ EOF
     echo "" >> /fstab-add
 }
 
+# Calculate the offset to squashfs data inside a .cpi file.
+# .cpi is a cpio newc archive wrapping a single .sqf file.
+# Offset = 110 bytes (newc fixed header) + filename "${module}.sqf\0",
+# aligned up to 4-byte boundary.
+cpi_sqf_offset() {
+    local name_len=$(expr length "$1")
+    echo $(( ((118 + $name_len)/4) * 4 ))
+}
+
 load_module() {
     local module="$1"
     local lodev
@@ -93,9 +102,20 @@ load_module() {
     local sqf=/.rcd/modules/${module}.sqf
 
     if [ ! -e "$sqf" ] ; then
-        name_len=$(expr length $module)
-        offset=$(( ((118 + $name_len)/4) * 4 ))
+        offset=$(cpi_sqf_offset "$module")
         sqf="/root/media/pld-nr$prefix/${module}.cpi"
+
+        if [ -e "$sqf" ] ; then
+            echo "Loading module '$module' from media"
+        # Network fallback: re-fetch module from PXE/TFTP server
+        elif type fetch_url >/dev/null 2>&1; then
+            local cpi="/.rcd/modules/${module}.cpi"
+            local modurl="${c_pldnr_modurl:-tftp:${prefix#/}}"
+            echo "Fetching module '$module' from ${modurl}"
+            if fetch_url "${modurl}/${module}.cpi" "$cpi"; then
+                sqf="$cpi"
+            fi
+        fi
     fi
 
     if [ ! -e "$sqf" ] ; then
