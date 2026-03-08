@@ -110,7 +110,13 @@ keymap=${c_pldnr_keymap:-$default_keymap}
 if [ -n "$keymap" ] ; then
     echo "KEYMAP=$keymap" >> root/etc/vconsole.conf
 fi
-font=${c_pldnr_font:-$default_font}
+if [ -n "$c_pldnr_font" ] ; then
+    font="$c_pldnr_font"
+elif [ -d /sys/class/drm ] && ls /sys/class/drm/card[0-9]* >/dev/null 2>&1 ; then
+    font="$default_drm_font"
+else
+    font="$default_font"
+fi
 if [ -n "$font" ] ; then
     echo "FONT=$font" >> root/etc/vconsole.conf
 fi

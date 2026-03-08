@@ -269,6 +269,7 @@ tcptrack
 telnet
 telnetd
 terminfo
+terminus-font-console
 testdisk
 #tftp
 #tftpd

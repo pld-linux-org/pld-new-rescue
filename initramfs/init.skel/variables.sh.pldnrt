@@ -9,5 +9,6 @@ bits="@bits@"
 prefix="/pld-nr-@bits@"
 default_keymap="@default_keymap@"
 default_font="@default_font@"
+default_drm_font="@default_drm_font@"
 
 # vi: ft=sh
