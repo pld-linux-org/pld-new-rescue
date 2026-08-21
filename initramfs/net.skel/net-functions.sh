@@ -97,10 +97,10 @@ setup_ip () {
        ip route add dev "$network_device" default via "$gw_ip"   # onlink not supported by busybox :(
     fi
     if [ -n "$dns1" ] ; then
-       echo "server $dns1" >> /etc/resolv.conf
+       echo "nameserver $dns1" >> /etc/resolv.conf
     fi
     if [ -n "$dns2" ] ; then
-       echo "server $dns2" >> /etc/resolv.conf
+       echo "nameserver $dns2" >> /etc/resolv.conf
     fi
     return 0
 }
