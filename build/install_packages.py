@@ -7,6 +7,8 @@ import subprocess
 import shutil
 import logging
 
+from glob import glob
+
 import pld_nr_buildconf
 
 logger = logging.getLogger("install_packages")
@@ -53,6 +55,20 @@ class PackageInstaller(object):
         if not os.path.exists(packages_db):
             subprocess.check_call(self.config.c_sudo + 
                                     ["rpm", "--initdb", "--root", self.dst_dir])
+    def import_rpm_keys(self):
+        # rpm verifies against the target rpmdb, and the key file itself only
+        # arrives with the 'rpm' package in 'basic' - a whole module too late
+        keys = sorted(glob("/etc/pki/rpm-gpg/*.asc"))
+        if not keys:
+            logger.error("No RPM signing keys in /etc/pki/rpm-gpg,"
+                            " cannot verify package signatures")
+            sys.exit(1)
+        logger.info("Trusting package signatures from: {0}"
+                        .format(", ".join(os.path.basename(k) for k in keys)))
+        subprocess.check_call(self.config.c_sudo
+                                + ["rpm", "--root", self.dst_dir, "--import"]
+                                + keys)
+
     def poldek(self, *args, ignore_errors=False):
         try:
             cmd = self.config.c_sudo \
@@ -201,6 +217,7 @@ def main():
     try:
         installer.init_minimal_dev()
         installer.init_rpm_db()
+        installer.import_rpm_keys()
         installer.poldek("--upa", ignore_errors=True)
         prev_files = set()
         installer.poldek("--install", "filesystem")
