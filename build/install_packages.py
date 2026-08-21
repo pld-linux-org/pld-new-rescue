@@ -209,6 +209,10 @@ def main():
         # packages needed early, before main rpm transaction
         installer.poldek("--install", "mksh")
         package_modules = {}
+        def record_module_packages(module):
+            for pkg in installer.get_installed_pkg_list():
+                if pkg not in package_modules:
+                    package_modules[pkg] = module
         for module in config.modules:
             if module == "base":
                 lst_fn = "base.full-lst"
@@ -221,6 +225,8 @@ def main():
                 prev_files.update(files)
                 logger.info("'{0}' packages already installed".format(module))
                 open(lst_fn, "a").close() # update mtime
+                # skipped modules still own their packages
+                record_module_packages(module)
                 continue
             script_fn = "../modules/{0}/pre-install.sh".format(module)
             if os.path.exists(script_fn):
@@ -247,10 +253,7 @@ def main():
             with open(lst_fn, "wt") as lst_f:
                 for path in sorted(module_files):
                     print(path, file=lst_f)
-            module_pkgs = installer.get_installed_pkg_list()
-            for pkg in module_pkgs:
-                if pkg not in package_modules:
-                    package_modules[pkg] = module
+            record_module_packages(module)
         write_package_list("../pld-nr-{}.packages".format(config.bits),
                             installer, config.modules, package_modules)
     except:
