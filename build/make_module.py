@@ -36,7 +36,7 @@ def main():
     logger.debug("Getting list of all files in 'root'")
     find_p = subprocess.Popen(config.c_sudo + ["find", "root"],
                                 stdout=subprocess.PIPE)
-    all_files = [l.strip(b"root/").decode("utf-8").rstrip()
+    all_files = [l.decode("utf-8").rstrip()[len("root/"):]
                                         for l in find_p.stdout.readlines()]
     find_p.stdout.close()
     rc = find_p.wait()
