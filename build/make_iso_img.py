@@ -167,6 +167,14 @@ def main():
 
                 "-joliet", "on",
                 "-rockridge", "on",
+
+                # without these xorriso leaves the backup GPT mid-image and
+                # a protective MBR covering only the filesystem - neither is a
+                # valid GPT layout, so partition tools see a damaged disk
+                # https://uefi.org/specs/UEFI/2.10/05_GUID_Partition_Table_Format.html
+                "-padding", "included",
+                "-compliance", "no_emul_toc",
+
                 "-volid", "PLD_NR",
                 "-volume_date", "uuid", config.cd_vol_id.replace("-", ""),
                 ]
