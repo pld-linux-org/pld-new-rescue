@@ -64,7 +64,7 @@ def _check_tool(tool, description=None, args=["--version"],
             description += " (from the '{}' package)".format(package)
     try:
         if quiet:
-            stderr = stdout=open("/dev/null", "wb")
+            stderr = open("/dev/null", "wb")
         else:
             stderr = None
         if get_output:

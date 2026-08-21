@@ -6,12 +6,9 @@ import os
 import subprocess
 import shutil
 import re
-import stat
 import logging
 import struct
 from glob import glob
-
-from hashlib import md5
 
 import pld_nr_buildconf
 

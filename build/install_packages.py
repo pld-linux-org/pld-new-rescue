@@ -5,7 +5,6 @@ import sys
 import os
 import subprocess
 import shutil
-import stat
 import logging
 
 import pld_nr_buildconf
@@ -65,7 +64,7 @@ class PackageInstaller(object):
                                 + self.langs_opts + list(args)
             logger.debug("Running: {0}".format(cmd))
             subprocess.check_call(cmd)
-        except subprocess.CalledProcessError as err:
+        except subprocess.CalledProcessError:
             if not ignore_errors:
                 raise
     def setup_chroot(self):

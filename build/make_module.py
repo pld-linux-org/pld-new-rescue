@@ -4,12 +4,7 @@ import argparse
 import sys
 import os
 import subprocess
-import shutil
-import re
-import stat
-import uuid
 import logging
-from glob import glob
 
 import pld_nr_buildconf
 

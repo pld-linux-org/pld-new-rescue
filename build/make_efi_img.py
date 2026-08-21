@@ -4,12 +4,8 @@ import argparse
 import sys
 import os
 import subprocess
-import shutil
 import re
-import stat
 import logging
-
-from hashlib import md5
 
 import pld_nr_buildconf
 
@@ -32,7 +28,6 @@ def main():
 
     efi_img_fn = os.path.abspath(args.destination)
     efi_templ_dir = os.path.abspath("../efi_templ")
-    efi_mnt_dir = os.path.abspath("efi_mnt")
 
     grub_files = {}
     for plat in config.grub_platforms:
@@ -76,8 +71,6 @@ def main():
         subprocess.check_call(["mkdosfs", "-I",
                                 "-i", config.efi_vol_id.replace("-", ""),
                                 efi_img_fn])
-        if not os.path.exists(efi_mnt_dir):
-            os.makedirs(efi_mnt_dir)
         logger.info("Installing PLD NR EFI files")
         subprocess.check_call(["mmd", "-i", efi_img_fn,
                                                 "::/EFI", "::/EFI/BOOT"])

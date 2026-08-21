@@ -3,12 +3,10 @@
 import argparse
 import sys
 import os
-import pathlib
 import subprocess
 import shutil
 import re
 import stat
-import errno
 import logging
 
 from glob import glob
@@ -113,10 +111,7 @@ def find_deps(config, files, all_files, root_dir):
                 unprocessed.append(dir_path)
             dir_path = os.path.dirname(dir_path)
         present.add(path)
-        try:
-            path_stat = os.stat(path, follow_symlinks=False)
-        except OSError as err:
-            raise
+        path_stat = os.stat(path, follow_symlinks=False)
         if stat.S_ISLNK(path_stat.st_mode):
             new_path = expand_symlinks(config, root_dir, path)
             deps = [ str(new_path).lstrip('/') ]
