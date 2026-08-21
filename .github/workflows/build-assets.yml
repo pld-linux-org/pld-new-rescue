@@ -47,6 +47,11 @@ jobs:
           EOF
           chmod +x build-commands.sh
 
+      - name: Pull the base image
+        run: |
+          docker pull "$IMAGE"
+          docker image inspect --format 'base image: {{index .RepoDigests 0}}' "$IMAGE"
+
       - name: Build in container
         run: |
           docker run --rm --privileged -u 0 -v "$PWD:/work" -w /work $IMAGE sh -c "./build-commands.sh"
@@ -104,6 +109,11 @@ jobs:
           $ARCH_COMMANDS
           EOF
           chmod +x build-commands.sh
+
+      - name: Pull the base image
+        run: |
+          docker pull "$IMAGE"
+          docker image inspect --format 'base image: {{index .RepoDigests 0}}' "$IMAGE"
 
       - name: Build in container
         run: |
