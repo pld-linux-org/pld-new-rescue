@@ -218,7 +218,7 @@ class Config(object):
             else:
                 self.hashed_root_password = ""
 
-        locales = self._config.get("locales")
+        locales = self._config.get("locales", fallback="")
         if locales.strip():
             self.locales = [l.strip() for l in locales.split(",")]
         else:
