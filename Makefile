@@ -1,12 +1,15 @@
 
 ARCH=
 
-.PHONY: cd usb bindist clean
+.PHONY: cd usb bindist clean lint
 
 all: image
 
 image:
 	$(MAKE) -C build image
+
+lint:
+	pyflakes build/*.py
 
 clean:
 	$(MAKE) -C build clean
