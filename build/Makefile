@@ -65,11 +65,11 @@ $(PSET_LST_FILES): ./install_packages.py poldek.conf
 poldek.conf: ./pld_nr_buildconf.py ../modules/poldek.conf ../build.conf
 	./pld_nr_buildconf.py --substitute < ../modules/poldek.conf > poldek.conf
 
-bindist: cd usb
+bindist: image
 	mkdir -p ../dist
 	ln -f ../pld-nr-$(BITS).iso ../dist/pld-new-rescue-$(VERSION)-$(BITS)bit.iso
 	ln -f ../pld-nr-$(BITS).packages ../dist/pld-new-rescue-$(VERSION)-$(BITS)bit-packages.txt
-	if [ "$$(echo extra_packages/th-current/$(ARCH)/*.rpm)" != "extra_packages/th-current/$(ARCH)/*.rpm" ] ; then \
+	if [ "$$(echo ../extra_packages/th-current/$(ARCH)/*.rpm)" != "../extra_packages/th-current/$(ARCH)/*.rpm" ] ; then \
 		cd .. && \
 		tar cvf dist/pld-new-rescue-$(VERSION)-$(ARCH)-extra_packages.tar extra_packages/th-current/$(ARCH)/*.rpm ; \
 	fi
