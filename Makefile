@@ -1,7 +1,7 @@
 
 ARCH=
 
-.PHONY: cd usb bindist clean lint
+.PHONY: all image bindist clean lint
 
 all: image
 

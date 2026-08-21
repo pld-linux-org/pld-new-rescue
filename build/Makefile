@@ -15,7 +15,7 @@ include make.vars
 image:	../pld-nr-$(BITS).iso
 	echo ; echo "$$(readlink -f $<) image built ($$(($$(stat --printf="%s" $<)/1048576)) MiB)" ; echo
 
-.PHONY: usb cd clean maintaner-clean
+.PHONY: bindist clean
 
 ifeq ($(MAKE_VARS_INCLUDED),yes)
 
@@ -99,7 +99,7 @@ uuids:
 make.deps: make.vars /usr/bin/python3
 	./pld_nr_buildconf.py --make-deps > make.deps
 
-.DELETE_ON_ERROR: make.vars make.deps
+.DELETE_ON_ERROR:
 
 /usr/bin/python3:
 	echo "ERROR: python3 interpreter missing"
