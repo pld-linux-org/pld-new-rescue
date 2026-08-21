@@ -234,6 +234,10 @@ def main():
     else:
         base_full_lst_fn = None
         base_lst_fn = None
+    if args.exclude:
+        exclude_fn = os.path.abspath(args.exclude)
+    else:
+        exclude_fn = None
 
     os.chdir(root_dir)
 
@@ -258,6 +262,13 @@ def main():
     files += paths
 
     find_deps(config, paths, files, root_dir)
+
+    if exclude_fn:
+        # dependencies are resolved first, so a library shared with the
+        # excluded initramfs is still found, just not packed again
+        excluded = set(l.rstrip() for l in open(exclude_fn, "rt").readlines())
+        paths = [p for p in paths if p not in excluded]
+        files = [p for p in files if p not in excluded]
 
     paths.sort()
 
