@@ -75,7 +75,8 @@ class PackageInstaller(object):
                                 + ["poldek", "--root", self.dst_dir,
                                 "--conf", "poldek.conf",
                                 "--cachedir", self.cache_dir,
-                                "-O", "rpmdef=_netsharedpath ''" ] \
+                                "-O", "rpmdef=_netsharedpath ''",
+                                "-O", "rpmdef=_pkgverify_level all" ] \
                                 + self.langs_opts + list(args)
             logger.debug("Running: {0}".format(cmd))
             subprocess.check_call(cmd)

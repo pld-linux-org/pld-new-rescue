@@ -277,6 +277,11 @@ the source PLD repository) in the `extra_packages/$arch` directory. The
 packages needed should be available in a tar archive released with the latest
 PLD NR binary release.
 
+Those packages have to be signed: the build imports every `*.asc` key from the
+build host's `/etc/pki/rpm-gpg` into the image and rpm then rejects any package
+it cannot verify. If you build the extra packages yourself, put your own public
+key in that directory.
+
 These provide features that are required by this image, but not available in
 the source repository used as a base for this build (to provide reproducible
 results).
