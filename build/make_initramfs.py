@@ -203,18 +203,15 @@ def main():
     log_parser = pld_nr_buildconf.get_logging_args_parser()
     parser = argparse.ArgumentParser(description="Make initramfs",
                                      parents=[log_parser])
-    parser.add_argument("--out-list", metavar="FILE",
-                        help="Save initramfs contents list to FILE")
     parser.add_argument("--substract-contents", metavar=("INFILE", "OUTFILE"),
                         nargs=2,
                         help="Read file list from INFILE, exclude contents"
-                              " of this initramfs module and write to OUTFILE"),
+                              " of this initramfs module and write to OUTFILE")
     parser.add_argument("--exclude", metavar="FILE",
                         help="Do not include any files listed in FILE")
     parser.add_argument("name", metavar="NAME",
                         help="Name of the initramfs module."
                             " _NAME.cpi and _NAME.lst files will be written.")
-    args = parser.parse_args()
     args = parser.parse_args()
     pld_nr_buildconf.setup_logging(args)
     

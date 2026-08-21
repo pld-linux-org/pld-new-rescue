@@ -34,7 +34,7 @@ GRUB_BOOT_MACHINE_LIST_SIZE = 12
 
 GRUB_BLOCK_LIST = 0x200 - GRUB_BOOT_MACHINE_LIST_SIZE
 
-def patch_image_mbr(config, image):
+def patch_image_mbr(image):
     lba_report = subprocess.check_output(["xorriso",
                                         "-dev", image,
                                         "-find", "/boot/boot.img",
@@ -233,7 +233,7 @@ def main():
         subprocess.check_call(command)
         
         if config.bios and "i386-pc" in config.grub_platforms:
-            patch_image_mbr(config, args.destination)
+            patch_image_mbr(args.destination)
     finally:
         shutil.rmtree(tmp_img_dir)
 
