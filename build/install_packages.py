@@ -59,7 +59,6 @@ class PackageInstaller(object):
                                 + ["poldek", "--root", self.dst_dir,
                                 "--conf", "poldek.conf",
                                 "--cachedir", self.cache_dir,
-                                "--pmopt='--nodigest'",
                                 "-O", "rpmdef=_netsharedpath ''" ] \
                                 + self.langs_opts + list(args)
             logger.debug("Running: {0}".format(cmd))
