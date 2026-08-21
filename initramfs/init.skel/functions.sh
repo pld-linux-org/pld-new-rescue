@@ -69,7 +69,10 @@ mount_aufs() {
         else
             options="dirs=/root/.rw/$dir=rw"
         fi
-        mount -t aufs -o $options none /root/$dir
+        if ! mount -t aufs -o $options none /root/$dir ; then
+            echo "ERROR: cannot mount aufs on /$dir"
+            echo "       (no aufs support in the kernel?)"
+        fi
         echo "none /$dir aufs rw 0 0" >> /fstab-add
         cat > /root/.rw/etc/systemd/system/${dir}.mount <<EOF
 [Unit]
@@ -126,8 +129,16 @@ load_module() {
     echo "Activating '$module' module"
 
     lodev=$(/sbin/losetup -o $offset --find --show $sqf)
+    if [ -z "$lodev" ] ; then
+        echo "No loop device for '$module' ($sqf)"
+        return 1
+    fi
     mkdir -p "/.rcd/m/${module}"
-    mount -t squashfs "$lodev" "/.rcd/m/${module}"
+    if ! mount -t squashfs "$lodev" "/.rcd/m/${module}" ; then
+        echo "Cannot mount the '$module' squashfs from $lodev"
+        /sbin/losetup -d "$lodev"
+        return 1
+    fi
 
     for dir in boot usr sbin lib lib64 etc bin opt root var ; do
         if [ -d /.rcd/m/${module}/$dir ] ; then
