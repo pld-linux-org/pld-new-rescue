@@ -62,8 +62,12 @@ _net.cpi _net.lst: ./make_initramfs.py _init.lst ../initramfs/net.files ../initr
 $(PSET_LST_FILES): ./install_packages.py poldek.conf
 	./install_packages.py
 
+# keep the mtime when the content did not change: a rewritten poldek.conf
+# reruns install_packages.py, which touches every .lst and re-squashes
+# every module
 poldek.conf: ./pld_nr_buildconf.py ../modules/poldek.conf ../build.conf
-	./pld_nr_buildconf.py --substitute < ../modules/poldek.conf > poldek.conf
+	./pld_nr_buildconf.py --substitute < ../modules/poldek.conf > $@.tmp
+	if cmp -s $@.tmp $@ ; then rm -f $@.tmp ; else mv -f $@.tmp $@ ; fi
 
 bindist: image
 	mkdir -p ../dist
@@ -82,7 +86,7 @@ clean:
 	-rm -rf *.lst *.full-lst *.pkgs *gen_init_cpio.list *.exclude
 	-rm -rf *.cpi *.sqf *.img
 	-rm -rf netboot.pxe net_*.efi
-	-rm -rf poldek.conf grub*.cfg
+	-rm -rf poldek.conf poldek.conf.tmp grub*.cfg
 	-rm -f font.pf2
 	-rm -f make.vars make.deps
 	-rm -f pld-nr-net.env uuids
