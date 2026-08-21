@@ -140,6 +140,9 @@ def main():
         link_target = os.readlink(vmlinuz_fn)
         link_target = os.path.join("/boot", link_target)
         vmlinuz_fn = os.path.join(root_dir, link_target.lstrip("/"))
+    if not os.path.exists(vmlinuz_fn):
+        logger.error("Kernel image not found: {}".format(vmlinuz_fn))
+        sys.exit(1)
 
     if os.path.exists(args.destination):
         os.unlink(args.destination)

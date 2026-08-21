@@ -55,6 +55,10 @@ def main():
                                             ] + extra_files,
                                             env=safe_env)
     match = DU_OUTPUT_RE.search(du_output.decode("utf-8"))
+    if not match:
+        logger.error("Cannot read the total size from 'du' output: {!r}"
+                                    .format(du_output.decode("utf-8")))
+        sys.exit(1)
     bytes_needed = int(int(match.group(1)) * 1.2)
     logger.debug("bytes needed: {0!r}".format(bytes_needed))
     blocks_needed = max(bytes_needed // 1024, 256)
