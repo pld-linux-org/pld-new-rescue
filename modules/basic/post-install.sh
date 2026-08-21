@@ -29,7 +29,6 @@ UsePAM yes
 AllowAgentForwarding yes
 AllowTcpForwarding yes
 X11Forwarding yes
-UsePrivilegeSeparation sandbox
 AcceptEnv LANG LC_* LANGUAGE TZ GIT_AUTHOR_* GIT_COMMITTER_*
 Subsystem	sftp	internal-sftp
 EOF
