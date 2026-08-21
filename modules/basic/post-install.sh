@@ -31,7 +31,7 @@ AllowTcpForwarding yes
 X11Forwarding yes
 UsePrivilegeSeparation sandbox
 AcceptEnv LANG LC_* LANGUAGE TZ GIT_AUTHOR_* GIT_COMMITTER_*
-Subsystem	sftp	/usr/lib/openssh/sftp-server
+Subsystem	sftp	internal-sftp
 EOF
 
 #######################################################3
