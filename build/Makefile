@@ -26,7 +26,7 @@ ifeq ($(MAKE_VARS_INCLUDED),yes)
 efi.img: ./make_efi_img.py $(EFI_GRUB_IMAGES) ../efi_templ/*
 	./make_efi_img.py $@
 
-boot.img: grub-i386-pc.img
+boot.img: grub-i386-pc.img /lib/grub/i386-pc/cdboot.img
 	cat /lib/grub/i386-pc/cdboot.img grub-i386-pc.img > $@
 
 netboot.pxe: ./make_grub_img.py /lib/grub/i386-pc
@@ -38,7 +38,7 @@ net_ia32.efi: ./make_grub_img.py /lib/grub/i386-efi
 net_x64.efi: ./make_grub_img.py /lib/grub/x86_64-efi
 	./make_grub_img.py --pxe x86_64-efi $@
 
-.DELETE: boot.img
+.INTERMEDIATE: boot.img
 
 font.pf2: /usr/share/fonts/TTF/DejaVuSansMono.ttf
 	grub-mkfont --output $@ $<
