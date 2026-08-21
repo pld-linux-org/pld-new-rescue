@@ -190,6 +190,10 @@ Kernel command-line options
 
 * `pldnr.modules=<module>,<module>...` – PLD NR modules to load (order matters)
 
+* `pldnr.modurl=<url>` – base URL to re-fetch modules from, used when the
+  initramfs could not be unpacked completely (default: `tftp:pld-nr-<bits>`,
+  taking the host from DHCP or the `ip=` parameter)
+
 * `pldnr.keymap=<name>` – keymap (default: from build.conf)
 
 * `pldnr.font=<name>` – font (default: from build.conf)
