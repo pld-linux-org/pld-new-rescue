@@ -72,8 +72,8 @@ echo "using prefix: $prefix efi_part: $efi_part $efi_suffix"
         else:
             if args.platform.endswith("-pc"):
                 grub_core_modules += ["biosdisk"]
-            grub_core_modules += ["iso9660", "search", "search_label",
-                                    "fat", "part_gpt", "iso9660"]
+            grub_core_modules += ["iso9660", "search",
+                                    "fat", "part_gpt"]
             prefix = "/boot/grub"
         logger.debug("Making {} grub image for {} with modules: {!r}"
                         .format(args.destination, args.platform,
