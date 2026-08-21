@@ -260,9 +260,9 @@ class GPT(object):
         backup_gpt.backup_lba = self.address
         backup_gpt.header_crc = 0
         backup_gpt.part_array_crc = 0
-        part_array_lbas = (self.part_array_size * self.part_entry_size
-                                                        // self.lba_size)
-        if self.part_array_size % self.lba_size:
+        part_array_bytes = self.part_array_size * self.part_entry_size
+        part_array_lbas = part_array_bytes // self.lba_size
+        if part_array_bytes % self.lba_size:
             part_array_lbas += 1
         backup_gpt.part_array_start = backup_gpt.current_lba - part_array_lbas
         return backup_gpt
