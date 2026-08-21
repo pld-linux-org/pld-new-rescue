@@ -96,13 +96,14 @@ def patch_image_mbr(config, image):
         # set the address of the kernel
         buf[GRUB_BOOT_MACHINE_KERNEL_SECTOR:GRUB_BOOT_MACHINE_KERNEL_SECTOR+8
                 ] = struct.pack("q", start_sector + core_offset)
-        image_f.seek(0)
-        image_f.write(buf)
 
         # enable drive check logic
         buf[GRUB_BOOT_MACHINE_DRIVE_CHECK:GRUB_BOOT_MACHINE_DRIVE_CHECK + 2
                 ] = b"\x90\x90"
-        
+
+        image_f.seek(0)
+        image_f.write(buf)
+
         image_f.seek((start_sector + core_offset) * 512)
         image_f.readinto(buf)
 
