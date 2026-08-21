@@ -214,7 +214,7 @@ class Config(object):
             root_password = self._config.get("root_password")
             if root_password:
                 self.hashed_root_password = crypt.crypt(root_password,
-                                                crypt.mksalt(crypt.METHOD_MD5))
+                                            crypt.mksalt(crypt.METHOD_SHA512))
             else:
                 self.hashed_root_password = ""
 
