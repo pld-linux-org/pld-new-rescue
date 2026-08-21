@@ -374,6 +374,7 @@ def main():
                             .format(err))
             sys.exit(1)
 
+        backup_gpt = None
         try:
             backup_gpt = primary_gpt.load_backup()
         except GPTError as err:
