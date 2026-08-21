@@ -19,7 +19,7 @@ case "$1" in
     ip addr add ${ip}/${mask} dev $interface
     [ -n "$router" ] && ip route add default via ${router%% *} dev $interface
     echo "# Written by early boot udhcpcd" > /etc/resolv.conf
-    [ -n "$domain" ] && echo search $domain > /etc/resolv.conf
+    [ -n "$domain" ] && echo search $domain >> /etc/resolv.conf
     for i in $dns ; do
       echo nameserver $i >> /etc/resolv.conf
     done
