@@ -280,6 +280,13 @@ results).
 When the preparations are done calling 'make' in the main directory of the
 distribution should start the build.
 
+Use `make V=1` for a verbose build – this exports `PLD_NR_DEBUG=1`, which
+switches all the build scripts to DEBUG-level logging. A single script can be
+made verbose the same way, or with its `--debug` option – but run it from the
+`build/` directory (`cd build && PLD_NR_DEBUG=1 ./install_packages.py`), since
+the scripts resolve `root`, `cache`, `poldek.conf` and `../modules` against the
+current directory.
+
 Please note that 'root' privileges are required for the process. Only the
 'root' user or other user with full privileges granted via 'sudo' can build PLD
 NR (enabling 'only the commands actually used by PLD NR build' still gives the

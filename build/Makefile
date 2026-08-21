@@ -1,6 +1,13 @@
 
 export ARCH=
 
+# Verbose build: 'make V=1' switches every build script to DEBUG-level logging.
+# Exported, not passed per recipe, so scripts run by hand and recipes added
+# later are covered too; get_default_log_level() in pld_nr_buildconf.py decides.
+ifneq ($(V),)
+export PLD_NR_DEBUG := $(V)
+endif
+
 include make.vars
 
 .PHONY: image

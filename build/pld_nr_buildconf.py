@@ -583,14 +583,24 @@ class Config(object):
                             os.path.abspath(build_dir))
         return cls._instance
 
+# Build-wide verbosity switch, set by 'make V=1'. Keeps a verbose build a
+# single knob instead of a --debug flag repeated in every Makefile recipe.
+DEBUG_ENV_VAR = "PLD_NR_DEBUG"
+
+def get_default_log_level():
+    if os.environ.get(DEBUG_ENV_VAR, "") not in ("", "0"):
+        return logging.DEBUG
+    return logging.INFO
+
 def get_logging_args_parser():
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--debug",
                         dest='log_level',
                         action='store_const',
                         const=logging.DEBUG,
-                        default=logging.INFO,
-                        help="Enable extra logging")
+                        default=get_default_log_level(),
+                        help="Enable extra logging (also enabled by"
+                             " 'make V=1')")
     return parser
 
 def setup_logging(args):

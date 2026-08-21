@@ -25,7 +25,7 @@ jobs:
         poldek -uvg binutils coreutils cpio dosfstools efi-shell-x64 findutils fonts-TTF-DejaVu git-core glibc-localedb-all grub2 grub2-mkfont grub2-platform-efi grub2-platform-pc kernel-tools losetup make memtest86+ mount mtools python3 python3-crypt-r python3-modules rpm squashfs util-linux xorriso xz
         git config --global --add safe.directory /work
       ARCH_COMMANDS: |
-        make
+        make V=1
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -83,7 +83,7 @@ jobs:
         poldek -uvg binutils coreutils cpio dosfstools efi-shell-ia32 findutils fonts-TTF-DejaVu git-core glibc-localedb-all grub2 grub2-mkfont grub2-platform-efi grub2-platform-pc kernel-tools losetup make memtest86+ mount mtools python3 python3-crypt-r python3-modules rpm squashfs util-linux xorriso xz
         git config --global --add safe.directory /work
       ARCH_COMMANDS: |
-        make ARCH=i686
+        make ARCH=i686 V=1
     steps:
       - name: Checkout
         uses: actions/checkout@v4
