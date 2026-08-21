@@ -135,6 +135,7 @@ if [ -e "/custom" -a -d "/custom" ]; then
 fi
 
 for file in /custom*.sh; do 
+    [ -e "$file" ] || continue
     /bin/sh $file
 done
 
@@ -158,6 +159,7 @@ rm /functions.sh
 rm /variables.sh
 rm /init
 for file in /custom*.sh; do 
+    [ -e "$file" ] || continue
     rm $file
 done
 
