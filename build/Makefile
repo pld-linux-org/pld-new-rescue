@@ -88,8 +88,13 @@ clean:
 	-rmdir efi_mnt
 	-$(SUDO) rm -rf cache __pycache__
 
-make.vars uuids: ../build.conf ./pld_nr_buildconf.py /usr/bin/python3
-	./pld_nr_buildconf.py --verify --gen-uuids --make-vars > make.vars
+make.vars: ../build.conf ./pld_nr_buildconf.py /usr/bin/python3
+	./pld_nr_buildconf.py --verify --make-vars > make.vars
+
+# no prerequisites on purpose: build UUIDs must survive a rebuild, only
+# 'make clean' issues new ones
+uuids:
+	./pld_nr_buildconf.py --gen-uuids > /dev/null
 
 make.deps: make.vars /usr/bin/python3
 	./pld_nr_buildconf.py --make-deps > make.deps
