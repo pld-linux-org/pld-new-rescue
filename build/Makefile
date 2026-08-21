@@ -78,7 +78,7 @@ endif
 clean:
 	-if $(SUDO) mountpoint -q efi_mnt ; then $(SUDO) umount efi_mnt ; fi
 	-$(SUDO) rm -rf --one-file-system root
-	-rm -rf *.lst *.full-lst *gen_init_cpio.list *.exclude
+	-rm -rf *.lst *.full-lst *.pkgs *gen_init_cpio.list *.exclude
 	-rm -rf *.cpi *.sqf *.img
 	-rm -rf netboot.pxe net_*.efi
 	-rm -rf poldek.conf grub*.cfg

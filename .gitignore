@@ -16,6 +16,7 @@
 /build/*.img
 /build/*.lst
 /build/*.full-lst
+/build/*.pkgs
 /build/*.exclude
 /build/*.pf2
 /build/*.gen_init_cpio.list

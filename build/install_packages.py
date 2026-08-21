@@ -176,7 +176,7 @@ def write_package_list(filename, installer, modules, package_modules):
                             "-" * module_width,
                             "-" * sum_width), file=pkg_lst_file)
         for pkg_name, pkg_ver, pkg_size, pkg_sum in sorted(packages_info):
-            module = package_modules.get(pkg_name)
+            module = package_modules.get(pkg_name, "?")
             print("{:<{}} {:<{}} {:>{}} {:<{}} {}"
                         .format(pkg_name, name_width,
                                 pkg_ver, ver_width,
@@ -208,10 +208,27 @@ def main():
         # packages needed early, before main rpm transaction
         installer.poldek("--install", "mksh")
         package_modules = {}
-        def record_module_packages(module):
-            for pkg in installer.get_installed_pkg_list():
-                if pkg not in package_modules:
-                    package_modules[pkg] = module
+        def record_module_packages(module, installed_now):
+            # rpm only knows what is installed now, not which module brought it
+            # in, so each module's share is snapshotted next to its file list
+            pkgs_fn = "{0}.pkgs".format(module)
+            lst_files.append(pkgs_fn)
+            if installed_now:
+                pkgs = [pkg for pkg in installer.get_installed_pkg_list()
+                                            if pkg not in package_modules]
+                with open(pkgs_fn, "wt") as pkgs_f:
+                    for pkg in sorted(pkgs):
+                        print(pkg, file=pkgs_f)
+            elif os.path.exists(pkgs_fn):
+                pkgs = [l.strip() for l in open(pkgs_fn, "rt").readlines()
+                                                                if l.strip()]
+            else:
+                # tree built before the snapshots existed
+                logger.warning("No {0!r}, cannot tell which packages '{1}'"
+                                " installed".format(pkgs_fn, module))
+                return
+            for pkg in pkgs:
+                package_modules.setdefault(pkg, module)
         for module in config.modules:
             if module == "base":
                 lst_fn = "base.full-lst"
@@ -224,8 +241,7 @@ def main():
                 prev_files.update(files)
                 logger.info("'{0}' packages already installed".format(module))
                 open(lst_fn, "a").close() # update mtime
-                # skipped modules still own their packages
-                record_module_packages(module)
+                record_module_packages(module, False)
                 continue
             script_fn = "../modules/{0}/pre-install.sh".format(module)
             if os.path.exists(script_fn):
@@ -252,7 +268,7 @@ def main():
             with open(lst_fn, "wt") as lst_f:
                 for path in sorted(module_files):
                     print(path, file=lst_f)
-            record_module_packages(module)
+            record_module_packages(module, True)
         write_package_list("../pld-nr-{}.packages".format(config.bits),
                             installer, config.modules, package_modules)
     except:
