@@ -19,23 +19,23 @@ image:	../pld-nr-$(BITS).iso
 
 ifeq ($(MAKE_VARS_INCLUDED),yes)
 
-../pld-nr-$(BITS).iso: uuids $(INITRAMFS_FILES) $(MODULE_FILES) efi.img $(PC_GRUB_IMAGES) $(NET_GRUB_IMAGES) $(FONT_FILE) ../iso_templ/* ../iso_templ/*/* ../iso_templ/*/*/*
+../pld-nr-$(BITS).iso: ./make_iso_img.py ./fix_gpt.py uuids $(INITRAMFS_FILES) $(MODULE_FILES) efi.img $(PC_GRUB_IMAGES) $(NET_GRUB_IMAGES) $(FONT_FILE) ../iso_templ/* ../iso_templ/*/* ../iso_templ/*/*/*
 	./make_iso_img.py $@
 	./fix_gpt.py --write $@
 
-efi.img: $(EFI_GRUB_IMAGES) ../efi_templ/*
+efi.img: ./make_efi_img.py $(EFI_GRUB_IMAGES) ../efi_templ/*
 	./make_efi_img.py $@
 
 boot.img: grub-i386-pc.img
 	cat /lib/grub/i386-pc/cdboot.img grub-i386-pc.img > $@
 
-netboot.pxe:
+netboot.pxe: ./make_grub_img.py /lib/grub/i386-pc
 	./make_grub_img.py --pxe i386-pc $@
 
-net_ia32.efi:
+net_ia32.efi: ./make_grub_img.py /lib/grub/i386-efi
 	./make_grub_img.py --pxe i386-efi $@
 
-net_x64.efi:
+net_x64.efi: ./make_grub_img.py /lib/grub/x86_64-efi
 	./make_grub_img.py --pxe x86_64-efi $@
 
 .DELETE: boot.img
@@ -44,25 +44,25 @@ font.pf2: /usr/share/fonts/TTF/DejaVuSansMono.ttf
 	grub-mkfont --output $@ $<
 
 
-grub-%.img: uuids /lib/grub/%
+grub-%.img: ./make_grub_img.py uuids /lib/grub/%
 	./make_grub_img.py $* $@
 
-_init.cpi base.lst _init.lst: uuids base.full-lst ../initramfs/init.files ../initramfs/init.skel/*
+_init.cpi base.lst _init.lst: ./make_initramfs.py uuids base.full-lst ../initramfs/init.files ../initramfs/init.skel/*
 	./make_initramfs.py --substract-contents base.full-lst base.lst init
 
-_net.cpi _net.lst: _init.lst ../initramfs/net.files ../initramfs/net.skel/*
+_net.cpi _net.lst: ./make_initramfs.py _init.lst ../initramfs/net.files ../initramfs/net.skel/*
 	./make_initramfs.py --exclude=_init.lst net
 
 %.cpi: %.sqf
 	echo $< | cpio -o -H newc -F $@
 
-%.sqf: %.lst
+%.sqf: %.lst ./make_module.py
 	./make_module.py $*
 
-$(PSET_LST_FILES): poldek.conf
+$(PSET_LST_FILES): ./install_packages.py poldek.conf
 	./install_packages.py
 
-poldek.conf: ../modules/poldek.conf ../build.conf
+poldek.conf: ./pld_nr_buildconf.py ../modules/poldek.conf ../build.conf
 	./pld_nr_buildconf.py --substitute < ../modules/poldek.conf > poldek.conf
 
 bindist: cd usb
