@@ -41,7 +41,7 @@ def main():
     find_p.stdout.close()
     rc = find_p.wait()
     if rc:
-        raise CalledProcessError(rc, ["find", "root"])
+        raise subprocess.CalledProcessError(rc, ["find", "root"])
 
     all_files = set(f for f in all_files if f)
 

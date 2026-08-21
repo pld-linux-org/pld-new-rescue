@@ -44,7 +44,7 @@ def _get_default_arch():
     try:
         result = subprocess.check_output(["rpm", "--eval", "%{_arch}"])
         result = result.decode("us-ascii").strip()
-    except CalledProcessError:
+    except subprocess.CalledProcessError:
         return "i686"
     if X86_RE.match(result):
         result = "i686" # make the image compatible with old hardware
@@ -484,8 +484,8 @@ class Config(object):
             img_opt = []
         def copy(src, dst):
             subprocess.check_call(["mcopy", "-D", "o"] + img_opt + [src, dst])
-        def mkdirs(src, dst):
-            subprocess.check_call(["mmd", "-D", "s"] + img_opt + [path])
+        def mkdirs(dst):
+            subprocess.check_call(["mmd", "-D", "s"] + img_opt + [dst])
         def copy_subst(src, dst):
             with tempfile.NamedTemporaryFile() as tmp_f:
                 self.copy_substituting(src, tmp_f.name)
@@ -576,7 +576,7 @@ class Config(object):
     @classmethod
     def get_config(cls):
         if cls._instance:
-            return _instance
+            return cls._instance
         build_dir = os.path.dirname(__file__)
         filename = os.path.join(build_dir, "../build.conf")
         cls._instance = cls(os.path.abspath(filename),

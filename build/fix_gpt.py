@@ -143,8 +143,8 @@ class GPT(object):
                 ) = struct.unpack("<8sHHLLLQQQQ16sQLLL", self.header[:92])
         self.revision = (rev1, rev2)
         if self.revision != (1, 0):
-            logger.warning("Unknown GPT revision: {}"
-                                                .format(".".join(revision)))
+            logger.warning("Unknown GPT revision: {}.{}"
+                                                .format(*self.revision))
         if self.reserved1:
             logger.warning("Non zero value of the reserved field: {:08x}"
                                                 .format(self.reserved1))
@@ -239,12 +239,12 @@ class GPT(object):
                         last_used = num
             if last_used >= self.part_array_size:
                 return False
-            self.part_array_size = max(trim_to, last_used - 1)
+            self.part_array_size = max(trim_to, last_used + 1)
         if self.partitions:
             self.partitions = self.partitions[:self.part_array_size]
             if len(self.partitions) < self.part_array_size:
                 self.partitions += [None] * (self.part_array_size
-                                                        - en(self.partitions))
+                                                        - len(self.partitions))
         else:
             self.partitions = [None] * self.part_array_size
         return True
@@ -299,7 +299,7 @@ class GPT(object):
         if len(header) < self.lba_size:
             header += (self.lba_size - len(header)) * b"\x00"
         else:
-            header[:self.lba_size]
+            header = header[:self.lba_size]
         crc = zlib.crc32(header[:self.header_size]) & 0xffffffff
         logger.debug("New header CRC: {}".format(crc))
         
@@ -384,7 +384,8 @@ def main():
                                             or backup_gpt.something_wrong):
             logger.info("Problems found, will fix that.")
         elif primary_gpt.part_array_size != 128:
-            logger.info("Strange partition array size ({}), will fix that.")
+            logger.info("Strange partition array size ({}), will fix that."
+                                    .format(primary_gpt.part_array_size))
         else:
             logger.info("Everything seems OK. Nothing to do.")
             return
