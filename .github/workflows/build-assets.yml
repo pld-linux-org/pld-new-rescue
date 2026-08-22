@@ -28,7 +28,7 @@ jobs:
         make V=1
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set date and short commit id
         id: taginfo
@@ -64,7 +64,7 @@ jobs:
           mv "$PKGS" "pld-nr-64-${date}-${shortid}.packages.txt"
 
       - name: Upload assets
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pld-nr-64-${{ steps.taginfo.outputs.date }}-${{ steps.taginfo.outputs.shortid }}
           path: |
@@ -91,7 +91,7 @@ jobs:
         make ARCH=i686 V=1
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set date and short commit id
         id: taginfo
@@ -127,7 +127,7 @@ jobs:
           mv "$PKGS" "pld-nr-32-${date}-${shortid}.packages.txt"
 
       - name: Upload assets
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pld-nr-32-${{ steps.taginfo.outputs.date }}-${{ steps.taginfo.outputs.shortid }}
           path: |
