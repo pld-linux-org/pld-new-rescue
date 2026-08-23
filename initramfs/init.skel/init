@@ -144,8 +144,9 @@ umount_media
 
 udevadm control --exit
 
+# loop devices backing the module squashfs keep /dev busy
 for dir in tmp run dev ; do
-    umount /$dir
+    umount -l /$dir
 done
 
 rm -f /.rcd/modules/* 2>/dev/null
