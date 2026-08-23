@@ -57,8 +57,8 @@ UUID=$pldnr_cd_vol_id /media/pld-nr	iso9660	noauto,utf8,ro		0 0
 UUID=$pldnr_efi_vol_id /boot/efi	vfat	noauto,utf8=true	0 0
 
 none		/proc			proc	defaults,noauto,hidepid=2,gid=17	0 0
-none		/sys			sysfs	defaults,noauto,gid=17	0 0
-none		/sys/fs/cgroup		tmpfs	noauto,nosuid,nodev,noexec,mode=755	0 0
+none		/sys			sysfs	defaults,noauto	0 0
+none		/sys/fs/cgroup		cgroup2	noauto,nosuid,nodev,noexec	0 0
 none		/proc/bus/usb		usbfs	defaults,noauto,devgid=78,devmode=0664	0 0
 none		/dev/pts		devpts	gid=5,mode=620		0 0
 none		/dev/shm		tmpfs	mode=1777,nosuid,nodev,noexec		0 0
