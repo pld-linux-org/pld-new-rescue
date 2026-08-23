@@ -60,7 +60,8 @@ mem_kb=$(awk '/MemTotal:/ {print $2}' /proc/meminfo)
 mount -o remount,size=$((mem_kb * 75 / 100))k /
 
 mkdir -p /root
-mount -t tmpfs none /root
+# tmpfs defaults to 1777, but this becomes the final root directory
+mount -t tmpfs -o mode=755 none /root
 
 mv *.sqf /.rcd/modules 2>/dev/null
 

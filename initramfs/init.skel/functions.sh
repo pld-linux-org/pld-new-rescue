@@ -59,6 +59,10 @@ mount_aufs() {
 
     mkdir -p /root/.rw/etc/systemd/system
 
+    # aufs takes the union root mode from the rw branch
+    mkdir -p /root/.rw/root
+    chmod 700 /root/.rw/root
+
     echo "" > /fstab-add
     echo "# PLD NR aufs filesystems (auto-generated)" >> /fstab-add
 
