@@ -197,15 +197,24 @@ for bits in 64 32 ; do
                 iscsi $bits ""
 
     pldnr_menuentry \
-                "PLD New Rescue $bits (serial console, all in RAM)" \
+                "PLD New Rescue $bits (serial console on ttyS0, all in RAM)" \
                 yes $bits "base basic rescue" \
                 "console=tty0 console=ttyS0,115200n8 earlyprintk=serial,ttyS0,115200"
 
     pldnr_menuentry \
-                "PLD New Rescue $bits (serial console, minimum RAM)" \
+                "PLD New Rescue $bits (serial console on ttyS0, minimum RAM)" \
                 iscsi $bits "" \
                 "console=tty0 console=ttyS0,115200n8 earlyprintk=serial,ttyS0,115200"
 
+    pldnr_menuentry \
+                "PLD New Rescue $bits (serial console on ttyS1, all in RAM)" \
+                yes $bits "base basic rescue" \
+                "console=tty0 console=ttyS1,115200n8 earlyprintk=serial,ttyS1,115200"
+
+    pldnr_menuentry \
+                "PLD New Rescue $bits (serial console on ttyS1, minimum RAM)" \
+                iscsi $bits "" \
+                "console=tty0 console=ttyS1,115200n8 earlyprintk=serial,ttyS1,115200"
 done
 
 if [ "$grub_platform" = "efi" ] ; then
