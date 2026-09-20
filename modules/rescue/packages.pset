@@ -137,7 +137,7 @@ md5deep
 mdadm
 mdf2iso
 memtester
-mibs-net-snmp 
+mibs-net-snmp
 microcom
 minicom
 #mkbootdisk
@@ -151,11 +151,11 @@ mtx
 nbd
 nbtscan
 nc
-ncdu
+ncdu1
 ncompress
 #ncps
 #nepim
-net-snmp 
+net-snmp
 net-snmp-utils
 net-tools
 nethogs
@@ -200,7 +200,7 @@ pldconf
 plipconfig
 ppp
 ppp-plugin-ifcfg-password
-ppp-plugin-pppoatm 
+ppp-plugin-pppoatm
 procinfo
 progsreiserfs
 proxytunnel
