@@ -28,6 +28,7 @@ cdrtools-readcd
 cdrtools-utils
 chkrootkit
 ckermit
+cpipe
 cpuburn
 cstream
 #ctunnel
@@ -49,6 +50,7 @@ dosfstools
 dump
 dvd+rw-tools
 elinks
+etherwake
 ethtool
 ettercap
 #ext2ed
@@ -277,6 +279,7 @@ time
 tinyproxy
 #tiobench
 tmpwatch
+tmux
 traceroute-nanog
 trafshow
 tre
