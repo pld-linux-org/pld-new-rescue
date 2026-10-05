@@ -271,7 +271,8 @@ wpa_supplicant
 x86info
 xfsdump
 xfsprogs
-zfs-fuse
+zfs
+kernel-zfs
 zsync
 
 # from users' wishlist :)
