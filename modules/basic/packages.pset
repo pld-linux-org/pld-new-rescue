@@ -13,9 +13,11 @@ iputils
 issue
 less
 linux-firmware
+linux-firmware-amd
 linux-firmware-atheros
 linux-firmware-broadcom
 linux-firmware-intel
+linux-firmware-mellanox
 linux-firmware-realtek
 login
 open
