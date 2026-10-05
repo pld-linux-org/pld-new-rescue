@@ -4,6 +4,7 @@
 
 basesystem
 systemd-init
+systemd-sysv-compat
 udev
 kernel
 busybox
